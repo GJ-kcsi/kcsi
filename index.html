@@ -108,6 +108,10 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 .brand .mark span{font-size:11px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:0 7px}
 .brand .org{font-size:12px;font-weight:700;color:var(--ink)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brand .mark b{color:var(--accent)}}
+.inst{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:8px}
+.inst h3{margin:0;font-size:14px;color:var(--muted)}
+.inst ol{margin:0;padding-left:22px;display:grid;gap:3px;font-size:15px}
+.inst.mine{border-color:var(--accent);border-width:2px}
 .legal{font-size:11px;color:var(--muted);text-align:center}
 .hide{display:none!important}
 @media (max-width:420px){.row3{grid-template-columns:1fr 1fr}}
@@ -132,11 +136,22 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
   <div class="box">
     <div style="display:flex;gap:12px;align-items:center">
       <img id="installIcon" alt="" width="56" height="56" style="border-radius:12px;flex:none">
-      <div><h2 id="installTitle">앱으로 설치하기</h2><p style="margin:2px 0 0">KCSI Photo Editor</p></div>
+      <div><h2 id="installTitle">앱으로 설치하기</h2><p style="margin:2px 0 0">바탕화면 아이콘으로 주소창 없이 열립니다</p></div>
     </div>
-    <p id="installMsg" style="color:var(--ink);font-size:15px;line-height:1.55"></p>
-    <ol id="installSteps" style="margin:0;padding-left:22px;display:grid;gap:4px;font-size:15px"></ol>
-    <button id="installBtn" class="btn primary hide" type="button">바탕화면에 설치</button>
+    <div id="instInApp" class="hide" style="display:grid;gap:6px">
+      <p style="color:var(--ink);font-size:15px;margin:0">지금은 카카오톡 등 다른 앱 안에서 열려 있어 설치가 되지 않습니다.</p>
+      <ol style="margin:0;padding-left:22px;display:grid;gap:4px;font-size:15px">
+        <li>오른쪽 위(또는 아래) 메뉴(⋮)를 누릅니다.</li><li>‘다른 브라우저로 열기’를 누릅니다.</li><li>새로 열린 화면에서 설치합니다.</li></ol>
+    </div>
+    <section id="instAndroid" class="inst">
+      <h3>안드로이드 (갤럭시 등)</h3>
+      <button id="installBtn" class="btn primary" type="button">설치하기</button>
+      <ol id="instAndroidSteps" class="hide"></ol>
+    </section>
+    <section id="instIOS" class="inst">
+      <h3>아이폰</h3>
+      <ol><li>사파리 아래쪽 <b>공유 버튼(□↑)</b>을 누릅니다.</li><li>목록을 내려 <b>‘홈 화면에 추가’</b>를 누릅니다.</li><li>오른쪽 위 <b>‘추가’</b>를 누릅니다.</li></ol>
+    </section>
     <div class="two">
       <button id="installLater" class="btn" type="button">나중에</button>
       <button id="installNever" class="btn" type="button">다시 보지 않기</button>
@@ -913,46 +928,50 @@ const standalone = () => matchMedia("(display-mode: standalone)").matches || nav
 const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; showInstall(); });
 window.addEventListener("appinstalled", () => { installEvt = null; showInstall(); });
-// 브라우저로 열었고 아직 설치하지 않았으면 처음에 팝업으로 설치 방법을 보여 줌
+// 브라우저로 열었고 아직 설치하지 않았으면 처음에 팝업으로 설치 안내(안드로이드: 버튼 / 아이폰: 순서 안내)
 let installClosed = false;
-function neverAsk() { try { return localStorage.getItem("kcsi-install-never") === "1"; } catch (e) { return false; } }
-function showInstall() {
+const flag = (k, v) => { try { if (v === undefined) return localStorage.getItem(k) === "1"; localStorage.setItem(k, "1"); } catch (e) { return false; } };
+if (standalone()) flag("kcsi-installed", 1);                    // 바탕화면 아이콘으로 열림 = 설치됨
+window.addEventListener("appinstalled", () => { flag("kcsi-installed", 1); installClosed = true; showInstall(); });
+async function isInstalled() {
+  if (standalone() || flag("kcsi-installed")) return true;
+  try { if (navigator.getInstalledRelatedApps) return (await navigator.getInstalledRelatedApps()).length > 0; } catch (e) {}
+  return false;
+}
+async function showInstall() {
   const pop = $("install"); if (!pop) return;
   const ua = navigator.userAgent;
   const inApp = /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\/|; wv\)/i.test(ua);
   const web = location.protocol === "https:" || location.hostname === "localhost";
-  let msg = "", steps = [];
-  if (standalone() || !web || installClosed || (neverAsk() && !inApp)) { pop.classList.add("hide"); return; }
-  if (inApp) {
-    msg = "지금은 카카오톡 등 다른 앱 안에서 열려 있어 설치와 저장이 되지 않습니다.";
-    steps = ["오른쪽 위(또는 아래) 메뉴(⋮)를 누릅니다.", "‘다른 브라우저로 열기’를 누릅니다.", "삼성 인터넷·크롬·사파리에서 다시 열리면 설치하세요."];
-  } else if (installEvt) {
-    msg = "바탕화면에 아이콘으로 설치하면 주소창 없이 앱처럼 열리고, 인터넷이 없어도 쓸 수 있습니다.";
-  } else if (isIOS()) {
-    msg = "바탕화면에 설치하면 주소창 없이 앱처럼 열립니다.";
-    steps = ["사파리 아래쪽 공유 버튼(□↑)을 누릅니다.", "목록을 내려 ‘홈 화면에 추가’를 누릅니다.", "오른쪽 위 ‘추가’를 누릅니다."];
-  } else if (/SamsungBrowser/i.test(ua)) {
-    msg = "바탕화면에 설치하면 주소창 없이 앱처럼 열립니다.";
-    steps = ["아래쪽 메뉴(≡)를 누릅니다.", "‘현재 페이지 추가’를 누릅니다.", "‘홈 화면’을 고릅니다."];
-  } else {
-    msg = "바탕화면에 설치하면 주소창 없이 앱처럼 열립니다.";
-    steps = ["오른쪽 위 메뉴(⋮)를 누릅니다.", "‘앱 설치’ 또는 ‘홈 화면에 추가’를 누릅니다."];
-  }
+  if (!web || installClosed || (await isInstalled()) || (flag("kcsi-install-never") && !inApp)) { pop.classList.add("hide"); return; }
   $("installIcon").src = document.querySelector('link[rel="apple-touch-icon"]').href;
-  $("installMsg").textContent = msg;
-  $("installSteps").innerHTML = steps.map((t) => `<li>${esc(t)}</li>`).join("");
-  $("installSteps").classList.toggle("hide", !steps.length);
-  $("installBtn").classList.toggle("hide", !installEvt);
+  $("instInApp").classList.toggle("hide", !inApp);
+  $("instAndroid").classList.toggle("hide", inApp);
+  $("instIOS").classList.toggle("hide", inApp);
+  $("instAndroid").classList.toggle("mine", !isIOS());
+  $("instIOS").classList.toggle("mine", isIOS());
   $("installNever").classList.toggle("hide", inApp);
   $("installNever").parentElement.style.gridTemplateColumns = inApp ? "1fr" : "";
   pop.classList.remove("hide");
 }
 $("installBtn").addEventListener("click", async () => {
-  if (!installEvt) return; installEvt.prompt();
-  await installEvt.userChoice.catch(() => {}); installEvt = null; installClosed = true; showInstall();
+  if (installEvt) {                               // 크롬·삼성 인터넷: 폰의 설치 창을 바로 띄움
+    installEvt.prompt();
+    const r = await installEvt.userChoice.catch(() => ({}));
+    installEvt = null;
+    if (r && r.outcome === "accepted") { flag("kcsi-installed", 1); installClosed = true; showInstall(); }
+    return;
+  }
+  // 브라우저가 바로 설치를 지원하지 않으면 메뉴 순서를 보여 줌
+  const samsung = /SamsungBrowser/i.test(navigator.userAgent);
+  const steps = isIOS() ? ["아이폰은 아래 ‘아이폰’ 순서대로 설치해 주세요."]
+    : samsung ? ["아래쪽 메뉴(≡)를 누릅니다.", "‘현재 페이지 추가’를 누릅니다.", "‘홈 화면’을 고릅니다."]
+    : ["오른쪽 위 메뉴(⋮)를 누릅니다.", "‘앱 설치’ 또는 ‘홈 화면에 추가’를 누릅니다."];
+  $("instAndroidSteps").innerHTML = steps.map((t) => `<li>${esc(t)}</li>`).join("");
+  $("instAndroidSteps").classList.remove("hide");
 });
 $("installLater").addEventListener("click", () => { installClosed = true; showInstall(); });
-$("installNever").addEventListener("click", () => { try { localStorage.setItem("kcsi-install-never", "1"); } catch (e) {} installClosed = true; showInstall(); });
+$("installNever").addEventListener("click", () => { flag("kcsi-install-never", 1); installClosed = true; showInstall(); });
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
