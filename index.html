@@ -360,7 +360,7 @@ const CHECK = [
     { id: "bug_st", label: "벌레 상태", type: "t", d: { p: 1, x: 450, y: 748, w: 113, size: 8, lines: 4, lh: 11 } },
   ]},
   { sec: "손상 등 시체 특이사항 (을지)", fields: [
-    { id: "body", label: "인체도에 손가락으로 표시", type: "pad", region: [30, 88, 365, 256], guide: true },
+    { id: "body", label: "인체도", type: "pad", region: [30, 88, 365, 256], guide: true },
   ]},
   { sec: "의사 검안", fields: [
     { id: "ex_pl", label: "검안 장소", type: "c", opts: [["현장", 2, 465.8, 98.2], ["안치실", 2, 510.4, 98.2], ["기타", 2, 403.3, 112.5]], detail: { on: "기타", ph: "기타 장소", d: { p: 2, x: 491.5, y: 112.5, w: 107, size: 8, align: "center" } } },
@@ -581,6 +581,22 @@ function renderCheck(v) {
   }));
   v.querySelectorAll("[data-now]").forEach((b) => b.addEventListener("click", () => { const el = $("in_" + b.dataset.now); el.value = nowLocal(); el.dispatchEvent(new Event("input")); }));
   v.querySelectorAll(".pad[data-pad]").forEach((p) => setupPad(p));
+  const bp = v.querySelector("[data-bodypad]");
+  if (bp) {
+    const cvb = bp.querySelector("canvas"), f = fieldById("body"), [bx, by, bw, bh] = f.region;
+    cvb.width = Math.round(bw * S); cvb.height = Math.round(bh * S);
+    const draw = async () => {
+      const im = await loadBg("c2"), g = cvb.getContext("2d");
+      g.fillStyle = "#fff"; g.fillRect(0, 0, cvb.width, cvb.height);
+      g.drawImage(im, bx * S, by * S, bw * S, bh * S, 0, 0, cvb.width, cvb.height);
+      drawStrokes(g, state.pads.body, cvb.width, cvb.height);
+    };
+    draw();
+    bp.addEventListener("click", () => openBody(draw));
+    v.querySelector("[data-bodyopen]").addEventListener("click", () => openBody(draw));
+    v.querySelector('[data-undo="body"]').addEventListener("click", () => { state.pads.body.pop(); draw(); saveSoon(); });
+    v.querySelector('[data-clear="body"]').addEventListener("click", () => { state.pads.body.length = 0; draw(); saveSoon(); });
+  }
   const sk = v.querySelector("[data-sketch]");
   if (sk) {
     const draw = () => paintSketchPreview(sk.querySelector("canvas"));
@@ -620,6 +636,8 @@ function fieldHtml(f, C) {
   }
   if (f.type === "pad" && f.id === "sketch") return `<div class="q"><span>${lab}</span><div class="pad open" data-sketch="1" role="button" aria-label="약도 그리기 열기"><canvas></canvas></div>
       <div class="padtools"><button class="btn small" type="button" data-sketchopen="1">그리기</button><button class="btn small" type="button" data-sketchclear="1">모두 지우기</button></div></div>`;
+  if (f.type === "pad" && f.id === "body") return `<div class="q"><span>${lab}</span><div class="pad open" data-bodypad="1" role="button" aria-label="인체도 그리기 열기"><canvas></canvas></div>
+      <div class="padtools"><button class="btn small" type="button" data-bodyopen="1">그리기</button><button class="btn small" type="button" data-undo="body">한 획 지우기</button><button class="btn small" type="button" data-clear="body">모두 지우기</button></div></div>`;
   if (f.type === "pad") return `<div class="q"><span>${lab}</span><div class="pad" data-pad="${f.id}"><canvas></canvas></div>
       <div class="padtools"><button class="btn small" type="button" data-undo="${f.id}">한 획 지우기</button><button class="btn small" type="button" data-clear="${f.id}">모두 지우기</button></div></div>`;
   return "";
@@ -826,6 +844,59 @@ function openSketch(onDone) {
     if (b.dataset.act === "undo" && undo.length) { const prev = JSON.parse(undo.pop()); items.length = 0; prev.forEach((x) => items.push(x)); sel = -1; }
     if (b.dataset.act === "done") { close(); return; }
     showSel(); paint(); saveSoon();
+  });
+  const onResize = () => fit();
+  window.addEventListener("resize", onResize);
+  history.pushState({ kcsi: route, sketch: 1 }, "", location.hash || "#check");   // 폰 뒤로 가기 = 완료
+  const onPop = () => close(true);
+  window.addEventListener("popstate", onPop);
+  function close(fromPop) {
+    if (closed) return; closed = true;
+    window.removeEventListener("resize", onResize); window.removeEventListener("popstate", onPop);
+    try { if (document.fullscreenElement) document.exitFullscreen(); if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+    box.remove(); saveSoon(); if (onDone) onDone();
+    if (!fromPop && history.state && history.state.sketch) history.back();
+  }
+  requestAnimationFrame(fit);
+}
+
+// ================= 인체도(전체 화면) =================
+function openBody(onDone) {
+  const strokes = state.pads.body, f = fieldById("body"), [bx, by, bw, bh] = f.region;
+  let cur = null, closed = false;
+  const box = document.createElement("div"); box.className = "skx";
+  box.innerHTML = `<div class="tb"><button type="button" data-act="undo">한 획 지우기</button><button type="button" data-act="clear">모두 지우기</button>
+      <button type="button" class="done" data-act="done">완료</button></div><div class="area"><canvas></canvas></div>`;
+  document.body.appendChild(box);
+  const cv = box.querySelector("canvas"), g = cv.getContext("2d"), area = box.querySelector(".area");
+  try {
+    const req = box.requestFullscreen || box.webkitRequestFullscreen;
+    if (req) Promise.resolve(req.call(box)).then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock("landscape").catch(() => {})).catch(() => {});
+  } catch (e) {}
+  let im = null, W = 0, H = 0;
+  loadBg("c2").then((x) => { im = x; paint(); });
+  function paint() {
+    g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+    if (im) g.drawImage(im, bx * S, by * S, bw * S, bh * S, 0, 0, W, H);
+    drawStrokes(g, strokes, W, H, "#d11a1a", Math.max(3, W / 220));
+  }
+  const fit = () => {
+    const aw = area.clientWidth - 12, ah = area.clientHeight - 12, k = Math.min(aw / bw, ah / bh), dpr = window.devicePixelRatio || 1;
+    cv.style.width = Math.floor(bw * k) + "px"; cv.style.height = Math.floor(bh * k) + "px";
+    W = cv.width = Math.floor(bw * k * dpr); H = cv.height = Math.floor(bh * k * dpr);
+    paint();
+  };
+  const pt = (e) => { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) / b.width, (e.clientY - b.top) / b.height]; };
+  cv.addEventListener("pointerdown", (e) => { cv.setPointerCapture(e.pointerId); cur = [pt(e)]; strokes.push(cur); paint(); });
+  cv.addEventListener("pointermove", (e) => { if (!cur) return; cur.push(pt(e)); paint(); });
+  const end = () => { if (cur) { if (cur.length < 2) cur.push([cur[0][0] + 0.002, cur[0][1]]); cur = null; paint(); saveSoon(); } };
+  cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
+  box.querySelector(".tb").addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.act === "undo") strokes.pop();
+    if (b.dataset.act === "clear") strokes.length = 0;
+    if (b.dataset.act === "done") { close(); return; }
+    paint(); saveSoon();
   });
   const onResize = () => fit();
   window.addEventListener("resize", onResize);
