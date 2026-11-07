@@ -209,6 +209,7 @@ const state = {
   pads: { body: [], sketch: [] },  // 손그림(정규화 좌표 선 목록)
   photos: [], perPage: 2,          // {id, blob, rot, desc}
   items: [], confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" },
+  sigs: { det: [], sci: [] },               // 유류물 목록 서명(손글씨)
   user: { org: "", rank: "", name: "" },   // 작성자(새로 시작해도 유지)
 };
 let profiles = [];                          // 전에 쓴 작성자들(이 기기에 보관)
@@ -387,10 +388,21 @@ function ageFromRrn(rrn) {
   return age >= 0 && age < 130 ? String(age) : "";
 }
 // 작성자 정보가 들어가는 칸들
-const RANKS = ["순경", "경장", "경사", "경위", "경감", "경정", "총경", "주무관", "행정관"];
 const rankName = (u) => [u.rank, u.name].map((x) => (x || "").trim()).filter(Boolean).join(" ");
+// 소속에서 지방청 부분만: "광주청 과학수사 1팀" → "광주청", "광주경찰청 과학수사계" → "광주경찰청"
+function agencyOf(org) {
+  const o = (org || "").trim(); if (!o) return "";
+  const word = o.split(/\s+/).find((w) => /청$/.test(w));
+  if (word) return word;
+  const m = o.match(/^(.+?(?:지방경찰청|경찰청|청))/);
+  return m ? m[1] : o.split(/\s+/)[0];
+}
 function userVals(u) {
-  return { "check.sci1_org": (u.org || "").trim(), "check.sci1_name": rankName(u), "confirm.sci_rank": (u.rank || "").trim(), "confirm.sci_name": (u.name || "").trim() };
+  const org = (u.org || "").trim(), ag = agencyOf(org);
+  return {
+    "check.police": ag, "check.sci1_org": org, "check.sci2_org": org, "check.sci3_org": org, "check.vid_org": org, "check.exp1_org": ag,
+    "check.sci1_name": rankName(u), "confirm.sci_rank": (u.rank || "").trim(), "confirm.sci_name": (u.name || "").trim(),
+  };
 }
 function applyUser(oldU, newU) {      // 비었거나, 전 작성자 값이거나, 기본값인 칸만 바꿈(직접 고친 칸은 그대로)
   const o = userVals(oldU), n = userVals(newU);
@@ -410,9 +422,22 @@ const RRN = { top: { p: 1, x0: 165, x1: 288, y: 270 }, bottom: { p: 1, x0: 165, 
 
 // ================= 화면 =================
 let route = "home";
-function go(r) { route = r; $("back").classList.toggle("hide", r === "home"); window.scrollTo(0, 0); render(); }
-$("back").addEventListener("click", () => go("home"));
-window.addEventListener("hashchange", () => { const r = location.hash.slice(1) || "home"; if (r !== route && ["home", "check", "photos", "items"].includes(r)) go(r); });
+// 폰의 뒤로 가기: 문서 화면이면 첫 화면으로, 첫 화면이면 앱 종료(브라우저 기본 동작)
+function go(r, fromBack) {
+  if (r !== "home" && route === "home" && !fromBack) history.pushState({ kcsi: r }, "", "#" + r);
+  else if (r !== "home" && route !== "home" && !fromBack) history.replaceState({ kcsi: r }, "", "#" + r);
+  route = r; $("back").classList.toggle("hide", r === "home"); window.scrollTo(0, 0); render();
+}
+$("back").addEventListener("click", () => { if (history.state && history.state.kcsi) history.back(); else go("home", true); });
+window.addEventListener("popstate", () => {
+  if (!$("sheet").classList.contains("hide") || !$("install").classList.contains("hide")) {   // 열린 창이 있으면 그것부터 닫기
+    $("sheet").classList.add("hide"); $("install").classList.add("hide");
+    if (route !== "home") history.pushState({ kcsi: route }, "", "#" + route);
+    return;
+  }
+  const r = (history.state && history.state.kcsi) || "home";
+  if (r !== route) go(r, true);
+});
 
 function render() {
   const v = $("view");
@@ -449,9 +474,8 @@ function renderHome(v) {
       <div style="display:flex;gap:6px"><select id="profSel" aria-label="저장된 작성자" style="flex:1"></select>
         <button id="profDel" class="icon del" type="button" aria-label="선택한 작성자 지우기">✕</button></div>
       <label class="f">소속<input id="uOrg" type="text" autocomplete="off"></label>
-      <div class="row"><label class="f">계급<input id="uRank" type="text" list="rankList" autocomplete="off"></label>
+      <div class="row"><label class="f">계급<input id="uRank" type="text" autocomplete="off"></label>
         <label class="f">이름<input id="uName" type="text" autocomplete="off"></label></div>
-      <datalist id="rankList">${RANKS.map((x) => `<option value="${x}">`).join("")}</datalist>
     </section>
     <section class="panel" aria-label="사건 정보">
       <label class="f">사건명 (파일 이름·사진 머리말)<input id="caseName" type="text" autocomplete="off"></label>
@@ -546,14 +570,14 @@ function detailOn(f, val) {
 }
 function fieldHtml(f, C) {
   const val = C[f.id] ?? "";
-  const lab = esc(f.label), ph = f.ph ? ` placeholder="${esc(f.ph)}"` : "";
+  const lab = esc(f.label), ph = ` placeholder="비우면 표시 안 함"`;
   if (f.type === "t" || f.type === "rrn") return `<label class="f">${lab}<input id="in_${f.id}" data-t="${f.id}" type="text" value="${esc(val)}"${ph} autocomplete="off"></label>`;
   if (f.type === "num") return `<label class="f">${lab}<input id="in_${f.id}" data-t="${f.id}" type="text" inputmode="numeric" value="${esc(val)}"${ph}></label>`;
   if (f.type === "area") return `<label class="f">${lab}<textarea id="in_${f.id}" data-t="${f.id}" rows="5"${ph}>${esc(val)}</textarea></label>`;
   if (f.type === "dt") return `<div class="q"><span>${lab}</span><div style="display:flex;gap:6px"><input id="in_${f.id}" data-t="${f.id}" type="datetime-local" value="${esc(val)}"><button class="btn small" type="button" data-now="${f.id}">지금</button></div></div>`;
   if (f.type === "t3") {
     const parts = ["위치", "종류", "크기"];
-    return `<div class="q"><span>${lab}</span><div class="row3">${parts.map((p, i) => `<input data-t="${f.id}_${i}" type="text" placeholder="${p}" value="${esc(C[f.id + "_" + i] ?? "")}">`).join("")}</div></div>`;
+    return `<div class="q"><span>${lab}</span><div class="row3">${parts.map((p, i) => `<input data-t="${f.id}_${i}" type="text" placeholder="${p} (비우면 표시 안 함)" aria-label="${p}" value="${esc(C[f.id + "_" + i] ?? "")}">`).join("")}</div></div>`;
   }
   if (f.type === "c" || f.type === "m") {
     const multi = f.type === "m";
@@ -561,7 +585,7 @@ function fieldHtml(f, C) {
     let det = "";
     if (f.detail) {
       const dv = C[f.id + "_d"] ?? "";
-      det = `<input id="det_${f.id}" class="${detailOn(f, val) ? "" : "hide"}" data-t="${f.id}_d" type="text" placeholder="${esc(f.detail.ph)}" value="${esc(dv)}">`;
+      det = `<input id="det_${f.id}" class="${detailOn(f, val) ? "" : "hide"}" data-t="${f.id}_d" type="text" placeholder="${esc(f.detail.ph)} (비우면 표시 안 함)" value="${esc(dv)}">`;
     }
     return `<div class="q"><span>${lab}${multi ? " (여러 개 선택)" : ""}</span><div class="chips">${chips}</div>${det}</div>`;
   }
@@ -576,6 +600,22 @@ const bgImg = {};
 function loadBg(key) {
   if (!bgImg[key]) bgImg[key] = new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = BG[key]; });
   return bgImg[key];
+}
+// 서명 칸: 양식의 (서 명) 자리 비율(68:26)과 같게
+const SIG = { w: 68, h: 26, x: 497, y: { det: 705.4, sci: 735.8 } };
+function setupSig(el) {
+  const id = el.dataset.sig, cv = el.querySelector("canvas"), strokes = state.sigs[id];
+  cv.width = 680; cv.height = 260;
+  const g = cv.getContext("2d");
+  const redraw = () => { g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); drawStrokes(g, strokes, cv.width, cv.height, "#111", 5); };
+  redraw();
+  let cur = null;
+  const pt = (e) => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; };
+  cv.addEventListener("pointerdown", (e) => { cv.setPointerCapture(e.pointerId); cur = [pt(e)]; strokes.push(cur); });
+  cv.addEventListener("pointermove", (e) => { if (!cur) return; cur.push(pt(e)); redraw(); });
+  const end = () => { if (cur) { cur = null; saveSoon(); } };
+  cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
+  document.querySelector(`[data-sigclear="${id}"]`).addEventListener("click", () => { strokes.length = 0; redraw(); saveSoon(); });
 }
 async function setupPad(el) {
   const id = el.dataset.pad, f = fieldById(id), [x, y, w, h] = f.region;
@@ -599,8 +639,8 @@ async function setupPad(el) {
   document.querySelector(`[data-undo="${id}"]`).addEventListener("click", () => { strokes.pop(); redraw(); saveSoon(); });
   document.querySelector(`[data-clear="${id}"]`).addEventListener("click", () => { strokes.length = 0; redraw(); saveSoon(); });
 }
-function drawStrokes(g, strokes, W, H) {
-  g.save(); g.strokeStyle = "#d11a1a"; g.lineWidth = Math.max(2, W / 180); g.lineCap = g.lineJoin = "round";
+function drawStrokes(g, strokes, W, H, color = "#d11a1a", width = Math.max(2, W / 180)) {
+  g.save(); g.strokeStyle = color; g.lineWidth = width; g.lineCap = g.lineJoin = "round";
   for (const s of strokes) {
     g.beginPath();
     s.forEach(([px, py], i) => (i ? g.lineTo(px * W, py * H) : g.moveTo(px * W, py * H)));
@@ -701,11 +741,15 @@ function renderItems(v) {
     <section class="panel"><h2>확인자</h2>
       <div class="row"><label class="f">담당 형사 계급<input data-cf="det_rank" type="text" value="${esc(cf.det_rank)}"></label>
         <label class="f">담당 형사 성명<input data-cf="det_name" type="text" value="${esc(cf.det_name)}"></label></div>
+      <div class="q"><span>담당 형사 서명</span><div class="pad" data-sig="det"><canvas></canvas></div>
+        <div class="padtools"><button class="btn small" type="button" data-sigclear="det">지우기</button></div></div>
       <div class="row"><label class="f">과학수사 담당자 계급<input data-cf="sci_rank" type="text" value="${esc(cf.sci_rank)}"></label>
         <label class="f">과학수사 담당자 성명<input data-cf="sci_name" type="text" value="${esc(cf.sci_name)}"></label></div>
-      <p class="legal" style="text-align:left;margin:0">서명 칸은 출력 후 직접 서명합니다. 15건이 넘으면 다음 쪽으로 이어집니다.</p>
+      <div class="q"><span>과학수사 담당자 서명</span><div class="pad" data-sig="sci"><canvas></canvas></div>
+        <div class="padtools"><button class="btn small" type="button" data-sigclear="sci">지우기</button></div></div>
     </section>`;
   v.querySelectorAll("[data-cf]").forEach((el) => el.addEventListener("input", () => { cf[el.dataset.cf] = el.value; saveSoon(); }));
+  v.querySelectorAll("[data-sig]").forEach(setupSig);
   $("addItem").addEventListener("click", () => { state.items.push({ name: "", qty: "", place: "", time: dotDateTime(nowLocal()), lab: "" }); state.include.items = true; renderItemList(); saveSoon(); setTimeout(() => { const all = document.querySelectorAll('[data-i$=":name"]'); all[all.length - 1]?.focus(); }, 50); });
   if (!state.items.length) state.items.push({ name: "", qty: "", place: "", time: dotDateTime(nowLocal()), lab: "" });
   renderItemList();
@@ -758,7 +802,7 @@ $("no").addEventListener("click", () => $("sheet").classList.add("hide"));
 $("yes").addEventListener("click", () => {
   state.photos.forEach((p) => p.url && URL.revokeObjectURL(p.url));
   Object.assign(state, { caseName: "", date: today(), include: { check: true, photos: true, items: true }, check: {}, pads: { body: [], sketch: [] },
-    photos: [], items: [], confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" } });
+    photos: [], items: [], confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" }, sigs: { det: [], sci: [] } });
   applyDefaults(); applyUser({}, state.user); $("sheet").classList.add("hide"); saveNow(); go("home");
 });
 
@@ -874,6 +918,11 @@ async function drawItems() {
     const cf = state.confirm;
     drawText(g, cf.det_rank, { x: 352, y: 705.4, w: 50, size: 9 }); drawText(g, cf.det_name, { x: 431, y: 705.4, w: 72, size: 9 });
     drawText(g, cf.sci_rank, { x: 352, y: 735.8, w: 50, size: 9 }); drawText(g, cf.sci_name, { x: 431, y: 735.8, w: 72, size: 9 });
+    for (const k of ["det", "sci"]) {          // 손글씨 서명을 (서 명) 자리에
+      const st = state.sigs[k]; if (!st.length) continue;
+      g.save(); g.translate(SIG.x * S, (SIG.y[k] - SIG.h / 2) * S);
+      drawStrokes(g, st, SIG.w * S, SIG.h * S, "#111", 2.6); g.restore();
+    }
     out.push(await toJpeg(c));
   }
   return out;
@@ -1102,7 +1151,7 @@ $("openKcsi").addEventListener("change", async (ev) => {
     const st = m.state;
     Object.assign(state, { caseName: st.caseName || "", date: st.date || today(), include: { check: true, photos: true, items: true, ...(st.include || {}) },
       check: st.check || {}, pads: { body: [], sketch: [], ...(st.pads || {}) }, perPage: st.perPage === 4 ? 4 : 2, items: st.items || [],
-      confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "", ...(st.confirm || {}) } });
+      confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "", ...(st.confirm || {}) }, sigs: { det: [], sci: [], ...(st.sigs || {}) } });
     state.photos = m.photos.filter((p) => z[p.file]).map((p, i) => ({ id: String(Date.now()) + i, blob: new Blob([z[p.file]], { type: "image/jpeg" }), rot: p.rot || 0, desc: p.desc || "" }));
     saveNow(); go("home");
     showSheet("작업을 불러왔습니다", f.name, "alert");
@@ -1190,6 +1239,7 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
     Object.assign(state, saved);
     state.pads = { body: [], sketch: [], ...(saved.pads || {}) };
     state.confirm = { det_rank: "", det_name: "", sci_rank: "", sci_name: "", ...(saved.confirm || {}) };
+    state.sigs = { det: [], sci: [], ...(saved.sigs || {}) };
   } else {
     const old = await DB.get("work");   // v0.1 사진 작업 이어받기
     if (old && old.photos) Object.assign(state, { caseName: old.caseName || "", date: old.date || today(), perPage: old.perPage || 2, photos: old.photos.map((p) => ({ ...p, desc: (p.desc || "").replace(/\n/g, " ") })) });
@@ -1199,6 +1249,8 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
   applyDefaults();
   setTimeout(showInstall, 600);
   const r = location.hash.slice(1);
+  history.replaceState(null, "", location.pathname + location.search);
+  route = "home";
   go(["check", "photos", "items"].includes(r) ? r : "home");
 })();
 </script>
