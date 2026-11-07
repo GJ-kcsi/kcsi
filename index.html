@@ -371,7 +371,7 @@ const CHECK = [
     { id: "info", label: "검안 시 현장정보 제공", type: "m", opts: [["사진", 2, 412.9, 287.3], ["동영상", 2, 472.2, 287.3], ["기타", 2, 412.9, 306]], detail: { on: "기타", ph: "기타 내용", d: { p: 2, x: 497, y: 306, w: 100, size: 8, align: "center" } } },
   ]},
   { sec: "현장요도 및 시체위치 · 기타 설명 (을지)", fields: [
-    { id: "sketch", label: "현장 약도를 손가락으로 그리기", type: "pad", region: [30, 366, 365, 223], guide: false },
+    { id: "sketch", label: "", type: "pad", region: [30, 366, 365, 223], guide: false },
     { id: "notes", label: "기타 설명 (12줄까지)", type: "area", d: { p: 2, x: 403, y: 374, w: 160, size: 7.5, lines: 12, lh: 18.9 } },
   ]},
   { sec: "변사 현장 주요 점검사항", fields: [
@@ -590,20 +590,21 @@ function renderCheck(v) {
       g.fillStyle = "#fff"; g.fillRect(0, 0, cvb.width, cvb.height);
       g.drawImage(im, bx * S, by * S, bw * S, bh * S, 0, 0, cvb.width, cvb.height);
       drawStrokes(g, state.pads.body, cvb.width, cvb.height);
+      if (!state.pads.body.length) {
+        const fs = cvb.width / 22, tw = fs * 9, th = fs * 1.9, cx = cvb.width / 2, cy = cvb.height / 2;
+        g.fillStyle = "rgba(255,255,255,.88)"; if (g.roundRect) { g.beginPath(); g.roundRect(cx - tw / 2, cy - th / 2, tw, th, th / 3); g.fill(); } else g.fillRect(cx - tw / 2, cy - th / 2, tw, th);
+        g.fillStyle = "#6b7580"; g.font = `600 ${fs}px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
+        g.fillText("탭하여 인체도 그리기", cx, cy);
+      }
     };
     draw();
     bp.addEventListener("click", () => openBody(draw));
-    v.querySelector("[data-bodyopen]").addEventListener("click", () => openBody(draw));
-    v.querySelector('[data-undo="body"]').addEventListener("click", () => { state.pads.body.pop(); draw(); saveSoon(); });
-    v.querySelector('[data-clear="body"]').addEventListener("click", () => { state.pads.body.length = 0; draw(); saveSoon(); });
   }
   const sk = v.querySelector("[data-sketch]");
   if (sk) {
     const draw = () => paintSketchPreview(sk.querySelector("canvas"));
     draw();
     sk.addEventListener("click", () => openSketch(draw));
-    v.querySelector("[data-sketchopen]").addEventListener("click", () => openSketch(draw));
-    v.querySelector("[data-sketchclear]").addEventListener("click", () => { state.pads.sketch.length = 0; draw(); saveSoon(); });
   }
 }
 function fieldById(id) { for (const s of CHECK) for (const f of s.fields) if (f.id === id) return f; }
@@ -634,10 +635,8 @@ function fieldHtml(f, C) {
     }
     return `<div class="q"><span>${lab}${multi ? " (여러 개 선택)" : ""}</span><div class="chips">${chips}</div>${det}</div>`;
   }
-  if (f.type === "pad" && f.id === "sketch") return `<div class="q"><span>${lab}</span><div class="pad open" data-sketch="1" role="button" aria-label="약도 그리기 열기"><canvas></canvas></div>
-      <div class="padtools"><button class="btn small" type="button" data-sketchopen="1">그리기</button><button class="btn small" type="button" data-sketchclear="1">모두 지우기</button></div></div>`;
-  if (f.type === "pad" && f.id === "body") return `<div class="q"><span>${lab}</span><div class="pad open" data-bodypad="1" role="button" aria-label="인체도 그리기 열기"><canvas></canvas></div>
-      <div class="padtools"><button class="btn small" type="button" data-bodyopen="1">그리기</button><button class="btn small" type="button" data-undo="body">한 획 지우기</button><button class="btn small" type="button" data-clear="body">모두 지우기</button></div></div>`;
+  if (f.type === "pad" && f.id === "sketch") return `<div class="q">${lab ? `<span>${lab}</span>` : ""}<div class="pad open" data-sketch="1" role="button" aria-label="약도 그리기 열기"><canvas></canvas></div></div>`;
+  if (f.type === "pad" && f.id === "body") return `<div class="q"><span>${lab}</span><div class="pad open" data-bodypad="1" role="button" aria-label="인체도 그리기 열기"><canvas></canvas></div></div>`;
   if (f.type === "pad") return `<div class="q"><span>${lab}</span><div class="pad" data-pad="${f.id}"><canvas></canvas></div>
       <div class="padtools"><button class="btn small" type="button" data-undo="${f.id}">한 획 지우기</button><button class="btn small" type="button" data-clear="${f.id}">모두 지우기</button></div></div>`;
   return "";
@@ -697,7 +696,7 @@ function paintSketchPreview(cv) {
   const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
   if (!state.pads.sketch.length) {
     g.fillStyle = "#98a2ac"; g.font = `600 ${cv.width / 22}px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
-    g.fillText("눌러서 약도 그리기", cv.width / 2, cv.height / 2); return;
+    g.fillText("탭하여 약도 그리기", cv.width / 2, cv.height / 2); return;
   }
   drawSketch(g, state.pads.sketch, cv.width, cv.height);
 }
