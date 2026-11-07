@@ -128,6 +128,22 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 
 <input id="pick" type="file" accept="image/*" multiple hidden>
 
+<div id="install" class="sheet hide" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+  <div class="box">
+    <div style="display:flex;gap:12px;align-items:center">
+      <img id="installIcon" alt="" width="56" height="56" style="border-radius:12px;flex:none">
+      <div><h2 id="installTitle">앱으로 설치하기</h2><p style="margin:2px 0 0">KCSI Photo Editor</p></div>
+    </div>
+    <p id="installMsg" style="color:var(--ink);font-size:15px;line-height:1.55"></p>
+    <ol id="installSteps" style="margin:0;padding-left:22px;display:grid;gap:4px;font-size:15px"></ol>
+    <button id="installBtn" class="btn primary hide" type="button">바탕화면에 설치</button>
+    <div class="two">
+      <button id="installLater" class="btn" type="button">나중에</button>
+      <button id="installNever" class="btn" type="button">다시 보지 않기</button>
+    </div>
+  </div>
+</div>
+
 <div id="sheet" class="sheet hide" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="box">
     <h2 id="sheetTitle"></h2>
@@ -390,11 +406,6 @@ function renderHome(v) {
       <label class="inc"><input type="checkbox" id="inc_items"> 유류물 목록</label>
       <label class="inc"><input type="checkbox" id="inc_photos"> 현장 사진</label>
     </section>
-    <section id="install" class="panel hide" aria-label="앱 설치">
-      <h2>앱으로 설치하기</h2>
-      <p id="installMsg" class="legal" style="text-align:left;margin:0;font-size:13px"></p>
-      <button id="installBtn" class="btn primary hide" type="button">바탕화면에 설치</button>
-    </section>
     <button id="shareApp" class="btn" type="button">이 앱을 동료에게 보내기</button>
     <button id="reset" class="btn" type="button" style="color:var(--danger)">모두 지우고 새로 시작</button>
     <footer class="brand">
@@ -411,7 +422,6 @@ function renderHome(v) {
     box.addEventListener("change", () => { state.include[k] = box.checked; saveSoon(); });
   }
   v.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
-  showInstall();
   $("shareApp").addEventListener("click", shareApp);
   $("reset").addEventListener("click", () => showSheet("모두 지울까요?", "점검 목록표, 사진, 유류물 목록, 사건명이 모두 지워집니다. 되돌릴 수 없습니다.", "confirm"));
 }
@@ -903,26 +913,46 @@ const standalone = () => matchMedia("(display-mode: standalone)").matches || nav
 const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; showInstall(); });
 window.addEventListener("appinstalled", () => { installEvt = null; showInstall(); });
+// 브라우저로 열었고 아직 설치하지 않았으면 처음에 팝업으로 설치 방법을 보여 줌
+let installClosed = false;
+function neverAsk() { try { return localStorage.getItem("kcsi-install-never") === "1"; } catch (e) { return false; } }
 function showInstall() {
-  const box = $("install"); if (!box) return;
-  const inApp = /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\/|; wv\)/i.test(navigator.userAgent);
-  if (inApp && !standalone()) {
-    box.classList.remove("hide"); $("installBtn").classList.add("hide");
-    $("installMsg").textContent = "지금은 다른 앱 안에서 열려 있습니다. 오른쪽 위(또는 아래) 메뉴에서 ‘다른 브라우저로 열기’를 눌러 삼성 인터넷·크롬·사파리에서 열어 주세요. 그래야 설치와 저장이 됩니다.";
-    return;
-  }
+  const pop = $("install"); if (!pop) return;
+  const ua = navigator.userAgent;
+  const inApp = /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\/|; wv\)/i.test(ua);
   const web = location.protocol === "https:" || location.hostname === "localhost";
-  let msg = "";
-  if (standalone() || !web) msg = "";
-  else if (installEvt) msg = "바탕화면에 아이콘으로 설치하면 주소창 없이 앱처럼 열리고, 인터넷이 없어도 쓸 수 있습니다.";
-  else if (isIOS()) msg = "사파리 아래쪽 공유 버튼(□↑)을 누르고 ‘홈 화면에 추가’를 고르면 앱처럼 설치됩니다.";
-  else if (/SamsungBrowser/i.test(navigator.userAgent)) msg = "아래쪽 메뉴(≡) → ‘현재 페이지 추가’ → ‘홈 화면’을 고르면 앱처럼 설치됩니다. 주소창에 설치 아이콘(⤓)이 보이면 그것을 눌러도 됩니다.";
-  else msg = "브라우저 메뉴(⋮ 또는 ≡)에서 ‘앱 설치’ 또는 ‘홈 화면에 추가’를 고르면 앱처럼 설치됩니다.";
-  box.classList.toggle("hide", !msg);
+  let msg = "", steps = [];
+  if (standalone() || !web || installClosed || (neverAsk() && !inApp)) { pop.classList.add("hide"); return; }
+  if (inApp) {
+    msg = "지금은 카카오톡 등 다른 앱 안에서 열려 있어 설치와 저장이 되지 않습니다.";
+    steps = ["오른쪽 위(또는 아래) 메뉴(⋮)를 누릅니다.", "‘다른 브라우저로 열기’를 누릅니다.", "삼성 인터넷·크롬·사파리에서 다시 열리면 설치하세요."];
+  } else if (installEvt) {
+    msg = "바탕화면에 아이콘으로 설치하면 주소창 없이 앱처럼 열리고, 인터넷이 없어도 쓸 수 있습니다.";
+  } else if (isIOS()) {
+    msg = "바탕화면에 설치하면 주소창 없이 앱처럼 열립니다.";
+    steps = ["사파리 아래쪽 공유 버튼(□↑)을 누릅니다.", "목록을 내려 ‘홈 화면에 추가’를 누릅니다.", "오른쪽 위 ‘추가’를 누릅니다."];
+  } else if (/SamsungBrowser/i.test(ua)) {
+    msg = "바탕화면에 설치하면 주소창 없이 앱처럼 열립니다.";
+    steps = ["아래쪽 메뉴(≡)를 누릅니다.", "‘현재 페이지 추가’를 누릅니다.", "‘홈 화면’을 고릅니다."];
+  } else {
+    msg = "바탕화면에 설치하면 주소창 없이 앱처럼 열립니다.";
+    steps = ["오른쪽 위 메뉴(⋮)를 누릅니다.", "‘앱 설치’ 또는 ‘홈 화면에 추가’를 누릅니다."];
+  }
+  $("installIcon").src = document.querySelector('link[rel="apple-touch-icon"]').href;
   $("installMsg").textContent = msg;
+  $("installSteps").innerHTML = steps.map((t) => `<li>${esc(t)}</li>`).join("");
+  $("installSteps").classList.toggle("hide", !steps.length);
   $("installBtn").classList.toggle("hide", !installEvt);
-  $("installBtn").onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice.catch(() => {}); installEvt = null; showInstall(); };
+  $("installNever").classList.toggle("hide", inApp);
+  $("installNever").parentElement.style.gridTemplateColumns = inApp ? "1fr" : "";
+  pop.classList.remove("hide");
 }
+$("installBtn").addEventListener("click", async () => {
+  if (!installEvt) return; installEvt.prompt();
+  await installEvt.userChoice.catch(() => {}); installEvt = null; installClosed = true; showInstall();
+});
+$("installLater").addEventListener("click", () => { installClosed = true; showInstall(); });
+$("installNever").addEventListener("click", () => { try { localStorage.setItem("kcsi-install-never", "1"); } catch (e) {} installClosed = true; showInstall(); });
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
@@ -939,6 +969,7 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
     if (old && old.photos) Object.assign(state, { caseName: old.caseName || "", date: old.date || today(), perPage: old.perPage || 2, photos: old.photos.map((p) => ({ ...p, desc: (p.desc || "").replace(/\n/g, " ") })) });
   }
   applyDefaults();
+  setTimeout(showInstall, 600);
   const r = location.hash.slice(1);
   go(["check", "photos", "items"].includes(r) ? r : "home");
 })();
