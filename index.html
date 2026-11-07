@@ -49,7 +49,7 @@ main{padding:12px max(16px,env(safe-area-inset-right,0px)) 130px max(16px,env(sa
 .panel h2{margin:0;font-size:15px;color:var(--navy)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .panel h2{color:var(--accent)}}
 label.f{display:grid;gap:4px;font-size:13px;color:var(--muted);min-width:0}
-input[type=text],input[type=date],input[type=datetime-local],input[type=number],textarea{font:inherit;font-size:15px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+input[type=text],input[type=date],input[type=datetime-local],input[type=number],textarea,select{font:inherit;font-size:15px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
 textarea{resize:vertical;line-height:1.45}
 input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -209,7 +209,9 @@ const state = {
   pads: { body: [], sketch: [] },  // 손그림(정규화 좌표 선 목록)
   photos: [], perPage: 2,          // {id, blob, rot, desc}
   items: [], confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" },
+  user: { org: "", rank: "", name: "" },   // 작성자(새로 시작해도 유지)
 };
+let profiles = [];                          // 전에 쓴 작성자들(이 기기에 보관)
 function today() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -384,6 +386,26 @@ function ageFromRrn(rrn) {
   if (base.getMonth() + 1 < m || (base.getMonth() + 1 === m && base.getDate() < day)) age--;
   return age >= 0 && age < 130 ? String(age) : "";
 }
+// 작성자 정보가 들어가는 칸들
+const RANKS = ["순경", "경장", "경사", "경위", "경감", "경정", "총경", "주무관", "행정관"];
+const rankName = (u) => [u.rank, u.name].map((x) => (x || "").trim()).filter(Boolean).join(" ");
+function userVals(u) {
+  return { "check.sci1_org": (u.org || "").trim(), "check.sci1_name": rankName(u), "confirm.sci_rank": (u.rank || "").trim(), "confirm.sci_name": (u.name || "").trim() };
+}
+function applyUser(oldU, newU) {      // 비었거나, 전 작성자 값이거나, 기본값인 칸만 바꿈(직접 고친 칸은 그대로)
+  const o = userVals(oldU), n = userVals(newU);
+  for (const path of Object.keys(n)) {
+    const [grp, key] = path.split("."), obj = grp === "check" ? state.check : state.confirm;
+    const cur = obj[key] ?? "", def = grp === "check" ? CHECK_DEFAULTS[key] : undefined;
+    if (!String(cur).trim() || cur === o[path] || cur === def) obj[key] = n[path] || def || "";
+  }
+}
+function rememberUser() {
+  const u = state.user; if (!(u.name || "").trim()) return;
+  const nm = u.name.trim();   // 같은 이름이면 소속·계급을 고쳐 덮어씀(승진·전보), 다른 이름이면 새로 추가
+  profiles = [{ org: u.org.trim(), rank: u.rank.trim(), name: nm }, ...profiles.filter((p) => p.name !== nm)].slice(0, 30);
+  DB.put("profiles", profiles);
+}
 const RRN = { top: { p: 1, x0: 165, x1: 288, y: 270 }, bottom: { p: 1, x0: 165, x1: 310, y: 291 } };
 
 // ================= 화면 =================
@@ -405,7 +427,8 @@ function render() {
 
 // ---------- 첫 화면 ----------
 function counts() {
-  const filled = Object.entries(state.check).filter(([k, x]) => CHECK_DEFAULTS[k] !== x).map(([, x]) => x).filter((x) => (Array.isArray(x) ? x.length : String(x ?? "").trim() !== "")).length
+  const uv = userVals(state.user);
+  const filled = Object.entries(state.check).filter(([k, x]) => CHECK_DEFAULTS[k] !== x && !(uv["check." + k] && uv["check." + k] === x)).map(([, x]) => x).filter((x) => (Array.isArray(x) ? x.length : String(x ?? "").trim() !== "")).length
     + (state.pads.body.length ? 1 : 0) + (state.pads.sketch.length ? 1 : 0);
   const items = state.items.filter((r) => Object.values(r).some((x) => String(x).trim())).length;
   return { check: filled, photos: state.photos.length, items };
@@ -418,9 +441,18 @@ function renderHome(v) {
   v.innerHTML = `
     <div class="topbtns" aria-label="작업">
       <button id="reset" class="btn" type="button" style="color:var(--danger)">새로 시작</button>
-      <label class="btn" for="openKcsi">작업 불러오기</label>
-      <button id="saveKcsi" class="btn" type="button">작업 저장</button>
+      <button id="saveKcsi" class="btn" type="button">저장</button>
+      <label class="btn" for="openKcsi">불러오기</label>
     </div>
+    <section class="panel" aria-label="작성자">
+      <h2>작성자</h2>
+      <div style="display:flex;gap:6px"><select id="profSel" aria-label="저장된 작성자" style="flex:1"></select>
+        <button id="profDel" class="icon del" type="button" aria-label="선택한 작성자 지우기">✕</button></div>
+      <label class="f">소속<input id="uOrg" type="text" autocomplete="off"></label>
+      <div class="row"><label class="f">계급<input id="uRank" type="text" list="rankList" autocomplete="off"></label>
+        <label class="f">이름<input id="uName" type="text" autocomplete="off"></label></div>
+      <datalist id="rankList">${RANKS.map((x) => `<option value="${x}">`).join("")}</datalist>
+    </section>
     <section class="panel" aria-label="사건 정보">
       <label class="f">사건명 (파일 이름·사진 머리말)<input id="caseName" type="text" autocomplete="off"></label>
       <label class="f">작성일<input id="date" type="date"></label>
@@ -441,6 +473,27 @@ function renderHome(v) {
       <div>© 2026 Gwangju Metropolitan Police Agency, Forensic Science Division. All rights reserved.</div>
     </footer>`;
   $("caseName").value = state.caseName; $("date").value = state.date;
+  // 작성자
+  const fillProf = () => {
+    const cur = [state.user.org, state.user.rank, state.user.name].join("|");
+    $("profSel").innerHTML = `<option value="">${profiles.length ? "저장된 작성자 선택" : "저장된 작성자 없음"}</option>` +
+      profiles.map((p, i) => `<option value="${i}" ${[p.org, p.rank, p.name].join("|") === cur ? "selected" : ""}>${esc([p.org, rankName(p)].filter(Boolean).join(" · "))}</option>`).join("");
+    $("profDel").disabled = $("profSel").value === "";
+  };
+  const showUser = () => { $("uOrg").value = state.user.org; $("uRank").value = state.user.rank; $("uName").value = state.user.name; };
+  showUser(); fillProf();
+  const setUser = (u) => { const old = { ...state.user }; state.user = u; applyUser(old, u); saveSoon(); };
+  [["uOrg", "org"], ["uRank", "rank"], ["uName", "name"]].forEach(([id, k]) => {
+    $(id).addEventListener("input", (e) => setUser({ ...state.user, [k]: e.target.value }));
+  });
+  $("profSel").addEventListener("change", (e) => {
+    const p = profiles[+e.target.value]; if (!p) return;
+    setUser({ ...p }); showUser(); fillProf();
+  });
+  $("profDel").addEventListener("click", () => {
+    const i = +$("profSel").value; if (!profiles[i]) return;
+    profiles.splice(i, 1); DB.put("profiles", profiles); fillProf();
+  });
   $("caseName").addEventListener("input", (e) => { state.caseName = e.target.value; saveSoon(); });
   $("date").addEventListener("input", (e) => { state.date = e.target.value; saveSoon(); });
   for (const k of ["check", "photos", "items"]) {
@@ -706,7 +759,7 @@ $("yes").addEventListener("click", () => {
   state.photos.forEach((p) => p.url && URL.revokeObjectURL(p.url));
   Object.assign(state, { caseName: "", date: today(), include: { check: true, photos: true, items: true }, check: {}, pads: { body: [], sketch: [] },
     photos: [], items: [], confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" } });
-  applyDefaults(); $("sheet").classList.add("hide"); saveNow(); go("home");
+  applyDefaults(); applyUser({}, state.user); $("sheet").classList.add("hide"); saveNow(); go("home");
 });
 
 // ================= PDF 그리기 =================
@@ -898,6 +951,7 @@ $("make").addEventListener("click", async () => {
   const ch = chosen();
   const bad = photoTooLong();
   if (ch.includes("photos") && bad >= 0) { showSheet("설명이 너무 깁니다", `사진 ${bad + 1}의 설명을 ${LIMIT[state.perPage]}자 이내로 줄여 주세요.`, "alert"); return; }
+  rememberUser();   // 문서를 만든 작성자는 다음에 고를 수 있게 보관
   showSheet("PDF 만드는 중", "잠시만 기다려 주세요.", "progress");
   const bar = $("prog").firstElementChild; bar.style.width = "5%";
   try {
@@ -997,6 +1051,7 @@ async function saveKcsi() {
   const c = counts();
   if (!c.check && !c.items && !c.photos) { showSheet("저장할 내용이 없습니다", "", "alert"); return; }
   const target = await pickTarget("kcsi"); if (!target) return;
+  rememberUser();
   showSheet("작업 파일 만드는 중", "", "progress");
   const bar = $("prog").firstElementChild; bar.style.width = "10%";
   try {
@@ -1019,7 +1074,7 @@ async function saveKcsi() {
       format: "kcsi-photo-project", version: 1, summary: "", quality: "표준", document_style: "표 없는 양식",
       photos_per_page: state.perPage, show_serial: true, margins_cm: { top: 2.5, bottom: 1.5, left: 2.0, right: 2.0 },
       checklist: attach, checklist_rel: attach, checklist_rotations: attach.map(() => 0), pdf_enabled: true,
-      cover: { enabled: true, "제목": "현장사진 보고서", "소속": "", "사건명": state.caseName, "작성일": dotDate(state.date), "촬영자": "" },
+      cover: { enabled: true, "제목": "현장사진 보고서", "소속": state.user.org.trim(), "사건명": state.caseName, "작성일": dotDate(state.date), "촬영자": rankName(state.user) },
       photos,
       mobile: { app: "KCSI Photo Editor Mobile", version: VERSION, state: rest, photos: state.photos.map((p, i) => ({ file: `사진/${pad(i + 1)}.jpg`, rot: p.rot, desc: p.desc })) },
     };
@@ -1118,7 +1173,14 @@ $("installBtn").addEventListener("click", async () => {
 $("installLater").addEventListener("click", () => { installClosed = true; showInstall(); });
 $("installNever").addEventListener("click", () => { flag("kcsi-install-never", 1); installClosed = true; showInstall(); });
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then((r) => r.update()).catch(() => {});
+  // 새 버전이 설치되면 한 번만 자동으로 새로 열기(작성 중인 내용은 기기에 저장돼 있음)
+  let reloaded = false;
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController || reloaded) return;
+    reloaded = true; saveNow(); setTimeout(() => location.reload(), 300);
+  });
 }
 
 // ================= 시작 =================
@@ -1132,6 +1194,8 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
     const old = await DB.get("work");   // v0.1 사진 작업 이어받기
     if (old && old.photos) Object.assign(state, { caseName: old.caseName || "", date: old.date || today(), perPage: old.perPage || 2, photos: old.photos.map((p) => ({ ...p, desc: (p.desc || "").replace(/\n/g, " ") })) });
   }
+  state.user = { org: "", rank: "", name: "", ...(state.user || {}) };
+  profiles = (await DB.get("profiles")) || [];
   applyDefaults();
   setTimeout(showInstall, 600);
   const r = location.hash.slice(1);
