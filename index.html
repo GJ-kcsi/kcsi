@@ -591,10 +591,10 @@ function renderCheck(v) {
       g.drawImage(im, bx * S, by * S, bw * S, bh * S, 0, 0, cvb.width, cvb.height);
       drawStrokes(g, state.pads.body, cvb.width, cvb.height);
       if (!state.pads.body.length) {
-        const fs = cvb.width / 22, tw = fs * 9, th = fs * 1.9, cx = cvb.width / 2, cy = cvb.height / 2;
+        const fs = cvb.width / 22, tw = fs * 11.5, th = fs * 1.9, cx = cvb.width / 2, cy = cvb.height / 2;
         g.fillStyle = "rgba(255,255,255,.88)"; if (g.roundRect) { g.beginPath(); g.roundRect(cx - tw / 2, cy - th / 2, tw, th, th / 3); g.fill(); } else g.fillRect(cx - tw / 2, cy - th / 2, tw, th);
         g.fillStyle = "#6b7580"; g.font = `600 ${fs}px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
-        g.fillText("탭하여 인체도 그리기", cx, cy);
+        g.fillText("탭하여 손상 부분 그리기", cx, cy);
       }
     };
     draw();
