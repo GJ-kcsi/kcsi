@@ -114,6 +114,16 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 .inst.mine{border-color:var(--accent);border-width:2px}
 .topbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .topbtns .btn{padding:10px 4px;font-size:14px;white-space:nowrap}
+.skx{position:fixed;inset:0;z-index:20;background:#2b3138;display:flex;flex-direction:column}
+.skx .tb{display:flex;gap:6px;padding:8px max(8px,env(safe-area-inset-right,0px)) 8px max(8px,env(safe-area-inset-left,0px));background:#1f3a5f;overflow-x:auto;flex:none}
+.skx .tb button{flex:none;font:inherit;font-size:14px;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:8px;padding:7px 11px;white-space:nowrap}
+.skx .tb button[aria-pressed=true]{background:#ffb000;color:#1b1b1b;border-color:#ffb000;font-weight:700}
+.skx .tb .sep{flex:none;width:1px;background:rgba(255,255,255,.3);margin:2px 2px}
+.skx .tb .done{margin-left:auto;background:#fff;color:#1f3a5f;font-weight:700}
+.skx .tb .hide{display:none}
+.skx .area{flex:1;display:grid;place-items:center;min-height:0;padding:6px}
+.skx canvas{background:#fff;touch-action:none;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+.pad.open{cursor:pointer}
 .legal{font-size:11px;color:var(--muted);text-align:center}
 .hide{display:none!important}
 @media (max-width:420px){.row3{grid-template-columns:1fr 1fr}}
@@ -294,7 +304,7 @@ const CHECK = [
     { id: "exp2_name", label: "참여자 2 성명", type: "t", d: { p: 1, x: 507, y: 343.5, w: 57, size: 8 } },
   ]},
   { sec: "현장 상황", fields: [
-    { id: "sc_chg", label: "현장 변경 여부", type: "c", opts: [["없음", 1, 100.6, 359.4], ["있음", 1, 135.2, 359.4]], detail: { on: "있음", ph: "변경 내용", d: { p: 1, x: 171, y: 359.4, w: 158, size: 8 } } },
+    { id: "sc_chg", label: "현장 변경 여부", type: "c", opts: [["없음", 1, 100.6, 359.4], ["있음", 1, 135.2, 359.4]] },
     { id: "sc_reason", label: "변경 사유", type: "t", d: { p: 1, x: 99, y: 373.7, w: 236, size: 8 } },
     { id: "cctv", label: "시시티브이(CCTV)", type: "c", opts: [["없음", 1, 146.6, 395.3], ["있음", 1, 188.4, 395.3]], detail: { on: "있음", ph: "위치 등", d: { p: 1, x: 229, y: 395.3, w: 101, size: 8 } } },
     { id: "door_n", label: "출입문 (개소)", type: "num", d: { p: 1, x: 112, y: 417, w: 40, align: "center", size: 9 } },
@@ -308,7 +318,7 @@ const CHECK = [
     { id: "rum_place", label: "물색 장소", type: "t", d: { p: 1, x: 432, y: 453, w: 132, size: 8 } },
   ]},
   { sec: "시체 상황", fields: [
-    { id: "bd_chg", label: "시체 변경 여부", type: "c", opts: [["없음", 1, 100.6, 472.9], ["있음", 1, 135.2, 472.9]], detail: { on: "있음", ph: "변경 내용", d: { p: 1, x: 171, y: 472.9, w: 195, size: 8 } } },
+    { id: "bd_chg", label: "시체 변경 여부", type: "c", opts: [["없음", 1, 100.6, 472.9], ["있음", 1, 135.2, 472.9]] },
     { id: "bd_reason", label: "변경 사유", type: "t", d: { p: 1, x: 99, y: 487.2, w: 270, size: 8 } },
     { id: "bd_loc", label: "위치", type: "c", opts: [["방", 1, 80.8, 509.2], ["거실", 1, 160.3, 509.2], ["베란다", 1, 195, 509.2], ["화장실", 1, 239.6, 509.2], ["기타", 1, 284.2, 509.2]],
       detail: { on: ["방", "기타"], ph: "방 종류 / 기타 장소", d: { "방": { p: 1, x: 127.5, y: 509.2, w: 47, size: 8, align: "center" }, "기타": { p: 1, x: 342.5, y: 509.2, w: 49, size: 8, align: "center" } } } },
@@ -543,6 +553,16 @@ function renderCheck(v) {
   v.innerHTML = html;
   // 연결
   v.querySelectorAll("[data-t]").forEach((el) => el.addEventListener("input", () => {
+    if (el.dataset.t === "v_rrn") {               // 000000-0000000 형태로, 7번째 숫자로 성별 자동 선택
+      const d = el.value.replace(/\D/g, "").slice(0, 13);
+      const f = d.length > 6 ? d.slice(0, 6) + "-" + d.slice(6) : d;
+      if (el.value !== f) { el.value = f; el.setSelectionRange(f.length, f.length); }
+      const sex = { 1: "남", 3: "남", 5: "남", 7: "남", 2: "여", 4: "여", 6: "여", 8: "여" }[d[6]];
+      if (sex) {
+        C.v_sex = sex;
+        document.querySelectorAll('[data-c="v_sex"]').forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === sex));
+      }
+    }
     C[el.dataset.t] = el.value;
     if (el.dataset.t === "v_rrn" || (el.dataset.t === "t_found" && C.v_rrn)) {   // 만 나이 자동 입력
       const a = ageFromRrn(C.v_rrn);
@@ -560,7 +580,15 @@ function renderCheck(v) {
     saveSoon();
   }));
   v.querySelectorAll("[data-now]").forEach((b) => b.addEventListener("click", () => { const el = $("in_" + b.dataset.now); el.value = nowLocal(); el.dispatchEvent(new Event("input")); }));
-  v.querySelectorAll(".pad").forEach((p) => setupPad(p));
+  v.querySelectorAll(".pad[data-pad]").forEach((p) => setupPad(p));
+  const sk = v.querySelector("[data-sketch]");
+  if (sk) {
+    const draw = () => paintSketchPreview(sk.querySelector("canvas"));
+    draw();
+    sk.addEventListener("click", () => openSketch(draw));
+    v.querySelector("[data-sketchopen]").addEventListener("click", () => openSketch(draw));
+    v.querySelector("[data-sketchclear]").addEventListener("click", () => { state.pads.sketch.length = 0; draw(); saveSoon(); });
+  }
 }
 function fieldById(id) { for (const s of CHECK) for (const f of s.fields) if (f.id === id) return f; }
 function detailOn(f, val) {
@@ -571,7 +599,8 @@ function detailOn(f, val) {
 function fieldHtml(f, C) {
   const val = C[f.id] ?? "";
   const lab = esc(f.label), ph = ` placeholder="비우면 표시 안 함"`;
-  if (f.type === "t" || f.type === "rrn") return `<label class="f">${lab}<input id="in_${f.id}" data-t="${f.id}" type="text" value="${esc(val)}"${ph} autocomplete="off"></label>`;
+  if (f.type === "rrn") return `<label class="f">${lab}<input id="in_${f.id}" data-t="${f.id}" type="text" inputmode="numeric" maxlength="14" value="${esc(val)}"${ph} autocomplete="off"></label>`;
+  if (f.type === "t") return `<label class="f">${lab}<input id="in_${f.id}" data-t="${f.id}" type="text" value="${esc(val)}"${ph} autocomplete="off"></label>`;
   if (f.type === "num") return `<label class="f">${lab}<input id="in_${f.id}" data-t="${f.id}" type="text" inputmode="numeric" value="${esc(val)}"${ph}></label>`;
   if (f.type === "area") return `<label class="f">${lab}<textarea id="in_${f.id}" data-t="${f.id}" rows="5"${ph}>${esc(val)}</textarea></label>`;
   if (f.type === "dt") return `<div class="q"><span>${lab}</span><div style="display:flex;gap:6px"><input id="in_${f.id}" data-t="${f.id}" type="datetime-local" value="${esc(val)}"><button class="btn small" type="button" data-now="${f.id}">지금</button></div></div>`;
@@ -589,6 +618,8 @@ function fieldHtml(f, C) {
     }
     return `<div class="q"><span>${lab}${multi ? " (여러 개 선택)" : ""}</span><div class="chips">${chips}</div>${det}</div>`;
   }
+  if (f.type === "pad" && f.id === "sketch") return `<div class="q"><span>${lab}</span><div class="pad open" data-sketch="1" role="button" aria-label="약도 그리기 열기"><canvas></canvas></div>
+      <div class="padtools"><button class="btn small" type="button" data-sketchopen="1">그리기</button><button class="btn small" type="button" data-sketchclear="1">모두 지우기</button></div></div>`;
   if (f.type === "pad") return `<div class="q"><span>${lab}</span><div class="pad" data-pad="${f.id}"><canvas></canvas></div>
       <div class="padtools"><button class="btn small" type="button" data-undo="${f.id}">한 획 지우기</button><button class="btn small" type="button" data-clear="${f.id}">모두 지우기</button></div></div>`;
   return "";
@@ -601,6 +632,216 @@ function loadBg(key) {
   if (!bgImg[key]) bgImg[key] = new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = BG[key]; });
   return bgImg[key];
 }
+// ================= 현장 약도(전체 화면) =================
+// 그림 하나하나: {t:"line",a:[x,y],b:[x,y]} / {t:"free",pts:[[x,y]..]} / {t:"door"|"window"|"person",x,y,r(도),s(크기)}
+// 좌표는 약도 칸 기준 0~1(가로·세로), 기호 크기 s는 가로 길이 기준
+const SK_REGION = { w: 365, h: 223 };
+const SK_GRID = 30;                                  // 가로 30칸 격자
+function fixSketch(v) { return (v || []).map((o) => (Array.isArray(o) ? { t: "free", pts: o } : o)); }
+function drawSketch(g, items, W, H, opt = {}) {
+  const lw = Math.max(2, W / 260), ink = "#111";
+  g.save(); g.lineCap = g.lineJoin = "round";
+  const order = items.map((o, i) => i).sort((a, b) => (["line", "free"].includes(items[a].t) ? 0 : 1) - (["line", "free"].includes(items[b].t) ? 0 : 1));
+  order.forEach((i) => {
+    const o = items[i], hi = opt.sel === i;
+    g.strokeStyle = hi ? "#e08a00" : ink; g.lineWidth = hi ? lw * 1.6 : lw;
+    if (o.t === "line") { g.beginPath(); g.moveTo(o.a[0] * W, o.a[1] * H); g.lineTo(o.b[0] * W, o.b[1] * H); g.stroke(); return; }
+    if (o.t === "free") {
+      g.beginPath(); o.pts.forEach(([x, y], k) => (k ? g.lineTo(x * W, y * H) : g.moveTo(x * W, y * H))); g.stroke(); return;
+    }
+    const L = o.s * W;
+    g.save(); g.translate(o.x * W, o.y * H); g.rotate((o.r * Math.PI) / 180);
+    if (o.t === "door") {                            // 벽 틈 + 문짝 + 열리는 호
+      const keep = g.strokeStyle;
+      g.strokeStyle = "#fff"; g.lineWidth = lw * 3; g.beginPath(); g.moveTo(-L / 2, 0); g.lineTo(L / 2, 0); g.stroke();
+      g.strokeStyle = keep; g.lineWidth = hi ? lw * 1.6 : lw;
+      g.beginPath(); g.moveTo(-L / 2, 0); g.lineTo(-L / 2, -L); g.stroke();
+      g.beginPath(); g.arc(-L / 2, 0, L, -Math.PI / 2, 0); g.setLineDash([L / 10, L / 14]); g.stroke(); g.setLineDash([]);
+      g.beginPath(); g.moveTo(-L / 2 - L * 0.15, 0); g.lineTo(-L / 2, 0); g.moveTo(L / 2, 0); g.lineTo(L / 2 + L * 0.15, 0); g.stroke();
+    } else if (o.t === "window") {                   // 벽 속 겹선
+      const t = L * 0.18;
+      g.fillStyle = "#fff"; g.fillRect(-L / 2, -t / 2, L, t);
+      g.strokeRect(-L / 2, -t / 2, L, t);
+      g.beginPath(); g.moveTo(-L / 2, 0); g.lineTo(L / 2, 0); g.stroke();
+    } else if (o.t === "person") {                   // 누운 사람(머리 쪽이 위)
+      const u = L / 10;
+      g.beginPath(); g.arc(0, -4 * u, 0.9 * u, 0, Math.PI * 2); g.stroke();
+      g.beginPath(); g.moveTo(0, -3.1 * u); g.lineTo(0, 1.2 * u); g.stroke();
+      g.beginPath(); g.moveTo(-2.2 * u, -0.6 * u); g.lineTo(0, -2.4 * u); g.lineTo(2.2 * u, -0.6 * u); g.stroke();
+      g.beginPath(); g.moveTo(-1.4 * u, 4.6 * u); g.lineTo(0, 1.2 * u); g.lineTo(1.4 * u, 4.6 * u); g.stroke();
+    }
+    g.restore();
+  });
+  g.restore();
+}
+function paintSketchPreview(cv) {
+  cv.width = Math.round(SK_REGION.w * 3); cv.height = Math.round(SK_REGION.h * 3);
+  const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
+  if (!state.pads.sketch.length) {
+    g.fillStyle = "#98a2ac"; g.font = `600 ${cv.width / 22}px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText("눌러서 약도 그리기", cv.width / 2, cv.height / 2); return;
+  }
+  drawSketch(g, state.pads.sketch, cv.width, cv.height);
+}
+function openSketch(onDone) {
+  const items = state.pads.sketch, undo = [];
+  let tool = "line", sel = -1, cur = null, drag = null, closed = false;
+  const box = document.createElement("div"); box.className = "skx";
+  const tools = [["line", "직선"], ["free", "손그림"], ["door", "문"], ["window", "창문"], ["person", "사람"], ["select", "선택·이동"]];
+  box.innerHTML = `<div class="tb">${tools.map(([k, t]) => `<button type="button" data-tool="${k}" aria-pressed="${k === tool}">${t}</button>`).join("")}
+      <span class="sep"></span>
+      <button type="button" data-act="rot" class="hide">회전</button><button type="button" data-act="big" class="hide">크게</button><button type="button" data-act="small" class="hide">작게</button><button type="button" data-act="del" class="hide">지우기</button>
+      <button type="button" data-act="undo">되돌리기</button><button type="button" class="done" data-act="done">완료</button></div>
+    <div class="area"><canvas></canvas></div>`;
+  document.body.appendChild(box);
+  const cv = box.querySelector("canvas"), g = cv.getContext("2d"), area = box.querySelector(".area");
+  try {
+    const req = box.requestFullscreen || box.webkitRequestFullscreen;
+    if (req) Promise.resolve(req.call(box)).then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock("landscape").catch(() => {})).catch(() => {});
+  } catch (e) {}
+  let W = 0, H = 0;
+  const step = 1 / SK_GRID, stepY = step * (SK_REGION.w / SK_REGION.h);
+  const snap = ([x, y]) => [Math.round(x / step) * step, Math.round(y / stepY) * stepY].map((v) => Math.min(1, Math.max(0, v)));
+  function paint(preview) {
+    g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+    g.fillStyle = "#c9d3dc";                         // 격자 점
+    const rr = Math.max(1.2, W / 700);
+    for (let i = 0; i <= SK_GRID; i++) for (let j = 0; j * stepY <= 1.0001; j++) { g.beginPath(); g.arc(i * step * W, j * stepY * H, rr, 0, Math.PI * 2); g.fill(); }
+    drawSketch(g, preview ? items.concat([preview]) : items, W, H, { sel });
+  }
+  const fit = () => {                               // 약도 칸 비율을 지키며 화면에 꽉 차게
+    const aw = area.clientWidth - 12, ah = area.clientHeight - 12, k = Math.min(aw / SK_REGION.w, ah / SK_REGION.h);
+    const dpr = window.devicePixelRatio || 1;
+    cv.style.width = Math.floor(SK_REGION.w * k) + "px"; cv.style.height = Math.floor(SK_REGION.h * k) + "px";
+    W = cv.width = Math.floor(SK_REGION.w * k * dpr); H = cv.height = Math.floor(SK_REGION.h * k * dpr);
+    paint();
+  };
+  const pt = (e) => { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) / b.width, (e.clientY - b.top) / b.height]; };
+  const magnet = (p) => {                            // 가까운 선 끝이 있으면 거기에 딱 붙임(벽이 이어지게)
+    const tol = (W / SK_GRID) * 1.6; let best = null, bd = tol;
+    items.forEach((o) => { if (o.t === "line") [o.a, o.b].forEach((q) => { const d = Math.hypot((q[0] - p[0]) * W, (q[1] - p[1]) * H); if (d < bd) { bd = d; best = q.slice(); } }); });
+    if (best) return best;
+    items.forEach((o) => {                           // 다른 벽 중간에 닿으면 그 벽 위로(ㅜ자 연결)
+      if (o.t !== "line") return;
+      const ax = o.a[0] * W, ay = o.a[1] * H, bx = o.b[0] * W, by = o.b[1] * H, l2 = (bx - ax) ** 2 + (by - ay) ** 2;
+      if (!l2) return;
+      const t = Math.max(0, Math.min(1, ((p[0] * W - ax) * (bx - ax) + (p[1] * H - ay) * (by - ay)) / l2));
+      const qx = ax + t * (bx - ax), qy = ay + t * (by - ay), d = Math.hypot(p[0] * W - qx, p[1] * H - qy);
+      if (d < bd) { bd = d; best = [qx / W, qy / H]; }
+    });
+    return best || snap(p);
+  };
+  const straight = (a, b) => {                       // 거의 수평·수직이면 딱 맞춤
+    const dx = (b[0] - a[0]) * W, dy = (b[1] - a[1]) * H, ang = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI) % 180;
+    if (ang < 10 || ang > 170) return [b[0], a[1]];
+    if (Math.abs(ang - 90) < 10) return [a[0], b[1]];
+    return b;
+  };
+  const save = () => { undo.push(JSON.stringify(items)); if (undo.length > 80) undo.shift(); };
+  const symbolSize = { door: 0.06, window: 0.07, person: 0.09 };
+  const hit = (p) => {                               // 누른 곳에서 가장 가까운 그림
+    const px = p[0] * W, py = p[1] * H, tol = Math.max(18, W / 40);
+    let best = -1, bd = tol;
+    items.forEach((o, i) => {
+      let d = Infinity;
+      if (o.t === "line" || o.t === "free") {
+        const pts = o.t === "line" ? [o.a, o.b] : o.pts;
+        for (let k = 0; k < pts.length; k++) {
+          const a = pts[k], b = pts[Math.min(k + 1, pts.length - 1)];
+          const ax = a[0] * W, ay = a[1] * H, bx = b[0] * W, by = b[1] * H, l2 = (bx - ax) ** 2 + (by - ay) ** 2;
+          const t = l2 ? Math.max(0, Math.min(1, ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / l2)) : 0;
+          d = Math.min(d, Math.hypot(px - (ax + t * (bx - ax)), py - (ay + t * (by - ay))));
+        }
+      } else d = Math.max(0, Math.hypot(px - o.x * W, py - o.y * H) - o.s * W * 0.5);
+      if (d < bd) { bd = d; best = i; }
+    });
+    return best;
+  };
+  const shift = (o, dx, dy) => {
+    if (o.t === "line") { o.a = [o.a[0] + dx, o.a[1] + dy]; o.b = [o.b[0] + dx, o.b[1] + dy]; }
+    else if (o.t === "free") o.pts = o.pts.map(([x, y]) => [x + dx, y + dy]);
+    else { o.x += dx; o.y += dy; }
+  };
+  const showSel = () => {
+    const o = items[sel], sym = o && !["line", "free"].includes(o.t);
+    box.querySelectorAll("[data-act=rot],[data-act=big],[data-act=small],[data-act=del]").forEach((b) => {
+      b.classList.toggle("hide", !(o && (sym || b.dataset.act === "del")));
+    });
+  };
+  cv.addEventListener("pointerdown", (e) => {
+    cv.setPointerCapture(e.pointerId); const p = pt(e);
+    if (tool === "select") {
+      sel = hit(p); showSel();
+      if (sel >= 0) { save(); drag = { last: p, moved: false }; }
+      paint(); return;
+    }
+    sel = -1; showSel();
+    if (tool === "line") { const a = magnet(p); cur = { t: "line", a, b: a.slice() }; }
+    else if (tool === "free") cur = { t: "free", pts: [p] };
+    else { const q = snap(p); cur = { t: tool, x: q[0], y: q[1], r: 0, s: symbolSize[tool] }; }
+    paint(cur);
+  });
+  cv.addEventListener("pointermove", (e) => {
+    const p = pt(e);
+    if (drag && sel >= 0) { shift(items[sel], p[0] - drag.last[0], p[1] - drag.last[1]); drag.last = p; drag.moved = true; paint(); return; }
+    if (!cur) return;
+    if (cur.t === "line") cur.b = straight(cur.a, p);
+    else if (cur.t === "free") cur.pts.push(p);
+    else { const q = snap(p); cur.x = q[0]; cur.y = q[1]; }
+    paint(cur);
+  });
+  const up = () => {
+    if (drag) {                                     // 옮긴 그림을 격자에 맞춤
+      const o = items[sel];
+      if (drag.moved && o) {
+        if (o.t === "line") { const a = snap(o.a); shift(o, a[0] - o.a[0], a[1] - o.a[1]); }
+        else if (o.t !== "free") { const q = snap([o.x, o.y]); o.x = q[0]; o.y = q[1]; }
+      }
+      if (!drag.moved) undo.pop();
+      drag = null; paint(); saveSoon(); return;
+    }
+    if (!cur) return;
+    if (cur.t === "line") {
+      cur.b = magnet(straight(cur.a, cur.b));
+      if (cur.a[0] === cur.b[0] && cur.a[1] === cur.b[1]) { cur = null; paint(); return; }
+    }
+    if (cur.t === "free" && cur.pts.length < 2) cur.pts.push([cur.pts[0][0] + 0.002, cur.pts[0][1]]);
+    save(); items.push(cur); cur = null;
+    if (!["line", "free"].includes(items[items.length - 1].t)) sel = items.length - 1;   // 방금 찍은 기호는 바로 돌리거나 크기 조절
+    showSel(); paint(); saveSoon();
+  };
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+  box.querySelector(".tb").addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.tool) {
+      tool = b.dataset.tool; if (tool !== "select") sel = -1;
+      box.querySelectorAll("[data-tool]").forEach((x) => x.setAttribute("aria-pressed", x === b));
+      showSel(); paint(); return;
+    }
+    const o = items[sel];
+    if (b.dataset.act === "rot" && o) { save(); o.r = (o.r + 45) % 360; }
+    if (b.dataset.act === "big" && o) { save(); o.s = Math.min(0.3, o.s * 1.25); }
+    if (b.dataset.act === "small" && o) { save(); o.s = Math.max(0.02, o.s / 1.25); }
+    if (b.dataset.act === "del" && o) { save(); items.splice(sel, 1); sel = -1; }
+    if (b.dataset.act === "undo" && undo.length) { const prev = JSON.parse(undo.pop()); items.length = 0; prev.forEach((x) => items.push(x)); sel = -1; }
+    if (b.dataset.act === "done") { close(); return; }
+    showSel(); paint(); saveSoon();
+  });
+  const onResize = () => fit();
+  window.addEventListener("resize", onResize);
+  history.pushState({ kcsi: route, sketch: 1 }, "", location.hash || "#check");   // 폰 뒤로 가기 = 완료
+  const onPop = () => close(true);
+  window.addEventListener("popstate", onPop);
+  function close(fromPop) {
+    if (closed) return; closed = true;
+    window.removeEventListener("resize", onResize); window.removeEventListener("popstate", onPop);
+    try { if (document.fullscreenElement) document.exitFullscreen(); if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+    box.remove(); saveSoon(); if (onDone) onDone();
+    if (!fromPop && history.state && history.state.sketch) history.back();
+  }
+  requestAnimationFrame(fit);
+}
+
 // 서명 칸: 양식의 (서 명) 자리 비율(68:26)과 같게
 const SIG = { w: 68, h: 26, x: 497, y: { det: 705.4, sci: 735.8 } };
 function setupSig(el) {
@@ -627,7 +868,7 @@ async function setupPad(el) {
   const redraw = () => {
     g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
     if (f.guide) g.drawImage(im, x * S, y * S, w * S, h * S, 0, 0, cv.width, cv.height);
-    drawStrokes(g, strokes, cv.width, cv.height);
+    drawStrokes(g, strokes, cv.width, cv.height, f.guide ? "#d11a1a" : "#111");
   };
   redraw();
   let cur = null;
@@ -889,9 +1130,12 @@ async function drawChecklist() {
         else { const which = sel.find((o) => d[o]); if (which) drawText(G(d[which].p), dv, lift(d[which])); }
       }
       if (f.id === "focus" && sel.includes("해당")) { /* 표시만 */ }
+    } else if (f.type === "pad" && f.id === "sketch") {
+      const [x, y, w, h] = f.region;
+      if (state.pads.sketch.length) { const g = G(2); g.save(); g.translate(x * S, y * S); drawSketch(g, state.pads.sketch, w * S, h * S); g.restore(); }
     } else if (f.type === "pad") {
       const [x, y, w, h] = f.region, strokes = state.pads[f.id];
-      if (strokes.length) { const g = G(2); g.save(); g.translate(x * S, y * S); drawStrokes(g, strokes, w * S, h * S); g.restore(); }
+      if (strokes.length) { const g = G(2); g.save(); g.translate(x * S, y * S); drawStrokes(g, strokes, w * S, h * S, f.guide ? "#d11a1a" : "#111"); g.restore(); }
     }
   }
   // 착의 체크: 칸 내용이 있으면 해당 □에 표시(위에서 처리)
@@ -933,10 +1177,10 @@ async function drawPhotos() {
   const total = Math.ceil(state.photos.length / per);
   for (let pi = 0; pi < total; pi++) {
     const { c, g } = newPage(), photos = state.photos.slice(pi * per, (pi + 1) * per);
-    const L = 18 * MM, R = PAGE.w - 18 * MM, T = 16 * MM, B = PAGE.h - 14 * MM;
+    const L = 20 * MM, R = PAGE.w - 20 * MM, T = 25 * MM, B = PAGE.h - 15 * MM;   // 여백 위 2.5 · 아래 1.5 · 좌우 2.0 cm
     g.fillStyle = "#555"; g.font = `${(3.2 * MM).toFixed(1)}px ${FONT}`; g.textAlign = "right"; g.textBaseline = "alphabetic";
     g.fillText([state.caseName.trim(), dotDate(state.date)].filter(Boolean).join("  |  "), R, T - 5 * MM);
-    g.textAlign = "center"; g.fillText(`${pi + 1} / ${total}`, PAGE.w / 2, PAGE.h - 7 * MM);
+    g.textAlign = "center"; g.fillText(`${pi + 1} / ${total}`, PAGE.w / 2, PAGE.h - 8 * MM);
     const cols = per === 4 ? 2 : 1, gap = 8 * MM, capH = (per === 4 ? 12 : 14) * MM;
     const cellW = (R - L - gap * (cols - 1)) / cols, cellH = (B - T - gap) / 2;
     for (let j = 0; j < photos.length; j++) {
@@ -1150,7 +1394,7 @@ $("openKcsi").addEventListener("change", async (ev) => {
     state.photos.forEach((p) => p.url && URL.revokeObjectURL(p.url));
     const st = m.state;
     Object.assign(state, { caseName: st.caseName || "", date: st.date || today(), include: { check: true, photos: true, items: true, ...(st.include || {}) },
-      check: st.check || {}, pads: { body: [], sketch: [], ...(st.pads || {}) }, perPage: st.perPage === 4 ? 4 : 2, items: st.items || [],
+      check: st.check || {}, pads: { body: (st.pads || {}).body || [], sketch: fixSketch((st.pads || {}).sketch) }, perPage: st.perPage === 4 ? 4 : 2, items: st.items || [],
       confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "", ...(st.confirm || {}) }, sigs: { det: [], sci: [], ...(st.sigs || {}) } });
     state.photos = m.photos.filter((p) => z[p.file]).map((p, i) => ({ id: String(Date.now()) + i, blob: new Blob([z[p.file]], { type: "image/jpeg" }), rot: p.rot || 0, desc: p.desc || "" }));
     saveNow(); go("home");
@@ -1238,6 +1482,7 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
   if (saved) {
     Object.assign(state, saved);
     state.pads = { body: [], sketch: [], ...(saved.pads || {}) };
+    state.pads.sketch = fixSketch(state.pads.sketch);
     state.confirm = { det_rank: "", det_name: "", sci_rank: "", sci_name: "", ...(saved.confirm || {}) };
     state.sigs = { det: [], sci: [], ...(saved.sigs || {}) };
   } else {
