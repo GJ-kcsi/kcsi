@@ -919,7 +919,8 @@ $("save").addEventListener("click", () => { $("sheet").classList.add("hide"); sa
 const baseName = () => (state.caseName.trim() || "현장사진").replace(/[\\/:*?"<>|]/g, "_");
 const TYPES = { pdf: { description: "PDF", accept: { "application/pdf": [".pdf"] } }, kcsi: { description: "KCSI 작업 파일", accept: { "application/octet-stream": [".kcsi"] } } };
 async function pickTarget(ext) {   // → {handle} | {name} | null(취소)
-  if (window.showSaveFilePicker) {
+  const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.userAgentData && navigator.userAgentData.mobile);
+  if (window.showSaveFilePicker && !mobile) {   // PC에서만(폰 브라우저는 저장 창이 있어도 쓰기가 막힘)
     try { return { handle: await window.showSaveFilePicker({ suggestedName: `${baseName()}.${ext}`, types: [TYPES[ext]] }) }; }
     catch (e) { if (e && e.name === "AbortError") return null; }
   }
@@ -934,7 +935,10 @@ async function pickTarget(ext) {   // → {handle} | {name} | null(취소)
   });
 }
 async function writeTarget(t, blob) {
-  if (t.handle) { const w = await t.handle.createWritable(); await w.write(blob); await w.close(); return t.handle.name; }
+  if (t.handle) {
+    try { const w = await t.handle.createWritable(); await w.write(blob); await w.close(); return t.handle.name; }
+    catch (e) { t = { name: t.handle.name }; }    // 쓰기가 막히면 다운로드로 저장
+  }
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = t.name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
   return t.name;
@@ -1013,7 +1017,7 @@ async function saveKcsi() {
     const { photos: _p, ...rest } = state;
     const project = {
       format: "kcsi-photo-project", version: 1, summary: "", quality: "표준", document_style: "표 없는 양식",
-      photos_per_page: state.perPage, show_serial: true, margins_cm: { top: 1.0, bottom: 0.5, left: 2.0, right: 2.0 },
+      photos_per_page: state.perPage, show_serial: true, margins_cm: { top: 2.5, bottom: 1.5, left: 2.0, right: 2.0 },
       checklist: attach, checklist_rel: attach, checklist_rotations: attach.map(() => 0), pdf_enabled: true,
       cover: { enabled: true, "제목": "현장사진 보고서", "소속": "", "사건명": state.caseName, "작성일": dotDate(state.date), "촬영자": "" },
       photos,
