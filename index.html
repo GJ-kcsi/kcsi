@@ -112,6 +112,8 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 .inst h3{margin:0;font-size:14px;color:var(--muted)}
 .inst ol{margin:0;padding-left:22px;display:grid;gap:3px;font-size:15px}
 .inst.mine{border-color:var(--accent);border-width:2px}
+.topbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.topbtns .btn{padding:10px 4px;font-size:14px;white-space:nowrap}
 .legal{font-size:11px;color:var(--muted);text-align:center}
 .hide{display:none!important}
 @media (max-width:420px){.row3{grid-template-columns:1fr 1fr}}
@@ -131,12 +133,13 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 </div></footer>
 
 <input id="pick" type="file" accept="image/*" multiple hidden>
+<input id="openKcsi" type="file" hidden>
 
 <div id="install" class="sheet hide" role="dialog" aria-modal="true" aria-labelledby="installTitle">
   <div class="box">
     <div style="display:flex;gap:12px;align-items:center">
       <img id="installIcon" alt="" width="56" height="56" style="border-radius:12px;flex:none">
-      <div><h2 id="installTitle">앱으로 설치하기</h2><p style="margin:2px 0 0">바탕화면 아이콘으로 주소창 없이 열립니다</p></div>
+      <h2 id="installTitle">앱으로 설치하기</h2>
     </div>
     <div id="instInApp" class="hide" style="display:grid;gap:6px">
       <p style="color:var(--ink);font-size:15px;margin:0">지금은 카카오톡 등 다른 앱 안에서 열려 있어 설치가 되지 않습니다.</p>
@@ -408,6 +411,11 @@ function renderHome(v) {
     <button class="menu" data-go="${key}" type="button"><span class="n">${n}</span>
       <span><b>${title}</b><small>${sub}</small></span><span aria-hidden="true">›</span></button>`;
   v.innerHTML = `
+    <div class="topbtns" aria-label="작업">
+      <button id="reset" class="btn" type="button" style="color:var(--danger)">새로 시작</button>
+      <label class="btn" for="openKcsi">작업 불러오기</label>
+      <button id="saveKcsi" class="btn" type="button">작업 저장</button>
+    </div>
     <section class="panel" aria-label="사건 정보">
       <label class="f">사건명 (파일 이름·사진 머리말)<input id="caseName" type="text" autocomplete="off"></label>
       <label class="f">작성일<input id="date" type="date"></label>
@@ -422,7 +430,6 @@ function renderHome(v) {
       <label class="inc"><input type="checkbox" id="inc_photos"> 현장 사진</label>
     </section>
     <button id="shareApp" class="btn" type="button">이 앱을 동료에게 보내기</button>
-    <button id="reset" class="btn" type="button" style="color:var(--danger)">모두 지우고 새로 시작</button>
     <footer class="brand">
       <div class="mark"><b>KCSI Photo Editor</b><span>Mobile ${VERSION}</span></div>
       <div class="org">광주경찰청 과학수사계</div>
@@ -438,6 +445,7 @@ function renderHome(v) {
   }
   v.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
   $("shareApp").addEventListener("click", shareApp);
+  $("saveKcsi").addEventListener("click", saveKcsi);
   $("reset").addEventListener("click", () => showSheet("모두 지울까요?", "점검 목록표, 사진, 유류물 목록, 사건명이 모두 지워집니다. 되돌릴 수 없습니다.", "confirm"));
 }
 
@@ -891,19 +899,26 @@ $("make").addEventListener("click", async () => {
     if (ch.includes("photos")) { jpegs = jpegs.concat(await drawPhotos()); }
     bar.style.width = "100%";
     const name = `${(state.caseName.trim() || "현장사진").replace(/[\\/:*?"<>|]/g, "_")}.pdf`;
-    lastPdf = new File([await buildPdf(jpegs)], name, { type: "application/pdf" });
+    lastPdf = new File([await buildPdf(jpegs)], name, { type: "application/pdf" }); shareTry = 0;
     $("share").classList.toggle("hide", !(window.isSecureContext && navigator.canShare && navigator.canShare({ files: [lastPdf] })));
     showSheet("PDF를 만들었습니다", `${name} · ${jpegs.length}쪽 · ${(lastPdf.size / 1048576).toFixed(1)}MB`, "done");
   } catch (e) {
     showSheet("PDF를 만들지 못했습니다", "다시 시도해 주세요. (" + e.message + ")", "alert");
   }
 });
+// 일부 브라우저(삼성 인터넷 등)는 한글 파일 이름 공유를 거부함 → 두 번째 시도는 영문 이름으로
+let shareTry = 0;
 $("share").addEventListener("click", async () => {
-  try { await navigator.share({ files: [lastPdf] }); }
+  const d = state.date.replace(/-/g, "");
+  const file = shareTry === 0 ? lastPdf : new File([lastPdf], `KCSI_${d}.pdf`, { type: "application/pdf" });
+  try { await navigator.share({ files: [file] }); shareTry = 0; }
   catch (e) {
     if (e && e.name === "AbortError") return;      // 사용자가 공유 창을 닫음
-    savePdf();                                     // 공유가 막힌 환경이면 저장으로 대신
-    showSheet("공유 창을 열 수 없어 저장했습니다", "다운로드 폴더(내 파일 → 다운로드)에서 PDF를 찾아 보내 주세요.", "done");
+    const code = e && e.name ? ` (${e.name})` : "";
+    if (shareTry === 0) { shareTry = 1; showSheet("공유를 다시 눌러 주세요", "영문 파일 이름으로 다시 시도합니다." + code, "done"); return; }
+    shareTry = 0;
+    savePdf();
+    showSheet("공유 창을 열 수 없어 저장했습니다", "다운로드 폴더에서 PDF를 보내 주세요." + code, "done");
     $("share").classList.add("hide");
   }
 });
@@ -912,6 +927,114 @@ function savePdf() {
   const a = document.createElement("a"); a.href = URL.createObjectURL(lastPdf); a.download = lastPdf.name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
+
+// ================= 작업 파일(.kcsi) 저장·불러오기 =================
+// .kcsi = ZIP(압축 없음): project.json(PC 프로그램 작업 형식) + 사진/001.jpg… + 첨부/점검표·유류물 쪽 그림
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = 0xffffffff; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
+function makeZip(files) {                       // files: [{name, data: Uint8Array}]
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  const d = new Date(), dt = ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)), dd = (((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate());
+  for (const f of files) {
+    const name = enc.encode(f.name), crc = crc32(f.data), n = f.data.length;
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+    h.setUint16(10, dt, true); h.setUint16(12, dd, true); h.setUint32(14, crc, true); h.setUint32(18, n, true); h.setUint32(22, n, true);
+    h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
+    parts.push(new Uint8Array(h.buffer), name, f.data);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true);
+    c.setUint16(12, dt, true); c.setUint16(14, dd, true); c.setUint32(16, crc, true); c.setUint32(20, n, true); c.setUint32(24, n, true);
+    c.setUint16(28, name.length, true); c.setUint32(42, off, true);
+    central.push(new Uint8Array(c.buffer), name);
+    off += 30 + name.length + n;
+  }
+  const csize = central.reduce((a, b) => a + b.length, 0);
+  const e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true);
+  e.setUint32(12, csize, true); e.setUint32(16, off, true);
+  return new Blob([...parts, ...central, new Uint8Array(e.buffer)], { type: "application/octet-stream" });
+}
+async function readZip(buf) {                    // 이름 → Uint8Array
+  const v = new DataView(buf), u8 = new Uint8Array(buf), dec = new TextDecoder();
+  let e = -1; for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 66000); i--) if (v.getUint32(i, true) === 0x06054b50) { e = i; break; }
+  if (e < 0) throw new Error("zip");
+  const count = v.getUint16(e + 10, true); let p = v.getUint32(e + 16, true); const out = {};
+  for (let k = 0; k < count; k++) {
+    if (v.getUint32(p, true) !== 0x02014b50) throw new Error("zip");
+    const method = v.getUint16(p + 10, true), csz = v.getUint32(p + 20, true), nl = v.getUint16(p + 28, true), xl = v.getUint16(p + 30, true), cl = v.getUint16(p + 32, true), lo = v.getUint32(p + 42, true);
+    const name = dec.decode(u8.subarray(p + 46, p + 46 + nl));
+    const start = lo + 30 + v.getUint16(lo + 26, true) + v.getUint16(lo + 28, true);
+    let data = u8.slice(start, start + csz);
+    if (method === 8) data = new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+    else if (method !== 0) throw new Error("zip");
+    out[name] = data; p += 46 + nl + xl + cl;
+  }
+  return out;
+}
+async function saveKcsi() {
+  const c = counts();
+  if (!c.check && !c.items && !c.photos) { showSheet("저장할 내용이 없습니다", "", "alert"); return; }
+  showSheet("작업 파일 만드는 중", "", "progress");
+  const bar = $("prog").firstElementChild; bar.style.width = "10%";
+  try {
+    const enc = new TextEncoder(), files = [], photos = [], attach = [];
+    const pad = (n) => String(n).padStart(3, "0");
+    for (let i = 0; i < state.photos.length; i++) {
+      const p = state.photos[i], f = `사진/${pad(i + 1)}.jpg`;
+      files.push({ name: f, data: new Uint8Array(await p.blob.arrayBuffer()) });
+      photos.push({ path: f, rel: f, number: String(i + 1), manual: false, desc: p.desc, included: true, rotation: p.rot,
+        brightness: 100, sharpness: 100, annotations: [], children: [] });
+    }
+    bar.style.width = "40%";
+    let pages = [];   // PC 문서에 '문서 사진 첨부'로 들어갈 점검표·유류물 쪽
+    if (c.check) pages = pages.concat((await drawChecklist()).map((b, i) => ({ b, n: `첨부/점검목록표_${i + 1}.jpg` })));
+    if (c.items) pages = pages.concat((await drawItems()).map((b, i) => ({ b, n: `첨부/유류물목록_${i + 1}.jpg` })));
+    for (const pg of pages) { files.push({ name: pg.n, data: new Uint8Array(await pg.b.arrayBuffer()) }); attach.push(pg.n); }
+    bar.style.width = "80%";
+    const { photos: _p, ...rest } = state;
+    const project = {
+      format: "kcsi-photo-project", version: 1, summary: "", quality: "표준", document_style: "표 없는 양식",
+      photos_per_page: state.perPage, show_serial: true, margins_cm: { top: 1.0, bottom: 0.5, left: 2.0, right: 2.0 },
+      checklist: attach, checklist_rel: attach, checklist_rotations: attach.map(() => 0), pdf_enabled: true,
+      cover: { enabled: true, "제목": "현장사진 보고서", "소속": "", "사건명": state.caseName, "작성일": dotDate(state.date), "촬영자": "" },
+      photos,
+      mobile: { app: "KCSI Photo Editor Mobile", version: VERSION, state: rest, photos: state.photos.map((p, i) => ({ file: `사진/${pad(i + 1)}.jpg`, rot: p.rot, desc: p.desc })) },
+    };
+    files.unshift({ name: "project.json", data: enc.encode(JSON.stringify(project, null, 1)) });
+    const name = `${(state.caseName.trim() || "현장사진").replace(/[\\/:*?"<>|]/g, "_")}.kcsi`;
+    const a = document.createElement("a"); a.href = URL.createObjectURL(makeZip(files)); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    showSheet("작업을 저장했습니다", `${name} · 다운로드 폴더`, "alert");
+  } catch (e) { showSheet("저장하지 못했습니다", e.message, "alert"); }
+}
+$("openKcsi").addEventListener("change", async (ev) => {
+  const f = ev.target.files[0]; ev.target.value = ""; if (!f) return;
+  try {
+    const z = await readZip(await f.arrayBuffer());
+    const proj = JSON.parse(new TextDecoder().decode(z["project.json"]));
+    let m = proj.mobile;
+    if (!m || !m.state) {                        // PC 프로그램에서 '사진 포함 저장'한 파일: 사진·설명·회전만 가져옴
+      const flat = []; const walk = (xs) => (xs || []).forEach((d) => { flat.push(d); walk(d.children); });
+      walk(proj.photos);
+      const list = flat.filter((d) => z[d.rel || d.path]);
+      if (!list.length) throw new Error("photos");
+      const c = proj.cover || {};
+      m = { state: { caseName: c["사건명"] || "", perPage: proj.photos_per_page === 4 ? 4 : 2 },
+        photos: list.map((d) => ({ file: d.rel || d.path, rot: d.rotation || 0, desc: (d.desc || "").replace(/\n/g, " ") })) };
+    }
+    state.photos.forEach((p) => p.url && URL.revokeObjectURL(p.url));
+    const st = m.state;
+    Object.assign(state, { caseName: st.caseName || "", date: st.date || today(), include: { check: true, photos: true, items: true, ...(st.include || {}) },
+      check: st.check || {}, pads: { body: [], sketch: [], ...(st.pads || {}) }, perPage: st.perPage === 4 ? 4 : 2, items: st.items || [],
+      confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "", ...(st.confirm || {}) } });
+    state.photos = m.photos.filter((p) => z[p.file]).map((p, i) => ({ id: String(Date.now()) + i, blob: new Blob([z[p.file]], { type: "image/jpeg" }), rot: p.rot || 0, desc: p.desc || "" }));
+    saveNow(); go("home");
+    showSheet("작업을 불러왔습니다", f.name, "alert");
+  } catch (e) {
+    showSheet("열 수 없는 파일입니다", "사진이 포함된 .kcsi 파일만 열 수 있습니다.", "alert");
+  }
+});
 
 // ================= 앱 주소 보내기 =================
 const APP_URL = "https://gj-kcsi.github.io/kcsi/";
