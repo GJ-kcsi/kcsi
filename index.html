@@ -129,7 +129,8 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 
 <footer class="dock"><div class="in">
   <div class="info" id="info"></div>
-  <button id="make" class="btn primary" type="button">PDF 만들기</button>
+  <button id="saveDock" class="btn" type="button">저장</button>
+  <button id="make" class="btn primary" type="button">PDF 생성</button>
 </div></footer>
 
 <input id="pick" type="file" accept="image/*" multiple hidden>
@@ -168,8 +169,12 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
     <p id="sheetMsg"></p>
     <div class="progress" id="prog"><i></i></div>
     <div id="sheetBtns" class="two hide">
-      <button id="share" class="btn primary" type="button">공유</button>
-      <button id="save" class="btn" type="button">저장</button>
+      <button id="save" class="btn primary" type="button">저장</button>
+      <button id="close2" class="btn" type="button">닫기</button>
+    </div>
+    <div id="nameBox" class="hide" style="display:grid;gap:10px">
+      <div style="display:flex;align-items:center;gap:6px"><input id="fname" type="text" autocomplete="off" style="flex:1"><span id="fext"></span></div>
+      <div class="two"><button id="nameOk" class="btn primary" type="button">저장</button><button id="nameNo" class="btn" type="button">취소</button></div>
     </div>
     <div id="confirmBtns" class="two hide">
       <button id="yes" class="btn" type="button" style="color:var(--danger)">지우기</button>
@@ -681,6 +686,7 @@ function updateDock() {
   $("info").textContent = ch.length ? (bad >= 0 && ch.includes("photos") ? `사진 ${bad + 1} 설명이 깁니다` : ch.map((k) => names[k]).join(" + ")) : "입력한 문서가 없습니다";
   $("info").style.color = bad >= 0 && ch.includes("photos") ? "var(--danger)" : "";
   $("make").disabled = !ch.length;
+  const c0 = counts(); $("saveDock").disabled = !(c0.check || c0.items || c0.photos);
 }
 
 // ---------- 확인·진행 창 ----------
@@ -689,10 +695,12 @@ function showSheet(title, msg, mode) {
   $("prog").classList.toggle("hide", mode !== "progress");
   $("sheetBtns").classList.toggle("hide", mode !== "done");
   $("confirmBtns").classList.toggle("hide", mode !== "confirm");
-  $("close").classList.toggle("hide", mode === "progress" || mode === "confirm");
+  $("nameBox").classList.toggle("hide", mode !== "name");
+  $("close").classList.toggle("hide", ["progress", "confirm", "done", "name"].includes(mode));
   $("sheet").classList.remove("hide");
 }
 $("close").addEventListener("click", () => $("sheet").classList.add("hide"));
+$("close2").addEventListener("click", () => $("sheet").classList.add("hide"));
 $("no").addEventListener("click", () => $("sheet").classList.add("hide"));
 $("yes").addEventListener("click", () => {
   state.photos.forEach((p) => p.url && URL.revokeObjectURL(p.url));
@@ -899,33 +907,42 @@ $("make").addEventListener("click", async () => {
     if (ch.includes("photos")) { jpegs = jpegs.concat(await drawPhotos()); }
     bar.style.width = "100%";
     const name = `${(state.caseName.trim() || "현장사진").replace(/[\\/:*?"<>|]/g, "_")}.pdf`;
-    lastPdf = new File([await buildPdf(jpegs)], name, { type: "application/pdf" }); shareTry = 0;
-    $("share").classList.toggle("hide", !(window.isSecureContext && navigator.canShare && navigator.canShare({ files: [lastPdf] })));
-    showSheet("PDF를 만들었습니다", `${name} · ${jpegs.length}쪽 · ${(lastPdf.size / 1048576).toFixed(1)}MB`, "done");
+    lastPdf = new File([await buildPdf(jpegs)], name, { type: "application/pdf" });
+        showSheet("PDF를 만들었습니다", `${name} · ${jpegs.length}쪽 · ${(lastPdf.size / 1048576).toFixed(1)}MB`, "done");
   } catch (e) {
     showSheet("PDF를 만들지 못했습니다", "다시 시도해 주세요. (" + e.message + ")", "alert");
   }
 });
-// 일부 브라우저(삼성 인터넷 등)는 한글 파일 이름 공유를 거부함 → 두 번째 시도는 영문 이름으로
-let shareTry = 0;
-$("share").addEventListener("click", async () => {
-  const d = state.date.replace(/-/g, "");
-  const file = shareTry === 0 ? lastPdf : new File([lastPdf], `KCSI_${d}.pdf`, { type: "application/pdf" });
-  try { await navigator.share({ files: [file] }); shareTry = 0; }
-  catch (e) {
-    if (e && e.name === "AbortError") return;      // 사용자가 공유 창을 닫음
-    const code = e && e.name ? ` (${e.name})` : "";
-    if (shareTry === 0) { shareTry = 1; showSheet("공유를 다시 눌러 주세요", "영문 파일 이름으로 다시 시도합니다." + code, "done"); return; }
-    shareTry = 0;
-    savePdf();
-    showSheet("공유 창을 열 수 없어 저장했습니다", "다운로드 폴더에서 PDF를 보내 주세요." + code, "done");
-    $("share").classList.add("hide");
+$("save").addEventListener("click", () => { $("sheet").classList.add("hide"); savePdf(); });
+// ---------- 파일 이름·위치 정하기 ----------
+// PC 크롬·엣지: 저장 창에서 위치와 이름을 고름 / 폰: 이름만 고치고 다운로드 폴더에 저장
+const baseName = () => (state.caseName.trim() || "현장사진").replace(/[\\/:*?"<>|]/g, "_");
+const TYPES = { pdf: { description: "PDF", accept: { "application/pdf": [".pdf"] } }, kcsi: { description: "KCSI 작업 파일", accept: { "application/octet-stream": [".kcsi"] } } };
+async function pickTarget(ext) {   // → {handle} | {name} | null(취소)
+  if (window.showSaveFilePicker) {
+    try { return { handle: await window.showSaveFilePicker({ suggestedName: `${baseName()}.${ext}`, types: [TYPES[ext]] }) }; }
+    catch (e) { if (e && e.name === "AbortError") return null; }
   }
-});
-$("save").addEventListener("click", () => savePdf());
-function savePdf() {
-  const a = document.createElement("a"); a.href = URL.createObjectURL(lastPdf); a.download = lastPdf.name;
+  return new Promise((ok) => {
+    $("fname").value = baseName(); $("fext").textContent = "." + ext;
+    showSheet("파일 이름", "", "name");
+    setTimeout(() => { $("fname").focus(); $("fname").select(); }, 50);
+    const done = (v) => { $("nameOk").onclick = $("nameNo").onclick = $("fname").onkeydown = null; $("sheet").classList.add("hide"); ok(v); };
+    $("nameOk").onclick = () => done({ name: ($("fname").value.trim() || baseName()).replace(/[\\/:*?"<>|]/g, "_") + "." + ext });
+    $("nameNo").onclick = () => done(null);
+    $("fname").onkeydown = (e) => { if (e.key === "Enter") $("nameOk").onclick(); };
+  });
+}
+async function writeTarget(t, blob) {
+  if (t.handle) { const w = await t.handle.createWritable(); await w.write(blob); await w.close(); return t.handle.name; }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = t.name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  return t.name;
+}
+async function savePdf() {
+  const t = await pickTarget("pdf"); if (!t) return;
+  try { const n = await writeTarget(t, lastPdf); showSheet("저장했습니다", n, "alert"); }
+  catch (e) { showSheet("저장하지 못했습니다", e.message, "alert"); }
 }
 
 // ================= 작업 파일(.kcsi) 저장·불러오기 =================
@@ -975,6 +992,7 @@ async function readZip(buf) {                    // 이름 → Uint8Array
 async function saveKcsi() {
   const c = counts();
   if (!c.check && !c.items && !c.photos) { showSheet("저장할 내용이 없습니다", "", "alert"); return; }
+  const target = await pickTarget("kcsi"); if (!target) return;
   showSheet("작업 파일 만드는 중", "", "progress");
   const bar = $("prog").firstElementChild; bar.style.width = "10%";
   try {
@@ -1002,10 +1020,8 @@ async function saveKcsi() {
       mobile: { app: "KCSI Photo Editor Mobile", version: VERSION, state: rest, photos: state.photos.map((p, i) => ({ file: `사진/${pad(i + 1)}.jpg`, rot: p.rot, desc: p.desc })) },
     };
     files.unshift({ name: "project.json", data: enc.encode(JSON.stringify(project, null, 1)) });
-    const name = `${(state.caseName.trim() || "현장사진").replace(/[\\/:*?"<>|]/g, "_")}.kcsi`;
-    const a = document.createElement("a"); a.href = URL.createObjectURL(makeZip(files)); a.download = name;
-    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-    showSheet("작업을 저장했습니다", `${name} · 다운로드 폴더`, "alert");
+    const name = await writeTarget(target, makeZip(files));
+    showSheet("저장했습니다", name, "alert");
   } catch (e) { showSheet("저장하지 못했습니다", e.message, "alert"); }
 }
 $("openKcsi").addEventListener("change", async (ev) => {
@@ -1035,6 +1051,8 @@ $("openKcsi").addEventListener("change", async (ev) => {
     showSheet("열 수 없는 파일입니다", "사진이 포함된 .kcsi 파일만 열 수 있습니다.", "alert");
   }
 });
+
+$("saveDock").addEventListener("click", saveKcsi);
 
 // ================= 앱 주소 보내기 =================
 const APP_URL = "https://gj-kcsi.github.io/kcsi/";
