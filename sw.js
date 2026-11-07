@@ -1,5 +1,5 @@
 // KCSI Photo Editor 모바일: 한 번 열면 인터넷 없이도 열리도록 앱 파일을 기기에 보관
-const CACHE = "kcsi-v0.2-28";
+const CACHE = "kcsi-v0.2-30";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable.png"];
 // 새 버전 설치 때는 브라우저 임시 보관본을 거치지 않고 서버에서 바로 받음
 self.addEventListener("install", (e) => {
