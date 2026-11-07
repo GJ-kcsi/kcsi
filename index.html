@@ -908,7 +908,7 @@ function showInstall() {
   const inApp = /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\/|; wv\)/i.test(navigator.userAgent);
   if (inApp && !standalone()) {
     box.classList.remove("hide"); $("installBtn").classList.add("hide");
-    $("installMsg").textContent = "지금은 다른 앱 안에서 열려 있습니다. 오른쪽 위(또는 아래) 메뉴에서 ‘다른 브라우저로 열기’를 눌러 크롬·사파리에서 열어 주세요. 그래야 설치와 저장이 됩니다.";
+    $("installMsg").textContent = "지금은 다른 앱 안에서 열려 있습니다. 오른쪽 위(또는 아래) 메뉴에서 ‘다른 브라우저로 열기’를 눌러 삼성 인터넷·크롬·사파리에서 열어 주세요. 그래야 설치와 저장이 됩니다.";
     return;
   }
   const web = location.protocol === "https:" || location.hostname === "localhost";
@@ -916,7 +916,8 @@ function showInstall() {
   if (standalone() || !web) msg = "";
   else if (installEvt) msg = "바탕화면에 아이콘으로 설치하면 주소창 없이 앱처럼 열리고, 인터넷이 없어도 쓸 수 있습니다.";
   else if (isIOS()) msg = "사파리 아래쪽 공유 버튼(□↑)을 누르고 ‘홈 화면에 추가’를 고르면 앱처럼 설치됩니다.";
-  else msg = "크롬 오른쪽 위 메뉴(⋮)에서 ‘앱 설치’ 또는 ‘홈 화면에 추가’를 고르면 앱처럼 설치됩니다.";
+  else if (/SamsungBrowser/i.test(navigator.userAgent)) msg = "아래쪽 메뉴(≡) → ‘현재 페이지 추가’ → ‘홈 화면’을 고르면 앱처럼 설치됩니다. 주소창에 설치 아이콘(⤓)이 보이면 그것을 눌러도 됩니다.";
+  else msg = "브라우저 메뉴(⋮ 또는 ≡)에서 ‘앱 설치’ 또는 ‘홈 화면에 추가’를 고르면 앱처럼 설치됩니다.";
   box.classList.toggle("hide", !msg);
   $("installMsg").textContent = msg;
   $("installBtn").classList.toggle("hide", !installEvt);
