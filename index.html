@@ -60,6 +60,7 @@ input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;b
 .q{display:grid;gap:6px}
 .q > span{font-size:13px;color:var(--muted)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
+.sysrow{display:flex;gap:6px;align-items:center}.sysrow input{flex:1}.sysrow .chips{flex-wrap:nowrap;gap:4px}.sysrow .chip{padding:6px 9px;font-size:13px}
 .chip{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px}
 .chip[aria-pressed=true]{background:var(--on);color:var(--on-ink);border-color:var(--on);font-weight:700}
 .btn{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:11px 12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
@@ -121,6 +122,7 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 .skx .tb .sep{flex:none;width:1px;background:rgba(255,255,255,.3);margin:2px 2px}
 .skx .tb .done{margin-left:auto;background:#fff;color:#1f3a5f;font-weight:700}
 .skx .tb .hide{display:none}
+.skx .tb .sigt{flex:none;color:#fff;font-weight:700;align-self:center;padding:0 6px}
 .skx .area{flex:1;display:grid;place-items:center;min-height:0;padding:6px}
 .skx canvas{background:#fff;touch-action:none;box-shadow:0 2px 10px rgba(0,0,0,.4)}
 .pad.open{cursor:pointer}
@@ -214,12 +216,13 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 // ================= 상태 =================
 const state = {
   caseName: "", date: today(),
-  include: { check: true, photos: true, items: true },
+  include: { check: true, photos: true, items: true, hand: true },
   check: {},                       // 점검 목록표 값
   pads: { body: [], sketch: [] },  // 손그림(정규화 좌표 선 목록)
   photos: [], perPage: 2,          // {id, blob, rot, desc}
   items: [], confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" },
-  sigs: { det: [], sci: [] },               // 유류물 목록 서명(손글씨)
+  sigs: { det: [], sci: [], hf: [], ht: [] }, // 서명(손글씨): 유류물 목록 담당 형사·과학수사, 인수인계서 인계자·인수자
+  hand: null,                                // 의뢰증거물 인수인계서
   user: { org: "", rank: "", name: "" },   // 작성자(새로 시작해도 유지)
 };
 let profiles = [];                          // 전에 쓴 작성자들(이 기기에 보관)
@@ -412,12 +415,13 @@ function userVals(u) {
   return {
     "check.police": ag, "check.sci1_org": org, "check.sci2_org": org, "check.sci3_org": org, "check.vid_org": org, "check.exp1_org": ag,
     "check.sci1_name": rankName(u), "confirm.sci_rank": (u.rank || "").trim(), "confirm.sci_name": (u.name || "").trim(),
+    "hand.org": org, "hand.rank": (u.rank || "").trim(), "hand.name": (u.name || "").trim(),
   };
 }
 function applyUser(oldU, newU) {      // 비었거나, 전 작성자 값이거나, 기본값인 칸만 바꿈(직접 고친 칸은 그대로)
   const o = userVals(oldU), n = userVals(newU);
   for (const path of Object.keys(n)) {
-    const [grp, key] = path.split("."), obj = grp === "check" ? state.check : state.confirm;
+    const [grp, key] = path.split("."), obj = grp === "check" ? state.check : grp === "hand" ? state.hand.to : state.confirm;
     const cur = obj[key] ?? "", def = grp === "check" ? CHECK_DEFAULTS[key] : undefined;
     if (!String(cur).trim() || cur === o[path] || cur === def) obj[key] = n[path] || def || "";
   }
@@ -451,12 +455,13 @@ window.addEventListener("popstate", () => {
 
 function render() {
   const v = $("view");
-  const titles = { home: "KCSI Photo Editor", check: "변사 현장 점검 목록표", photos: "현장 사진", items: "유류물 목록" };
+  const titles = { home: "KCSI Photo Editor", check: "변사 현장 점검 목록표", photos: "현장 사진", items: "유류물 목록", hand: "의뢰증거물 인수인계서" };
   $("title").textContent = titles[route];
   if (route === "home") renderHome(v);
   if (route === "check") renderCheck(v);
   if (route === "photos") renderPhotos(v);
   if (route === "items") renderItems(v);
+  if (route === "hand") renderHand(v);
   updateDock();
 }
 
@@ -466,7 +471,7 @@ function counts() {
   const filled = Object.entries(state.check).filter(([k, x]) => CHECK_DEFAULTS[k] !== x && !(uv["check." + k] && uv["check." + k] === x)).map(([, x]) => x).filter((x) => (Array.isArray(x) ? x.length : String(x ?? "").trim() !== "")).length
     + (state.pads.body.length ? 1 : 0) + (state.pads.sketch.length ? 1 : 0);
   const items = state.items.filter((r) => Object.values(r).some((x) => String(x).trim())).length;
-  return { check: filled, photos: state.photos.length, items };
+  return { check: filled, photos: state.photos.length, items, hand: handFilled() };
 }
 function renderHome(v) {
   const c = counts();
@@ -493,11 +498,13 @@ function renderHome(v) {
     </section>
     ${menu("check", 1, "변사 현장 점검 목록표", c.check ? "입력됨" : "입력 안 함")}
     ${menu("items", 2, "유류물 목록", c.items ? `${c.items}개 입력됨` : "입력 안 함")}
-    ${menu("photos", 3, "현장 사진", c.photos ? `사진 ${c.photos}장` : "입력 안 함")}
+    ${menu("hand", 3, "의뢰증거물 인수인계서", c.hand ? `증거물 ${c.hand}개 입력됨` : "입력 안 함")}
+    ${menu("photos", 4, "현장 사진", c.photos ? `사진 ${c.photos}장` : "입력 안 함")}
     <section class="panel" aria-label="PDF에 넣을 문서">
       <h2>PDF에 넣을 문서</h2>
       <label class="inc"><input type="checkbox" id="inc_check"> 변사 현장 점검 목록표</label>
       <label class="inc"><input type="checkbox" id="inc_items"> 유류물 목록</label>
+      <label class="inc"><input type="checkbox" id="inc_hand"> 의뢰증거물 인수인계서</label>
       <label class="inc"><input type="checkbox" id="inc_photos"> 현장 사진</label>
     </section>
     <footer class="brand">
@@ -529,14 +536,14 @@ function renderHome(v) {
   });
   $("caseName").addEventListener("input", (e) => { state.caseName = e.target.value; saveSoon(); });
   $("date").addEventListener("input", (e) => { state.date = e.target.value; saveSoon(); });
-  for (const k of ["check", "photos", "items"]) {
+  for (const k of ["check", "photos", "items", "hand"]) {
     const box = $("inc_" + k);
     box.checked = state.include[k] && c[k] > 0; box.disabled = c[k] === 0;
     box.addEventListener("change", () => { state.include[k] = box.checked; saveSoon(); });
   }
   v.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
   $("saveKcsi").addEventListener("click", saveKcsi);
-  $("reset").addEventListener("click", () => showSheet("모두 지울까요?", "점검 목록표, 사진, 유류물 목록, 사건명이 모두 지워집니다. 되돌릴 수 없습니다.", "confirm"));
+  $("reset").addEventListener("click", () => showSheet("모두 지울까요?", "점검 목록표, 유류물 목록, 인수인계서, 사진, 사건명이 모두 지워집니다. 되돌릴 수 없습니다.", "confirm"));
 }
 
 // ---------- 점검 목록표 입력 ----------
@@ -915,19 +922,70 @@ function openBody(onDone) {
 
 // 서명 칸: 양식의 (서 명) 자리 비율(68:26)과 같게
 const SIG = { w: 68, h: 26, x: 497, y: { det: 705.4, sci: 735.8 } };
-function setupSig(el) {
-  const id = el.dataset.sig, cv = el.querySelector("canvas"), strokes = state.sigs[id];
+function setupSig(el) {   // 칸에는 서명 미리보기, 탭하면 전체 화면에서 서명
+  const id = el.dataset.sig, cv = el.querySelector("canvas");
   cv.width = 680; cv.height = 260;
   const g = cv.getContext("2d");
-  const redraw = () => { g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); drawStrokes(g, strokes, cv.width, cv.height, "#111", 5); };
-  redraw();
-  let cur = null;
-  const pt = (e) => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; };
-  cv.addEventListener("pointerdown", (e) => { cv.setPointerCapture(e.pointerId); cur = [pt(e)]; strokes.push(cur); });
-  cv.addEventListener("pointermove", (e) => { if (!cur) return; cur.push(pt(e)); redraw(); });
-  const end = () => { if (cur) { cur = null; saveSoon(); } };
+  const draw = () => {
+    const strokes = state.sigs[id];
+    g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
+    drawStrokes(g, strokes, cv.width, cv.height, "#111", 5);
+    if (!strokes.length) {
+      g.fillStyle = "#6b7580"; g.font = `600 ${cv.width / 20}px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillText("탭하여 서명하기", cv.width / 2, cv.height / 2);
+    }
+  };
+  draw();
+  el.addEventListener("click", () => openSig(id, el.dataset.title || "서명", draw));
+}
+function openSig(id, title, onDone) {
+  const strokes = state.sigs[id];
+  let cur = null, closed = false;
+  const box = document.createElement("div"); box.className = "skx";
+  box.innerHTML = `<div class="tb"><span class="sigt">${esc(title)}</span><button type="button" data-act="clear">지우기</button>
+      <button type="button" class="done" data-act="done">완료</button></div><div class="area"><canvas></canvas></div>`;
+  document.body.appendChild(box);
+  const cv = box.querySelector("canvas"), g = cv.getContext("2d"), area = box.querySelector(".area");
+  try {
+    const req = box.requestFullscreen || box.webkitRequestFullscreen;
+    if (req) Promise.resolve(req.call(box)).then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock("landscape").catch(() => {})).catch(() => {});
+  } catch (e) {}
+  let W = 0, H = 0;
+  const paint = () => {
+    g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+    g.strokeStyle = "#c9d0d6"; g.lineWidth = Math.max(1, W / 600); g.setLineDash([W / 80, W / 120]);
+    g.beginPath(); g.moveTo(W * 0.06, H * 0.8); g.lineTo(W * 0.94, H * 0.8); g.stroke(); g.setLineDash([]);
+    drawStrokes(g, strokes, W, H, "#111", Math.max(3, W / 140));
+  };
+  const fit = () => {
+    const aw = area.clientWidth - 12, ah = area.clientHeight - 12, k = Math.min(aw / SIG.w, ah / SIG.h), dpr = window.devicePixelRatio || 1;
+    cv.style.width = Math.floor(SIG.w * k) + "px"; cv.style.height = Math.floor(SIG.h * k) + "px";
+    W = cv.width = Math.floor(SIG.w * k * dpr); H = cv.height = Math.floor(SIG.h * k * dpr);
+    paint();
+  };
+  const pt = (e) => { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) / b.width, (e.clientY - b.top) / b.height]; };
+  cv.addEventListener("pointerdown", (e) => { cv.setPointerCapture(e.pointerId); cur = [pt(e)]; strokes.push(cur); paint(); });
+  cv.addEventListener("pointermove", (e) => { if (!cur) return; cur.push(pt(e)); paint(); });
+  const end = () => { if (cur) { if (cur.length < 2) cur.push([cur[0][0] + 0.002, cur[0][1]]); cur = null; paint(); saveSoon(); } };
   cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
-  document.querySelector(`[data-sigclear="${id}"]`).addEventListener("click", () => { strokes.length = 0; redraw(); saveSoon(); });
+  box.querySelector(".tb").addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.act === "clear") { strokes.length = 0; paint(); saveSoon(); }
+    if (b.dataset.act === "done") close();
+  });
+  const onResize = () => fit();
+  window.addEventListener("resize", onResize);
+  history.pushState({ kcsi: route, sketch: 1 }, "", location.hash || "#" + route);   // 폰 뒤로 가기 = 완료
+  const onPop = () => close(true);
+  window.addEventListener("popstate", onPop);
+  function close(fromPop) {
+    if (closed) return; closed = true;
+    window.removeEventListener("resize", onResize); window.removeEventListener("popstate", onPop);
+    try { if (document.fullscreenElement) document.exitFullscreen(); if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+    box.remove(); saveSoon(); if (onDone) onDone();
+    if (!fromPop && history.state && history.state.sketch) history.back();
+  }
+  requestAnimationFrame(fit);
 }
 async function setupPad(el) {
   const id = el.dataset.pad, f = fieldById(id), [x, y, w, h] = f.region;
@@ -1053,12 +1111,10 @@ function renderItems(v) {
     <section class="panel"><h2>확인자</h2>
       <div class="row"><label class="f">담당 형사 계급<input data-cf="det_rank" type="text" value="${esc(cf.det_rank)}"></label>
         <label class="f">담당 형사 성명<input data-cf="det_name" type="text" value="${esc(cf.det_name)}"></label></div>
-      <div class="q"><span>담당 형사 서명</span><div class="pad" data-sig="det"><canvas></canvas></div>
-        <div class="padtools"><button class="btn small" type="button" data-sigclear="det">지우기</button></div></div>
+      <div class="q"><span>담당 형사 서명</span><div class="pad open" data-sig="det" data-title="담당 형사 서명" role="button" aria-label="담당 형사 서명하기"><canvas></canvas></div></div>
       <div class="row"><label class="f">과학수사 담당자 계급<input data-cf="sci_rank" type="text" value="${esc(cf.sci_rank)}"></label>
         <label class="f">과학수사 담당자 성명<input data-cf="sci_name" type="text" value="${esc(cf.sci_name)}"></label></div>
-      <div class="q"><span>과학수사 담당자 서명</span><div class="pad" data-sig="sci"><canvas></canvas></div>
-        <div class="padtools"><button class="btn small" type="button" data-sigclear="sci">지우기</button></div></div>
+      <div class="q"><span>과학수사 담당자 서명</span><div class="pad open" data-sig="sci" data-title="과학수사 담당자 서명" role="button" aria-label="과학수사 담당자 서명하기"><canvas></canvas></div></div>
     </section>`;
   v.querySelectorAll("[data-cf]").forEach((el) => el.addEventListener("input", () => { cf[el.dataset.cf] = el.value; saveSoon(); }));
   v.querySelectorAll("[data-sig]").forEach(setupSig);
@@ -1083,19 +1139,116 @@ function renderItemList() {
   list.querySelectorAll("[data-iu]").forEach((b) => b.addEventListener("click", () => { const i = +b.dataset.iu; [state.items[i - 1], state.items[i]] = [state.items[i], state.items[i - 1]]; renderItemList(); saveSoon(); }));
 }
 
+// ---------- 의뢰증거물 인수인계서 ----------
+// 증거물마다 번호·품명·수량·포장(봉인) 상태, 한 번의 인계에 대해 일시·장소·목적·봉인 확인과 인계자·인수자 서명
+const HAND_PURPOSE = ["감정 의뢰", "보관", "반환", "기타"], HAND_SEAL = ["이상 없음", "이상 있음"];
+const HAND_SYS = ["KICS", "SCAS", "온나라"];   // 접수번호를 받은 시스템
+const handDefault = () => ({ sys: "KICS", no: "", t: "", place: "", purpose: "감정 의뢰", purpose_d: "", seal: "이상 없음", seal_d: "", note: "",
+  from: { org: "", rank: "", name: "" }, to: { org: "", rank: "", name: "" }, items: [] });
+const handRow = () => ({ no: "", name: "", qty: "", pack: "", note: "" });
+function fixHand(x) {
+  const d = handDefault(), h = { ...d, ...(x || {}) };
+  h.from = { ...d.from, ...(h.from || {}) }; h.to = { ...d.to, ...(h.to || {}) };
+  h.items = Array.isArray(h.items) ? h.items.map((r) => ({ ...handRow(), ...r })) : [];
+  return h;
+}
+const handFilled = () => state.hand.items.filter((r) => Object.values(r).some((x) => String(x).trim())).length;
+function renderHand(v) {
+  const h = state.hand;
+  if (!h.t) h.t = nowLocal();
+  if (!h.items.length) h.items.push(handRow());
+  const inp = (k, lab, ph = "") => `<label class="f">${lab}<input data-h="${k}" type="text" value="${esc(h[k])}"${ph ? ` placeholder="${esc(ph)}"` : ""} autocomplete="off"></label>`;
+  const dt = (k, lab) => `<div class="q"><span>${lab}</span><div style="display:flex;gap:6px"><input data-h="${k}" type="datetime-local" value="${esc(h[k])}"><button class="btn small" type="button" data-hnow="${k}">지금</button></div></div>`;
+  const chips = (k, opts) => `<div class="chips">${opts.map((o) => `<button type="button" class="chip" data-hc="${k}" data-v="${esc(o)}" aria-pressed="${h[k] === o}">${esc(o)}</button>`).join("")}</div>`;
+  const person = (who, title) => `<section class="panel"><h2>${title}</h2>
+      <label class="f">소속<input data-hp="${who}:org" type="text" value="${esc(h[who].org)}" autocomplete="off"></label>
+      <div class="row"><label class="f">계급<input data-hp="${who}:rank" type="text" value="${esc(h[who].rank)}" autocomplete="off"></label>
+        <label class="f">성명<input data-hp="${who}:name" type="text" value="${esc(h[who].name)}" autocomplete="off"></label></div>
+      <div class="q"><span>${title} 서명</span><div class="pad open" data-sig="${who === "from" ? "hf" : "ht"}" data-title="${title} 서명" role="button" aria-label="${title} 서명하기"><canvas></canvas></div></div>
+    </section>`;
+  v.innerHTML = `
+    <section class="panel"><h2>사건 정보</h2>
+      <label class="f">사건명<input id="hCase" type="text" value="${esc(state.caseName)}" autocomplete="off"></label>
+      <div class="q"><span>접수번호</span><div class="sysrow">${chips("sys", HAND_SYS)}
+        <input data-h="no" type="text" value="${esc(h.no)}" aria-label="접수번호" autocomplete="off"></div></div>
+    </section>
+    <div id="hlist" style="display:grid;gap:10px"></div>
+    <div class="row"><button id="addHand" class="btn" type="button">＋ 증거물 추가</button>
+      <button id="fromItems" class="btn" type="button">유류물에서 가져오기</button></div>
+    <section class="panel"><h2>인수인계</h2>
+      ${dt("t", "인계 일시")}
+      ${inp("place", "인계 장소")}
+      <div class="q"><span>인계 목적</span>${chips("purpose", HAND_PURPOSE)}
+        <input data-h="purpose_d" class="${h.purpose === "기타" ? "" : "hide"}" type="text" placeholder="목적" value="${esc(h.purpose_d)}"></div>
+      <div class="q"><span>봉인·포장 상태</span>${chips("seal", HAND_SEAL)}
+        <input data-h="seal_d" class="${h.seal === "이상 있음" ? "" : "hide"}" type="text" placeholder="내용" value="${esc(h.seal_d)}"></div>
+      <label class="f">특이사항<textarea data-h="note" rows="2">${esc(h.note)}</textarea></label>
+    </section>
+    ${person("from", "인계자")}
+    ${person("to", "인수자")}`;
+  $("hCase").addEventListener("input", (e) => { state.caseName = e.target.value; saveSoon(); });
+  v.querySelectorAll("[data-h]").forEach((el) => el.addEventListener("input", () => { h[el.dataset.h] = el.value; saveSoon(); }));
+  v.querySelectorAll("[data-hnow]").forEach((b) => b.addEventListener("click", () => {
+    const el = v.querySelector(`[data-h="${b.dataset.hnow}"]`); el.value = nowLocal(); el.dispatchEvent(new Event("input"));
+  }));
+  v.querySelectorAll("[data-hc]").forEach((b) => b.addEventListener("click", () => {
+    const k = b.dataset.hc; h[k] = b.dataset.v;
+    b.parentElement.querySelectorAll("[data-hc]").forEach((x) => x.setAttribute("aria-pressed", h[k] === x.dataset.v));
+    const det = v.querySelector(`[data-h="${k}_d"]`);
+    if (det) det.classList.toggle("hide", h[k] !== (k === "purpose" ? "기타" : "이상 있음"));
+    saveSoon();
+  }));
+  v.querySelectorAll("[data-hp]").forEach((el) => el.addEventListener("input", () => { const [w, k] = el.dataset.hp.split(":"); h[w][k] = el.value; saveSoon(); }));
+  v.querySelectorAll("[data-sig]").forEach(setupSig);
+  $("addHand").addEventListener("click", () => {
+    h.items.push(handRow()); state.include.hand = true; renderHandList(); saveSoon();
+    setTimeout(() => { const all = document.querySelectorAll('[data-hi$=":name"]'); all[all.length - 1]?.focus(); }, 50);
+  });
+  const src = () => state.items.filter((r) => String(r.name || "").trim());
+  $("fromItems").disabled = !src().length;
+  $("fromItems").addEventListener("click", () => {
+    const have = new Set(h.items.map((r) => `${r.name.trim()}|${r.qty.trim()}`));
+    h.items = h.items.filter((r) => Object.values(r).some((x) => String(x).trim()));
+    for (const r of src()) {
+      const key = `${r.name.trim()}|${String(r.qty || "").trim()}`;
+      if (!have.has(key)) { h.items.push({ ...handRow(), name: r.name.trim(), qty: String(r.qty || "").trim() }); have.add(key); }
+    }
+    if (!h.items.length) h.items.push(handRow());
+    state.include.hand = true; renderHandList(); saveSoon();
+  });
+  renderHandList();
+}
+function renderHandList() {
+  const list = $("hlist"); if (!list) return;
+  const items = state.hand.items;
+  list.innerHTML = items.map((r, i) => `
+    <article class="item"><div class="top"><span class="no">${i + 1}</span>
+      <div class="tools"><button class="icon" data-hu="${i}" aria-label="위로" ${i ? "" : "disabled"}>↑</button>
+      <button class="icon del" data-hd="${i}" aria-label="삭제">✕</button></div></div>
+      <div class="row"><label class="f">증거물 번호<input data-hi="${i}:no" type="text" value="${esc(r.no)}" autocomplete="off"></label>
+        <label class="f">수량<input data-hi="${i}:qty" type="text" value="${esc(r.qty)}" autocomplete="off"></label></div>
+      <label class="f">품명 및 내용<input data-hi="${i}:name" type="text" value="${esc(r.name)}" autocomplete="off"></label>
+      <div class="row"><label class="f">포장·봉인<input data-hi="${i}:pack" type="text" value="${esc(r.pack)}" placeholder="예: 종이봉투 봉인" autocomplete="off"></label>
+        <label class="f">비고<input data-hi="${i}:note" type="text" value="${esc(r.note)}" autocomplete="off"></label></div>
+    </article>`).join("");
+  list.querySelectorAll("[data-hi]").forEach((el) => el.addEventListener("input", () => { const [i, k] = el.dataset.hi.split(":"); items[i][k] = el.value; saveSoon(); }));
+  list.querySelectorAll("[data-hd]").forEach((b) => b.addEventListener("click", () => { items.splice(+b.dataset.hd, 1); if (!items.length) items.push(handRow()); renderHandList(); saveSoon(); }));
+  list.querySelectorAll("[data-hu]").forEach((b) => b.addEventListener("click", () => { const i = +b.dataset.hu; [items[i - 1], items[i]] = [items[i], items[i - 1]]; renderHandList(); saveSoon(); }));
+}
+
 // ---------- 아래 버튼 ----------
 function chosen() {
   const c = counts();
-  return ["check", "items", "photos"].filter((k) => c[k] > 0 && state.include[k]);
+  return ["check", "items", "hand", "photos"].filter((k) => c[k] > 0 && state.include[k] !== false);
 }
 function photoTooLong() { return state.photos.findIndex((p) => p.desc.length > LIMIT[state.perPage]); }
 function updateDock() {
-  const ch = chosen(), names = { check: "점검 목록표", photos: "사진", items: "유류물" };
+  const ch = chosen(), names = { check: "점검 목록표", photos: "사진", items: "유류물", hand: "인수인계서" };
   const bad = photoTooLong();
   $("info").textContent = ch.length ? (bad >= 0 && ch.includes("photos") ? `사진 ${bad + 1} 설명이 깁니다` : ch.map((k) => names[k]).join(" + ")) : "입력한 문서가 없습니다";
   $("info").style.color = bad >= 0 && ch.includes("photos") ? "var(--danger)" : "";
   $("make").disabled = !ch.length;
-  const c0 = counts(); $("saveDock").disabled = !(c0.check || c0.items || c0.photos);
+  const c0 = counts(); $("saveDock").disabled = !(c0.check || c0.items || c0.hand || c0.photos);
 }
 
 // ---------- 확인·진행 창 ----------
@@ -1113,8 +1266,8 @@ $("close2").addEventListener("click", () => $("sheet").classList.add("hide"));
 $("no").addEventListener("click", () => $("sheet").classList.add("hide"));
 $("yes").addEventListener("click", () => {
   state.photos.forEach((p) => p.url && URL.revokeObjectURL(p.url));
-  Object.assign(state, { caseName: "", date: today(), include: { check: true, photos: true, items: true }, check: {}, pads: { body: [], sketch: [] },
-    photos: [], items: [], confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" }, sigs: { det: [], sci: [] } });
+  Object.assign(state, { caseName: "", date: today(), include: { check: true, photos: true, items: true, hand: true }, check: {}, pads: { body: [], sketch: [] },
+    photos: [], items: [], confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" }, sigs: { det: [], sci: [], hf: [], ht: [] }, hand: handDefault() });
   applyDefaults(); applyUser({}, state.user); $("sheet").classList.add("hide"); saveNow(); go("home");
 });
 
@@ -1242,6 +1395,98 @@ async function drawItems() {
   }
   return out;
 }
+// 의뢰증거물 인수인계서 쪽 그리기(양식 그림 없이 직접 그림, 단위 pt)
+async function drawHandover() {
+  const h = state.hand, rows = h.items.filter((r) => Object.values(r).some((x) => String(x).trim()));
+  const X0 = 45, X1 = 550, PER = 12, out = [];
+  const pagesN = Math.max(1, Math.ceil(rows.length / PER));
+  for (let pi = 0; pi < pagesN; pi++) {
+    const { c, g } = newPage();
+    const line = (x0, y0, x1, y1, w = 0.6) => { g.strokeStyle = "#000"; g.lineWidth = w * S; g.beginPath(); g.moveTo(x0 * S, y0 * S); g.lineTo(x1 * S, y1 * S); g.stroke(); };
+    const box = (x0, y0, x1, y1, fill) => {
+      if (fill) { g.fillStyle = fill; g.fillRect(x0 * S, y0 * S, (x1 - x0) * S, (y1 - y0) * S); }
+      g.strokeStyle = "#000"; g.lineWidth = 0.6 * S; g.strokeRect(x0 * S, y0 * S, (x1 - x0) * S, (y1 - y0) * S);
+    };
+    const put = (text, x0, x1, y0, y1, o = {}) => {
+      const t = String(text ?? "").trim(); if (!t) return;
+      const size = o.size || 9.5, two = o.lines === 2 && fitNeeds(g, t, x1 - x0 - 8, size);
+      drawText(g, t, { x: o.left ? x0 + 5 : (x0 + x1) / 2, y: (y0 + y1) / 2 - (two ? size * 0.55 : 0), w: x1 - x0 - 8, size, bold: o.bold,
+        align: o.left ? "left" : "center", lines: o.lines || 1, lh: size * 1.15 });
+    };
+    // 칸 나누기: [[너비, 내용, 머리칸?, 옵션]...]
+    const row = (y0, y1, cells) => {
+      let x = X0;
+      for (const [w, text, head, o] of cells) {
+        box(x, y0, x + w, y1, head ? "#EDEDED" : null);
+        if (typeof text === "function") text(x, x + w); else put(text, x, x + w, y0, y1, { bold: head, ...(o || {}) });
+        x += w;
+      }
+    };
+    const opts = (list, val, detOn, det) => (x0, x1, y0, y1, after) => {
+      let x = x0 + 9; const yc = (y0 + y1) / 2;
+      g.font = font(9.5); g.textAlign = "left"; g.textBaseline = "alphabetic";
+      for (const o of list) {
+        g.strokeStyle = "#000"; g.lineWidth = 0.6 * S; g.strokeRect(x * S, (yc - 4.5) * S, 9 * S, 9 * S);
+        if (val === o) drawCheck(g, x, yc + 0.3, 9);
+        g.fillStyle = "#000"; g.fillText(o, (x + 13) * S, (yc + 3.6) * S);
+        x += 13 + g.measureText(o).width / S + 16;
+      }
+      if (detOn && val === detOn && String(det || "").trim()) drawText(g, `( ${String(det).trim()} )`, { x, y: yc, w: x1 - x - 6, size: 9.5 });
+      if (String(after || "").trim()) drawText(g, String(after).trim(), { x: x + 6, y: yc, w: x1 - x - 12, size: 10 });
+    };
+    // 제목
+    g.fillStyle = "#000"; g.font = font(19, true); g.textAlign = "center"; g.textBaseline = "alphabetic";
+    g.fillText("의뢰증거물 인수인계서", (X0 + X1) / 2 * S, 82 * S);
+    line(X0 + 120, 90, X1 - 120, 90, 0.8);
+    // 사건 정보
+    let y = 108;
+    row(y, y + 26, [[75, "사 건 명", true], [430, state.caseName, false, { left: true }]]); y += 26;
+    box(X0, y, X0 + 75, y + 26, "#EDEDED"); put("접수번호", X0, X0 + 75, y, y + 26, { bold: true });
+    box(X0 + 75, y, X1, y + 26); opts(HAND_SYS, h.sys)(X0 + 75, X1, y, y + 26, h.no); y += 26;
+    // 증거물 목록
+    y += 18; g.fillStyle = "#000"; g.font = font(11, true); g.textAlign = "left"; g.fillText("1. 증거물 목록", X0 * S, y * S); y += 8;
+    const W = [32, 72, 186, 45, 95, 75];
+    row(y, y + 24, [[W[0], "연번", true], [W[1], "증거물 번호", true], [W[2], "품명 및 내용", true], [W[3], "수량", true], [W[4], "포장·봉인 상태", true], [W[5], "비 고", true]]);
+    y += 24;
+    for (let j = 0; j < PER; j++) {
+      const r = rows[pi * PER + j], n = pi * PER + j + 1;
+      row(y, y + 24, [[W[0], r ? String(n) : ""], [W[1], r && r.no, false, { lines: 2, size: 8.5 }], [W[2], r && r.name, false, { lines: 2, size: 9 }],
+        [W[3], r && r.qty, false, { size: 9 }], [W[4], r && r.pack, false, { lines: 2, size: 8.5 }], [W[5], r && r.note, false, { lines: 2, size: 8.5 }]]);
+      y += 24;
+    }
+    // 인수인계
+    y += 20; g.fillStyle = "#000"; g.font = font(11, true); g.textAlign = "left"; g.fillText("2. 인수인계 확인", X0 * S, y * S); y += 8;
+    row(y, y + 26, [[75, "인계 일시", true], [165, dotDateTime(h.t)], [75, "인계 장소", true], [190, h.place, false, { lines: 2, size: 9 }]]); y += 26;
+    const optRow = (label, list, val, detOn, det) => {
+      box(X0, y, X0 + 75, y + 26, "#EDEDED"); put(label, X0, X0 + 75, y, y + 26, { bold: true });
+      box(X0 + 75, y, X1, y + 26); opts(list, val, detOn, det)(X0 + 75, X1, y, y + 26); y += 26;
+    };
+    optRow("인계 목적", HAND_PURPOSE, h.purpose, "기타", h.purpose_d);
+    optRow("봉인 상태", HAND_SEAL, h.seal, "이상 있음", h.seal_d);
+    row(y, y + 36, [[75, "특이사항", true], [430, h.note, false, { left: true, lines: 2, size: 9 }]]); y += 36;
+    // 인계자·인수자
+    y += 12;
+    const P = [60, 165, 60, 100, 120];
+    row(y, y + 22, [[P[0], "구 분", true], [P[1], "소 속", true], [P[2], "계 급", true], [P[3], "성 명", true], [P[4], "서 명", true]]); y += 22;
+    for (const [who, label, sig] of [["from", "인계자", "hf"], ["to", "인수자", "ht"]]) {
+      const p = h[who];
+      row(y, y + 38, [[P[0], label, true], [P[1], p.org, false, { lines: 2, size: 9 }], [P[2], p.rank], [P[3], p.name], [P[4], ""]]);
+      const st = state.sigs[sig];
+      if (st && st.length) {
+        const sh = 32, sw = sh * SIG.w / SIG.h, sx = X1 - P[4] + (P[4] - sw) / 2;
+        g.save(); g.translate(sx * S, (y + 3) * S); drawStrokes(g, st, sw * S, sh * S, "#111", 2.6); g.restore();
+      }
+      y += 38;
+    }
+    y += 26;
+    g.fillStyle = "#000"; g.font = font(10.5); g.textAlign = "center";
+    g.fillText("위 증거물을 인계·인수하였음을 확인합니다.", (X0 + X1) / 2 * S, y * S);
+    if (pagesN > 1) { g.font = font(9); g.fillText(`${pi + 1} / ${pagesN}`, (X0 + X1) / 2 * S, 815 * S); }
+    out.push(await toJpeg(c));
+  }
+  return out;
+}
+function fitNeeds(g, text, w, size) { g.font = font(size); return g.measureText(String(text || "")).width > w * S; }
 function fitNeeds2(g, text, w) { g.font = font(8.5); return g.measureText(String(text || "")).width > w * S; }
 async function drawPhotos() {
   const out = [], per = state.perPage, MM = PAGE.w / 210;
@@ -1322,6 +1567,7 @@ $("make").addEventListener("click", async () => {
     let jpegs = [];
     if (ch.includes("check")) { jpegs = jpegs.concat(await drawChecklist()); bar.style.width = "35%"; }
     if (ch.includes("items")) { jpegs = jpegs.concat(await drawItems()); bar.style.width = "50%"; }
+    if (ch.includes("hand")) { jpegs = jpegs.concat(await drawHandover()); bar.style.width = "60%"; }
     if (ch.includes("photos")) { jpegs = jpegs.concat(await drawPhotos()); }
     bar.style.width = "100%";
     const name = `${(state.caseName.trim() || "현장사진").replace(/[\\/:*?"<>|]/g, "_")}.pdf`;
@@ -1421,7 +1667,7 @@ async function readZip(buf) {                    // 이름 → Uint8Array
 }
 async function saveKcsi() {
   const c = counts();
-  if (!c.check && !c.items && !c.photos) { showSheet("저장할 내용이 없습니다", "", "alert"); return; }
+  if (!c.check && !c.items && !c.hand && !c.photos) { showSheet("저장할 내용이 없습니다", "", "alert"); return; }
   const target = await pickTarget("kcsi"); if (!target) return;
   rememberUser();
   showSheet("작업 파일 만드는 중", "", "progress");
@@ -1436,9 +1682,10 @@ async function saveKcsi() {
         brightness: 100, sharpness: 100, annotations: [], children: [] });
     }
     bar.style.width = "40%";
-    let pages = [];   // PC 문서에 '문서 사진 첨부'로 들어갈 점검표·유류물 쪽
+    let pages = [];   // PC 문서에 '문서 사진 첨부'로 들어갈 점검표·유류물·인수인계서 쪽
     if (c.check) pages = pages.concat((await drawChecklist()).map((b, i) => ({ b, n: `첨부/점검목록표_${i + 1}.jpg` })));
     if (c.items) pages = pages.concat((await drawItems()).map((b, i) => ({ b, n: `첨부/유류물목록_${i + 1}.jpg` })));
+    if (c.hand) pages = pages.concat((await drawHandover()).map((b, i) => ({ b, n: `첨부/의뢰증거물인수인계서_${i + 1}.jpg` })));
     for (const pg of pages) { files.push({ name: pg.n, data: new Uint8Array(await pg.b.arrayBuffer()) }); attach.push(pg.n); }
     bar.style.width = "80%";
     const { photos: _p, ...rest } = state;
@@ -1472,9 +1719,10 @@ $("openKcsi").addEventListener("change", async (ev) => {
     }
     state.photos.forEach((p) => p.url && URL.revokeObjectURL(p.url));
     const st = m.state;
-    Object.assign(state, { caseName: st.caseName || "", date: st.date || today(), include: { check: true, photos: true, items: true, ...(st.include || {}) },
+    Object.assign(state, { caseName: st.caseName || "", date: st.date || today(), include: { check: true, photos: true, items: true, hand: true, ...(st.include || {}) },
       check: st.check || {}, pads: { body: (st.pads || {}).body || [], sketch: fixSketch((st.pads || {}).sketch) }, perPage: st.perPage === 4 ? 4 : 2, items: st.items || [],
-      confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "", ...(st.confirm || {}) }, sigs: { det: [], sci: [], ...(st.sigs || {}) } });
+      confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "", ...(st.confirm || {}) }, sigs: { det: [], sci: [], hf: [], ht: [], ...(st.sigs || {}) },
+      hand: fixHand(st.hand) });
     state.photos = m.photos.filter((p) => z[p.file]).map((p, i) => ({ id: String(Date.now()) + i, blob: new Blob([z[p.file]], { type: "image/jpeg" }), rot: p.rot || 0, desc: p.desc || "" }));
     saveNow(); go("home");
     showSheet("작업을 불러왔습니다", f.name, "alert");
@@ -1555,19 +1803,24 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
     state.pads = { body: [], sketch: [], ...(saved.pads || {}) };
     state.pads.sketch = fixSketch(state.pads.sketch);
     state.confirm = { det_rank: "", det_name: "", sci_rank: "", sci_name: "", ...(saved.confirm || {}) };
-    state.sigs = { det: [], sci: [], ...(saved.sigs || {}) };
+    state.sigs = { det: [], sci: [], hf: [], ht: [], ...(saved.sigs || {}) };
   } else {
     const old = await DB.get("work");   // v0.1 사진 작업 이어받기
     if (old && old.photos) Object.assign(state, { caseName: old.caseName || "", date: old.date || today(), perPage: old.perPage || 2, photos: old.photos.map((p) => ({ ...p, desc: (p.desc || "").replace(/\n/g, " ") })) });
   }
   state.user = { org: "", rank: "", name: "", ...(state.user || {}) };
+  state.hand = fixHand(state.hand);
+  if (!Object.values(state.hand.to).some((x) => String(x).trim())) {   // 인수자 칸이 비어 있으면 작성자로
+    const u = state.user; state.hand.to = { org: (u.org || "").trim(), rank: (u.rank || "").trim(), name: (u.name || "").trim() };
+  }
+  state.include = { check: true, photos: true, items: true, hand: true, ...(state.include || {}) };
   profiles = (await DB.get("profiles")) || [];
   applyDefaults();
   setTimeout(showInstall, 600);
   const r = location.hash.slice(1);
   history.replaceState(null, "", location.pathname + location.search);
   route = "home";
-  go(["check", "photos", "items"].includes(r) ? r : "home");
+  go(["check", "photos", "items", "hand"].includes(r) ? r : "home");
 })();
 </script>
 </body>
