@@ -1097,13 +1097,20 @@ async function loadFile(file) {
   const blob = await new Promise((ok) => c.toBlob(ok, "image/jpeg", 0.9));
   return { id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()), blob, rot: 0, desc: "" };
 }
-async function addFiles(files) {
-  const list = [...files];
+async function loadMany(list) {   // 진행 창에 "사진 불러오는 중 3 / 5"를 보이며 차례로 불러옴
+  const out = [], bad = [], bar = $("prog").firstElementChild;
+  bar.style.width = "0%";
   for (let i = 0; i < list.length; i++) {
-    $("info").textContent = `사진 불러오는 중 ${i + 1} / ${list.length}`;
-    try { state.photos.push(await loadFile(list[i])); }
-    catch (e) { showSheet("사진을 열 수 없습니다", `${list[i].name} 파일은 이 브라우저에서 열 수 없는 형식입니다.`, "alert"); }
+    showSheet(`사진 불러오는 중 ${i + 1}/${list.length}`, "", "progress");
+    try { out.push(await loadFile(list[i])); } catch (e) { bad.push(list[i].name); }
+    bar.style.width = `${Math.round(((i + 1) / list.length) * 100)}%`;
   }
+  if (bad.length) showSheet("사진을 열 수 없습니다", `${bad.join(", ")} 파일은 이 브라우저에서 열 수 없는 형식입니다.`, "alert");
+  else $("sheet").classList.add("hide");
+  return out;
+}
+async function addFiles(files) {
+  state.photos.push(...(await loadMany([...files])));
   state.include.photos = true;
   renderPhotoList(); saveSoon();
 }
@@ -1291,11 +1298,7 @@ function docAct(what, i) {
 }
 $("pickDoc").addEventListener("change", async (e) => {
   const list = [...e.target.files]; e.target.value = "";
-  for (let i = 0; i < list.length; i++) {
-    $("info").textContent = `사진 불러오는 중 ${i + 1} / ${list.length}`;
-    try { const p = await loadFile(list[i]); delete p.desc; state.docs.push(p); }
-    catch (err) { showSheet("사진을 열 수 없습니다", `${list[i].name} 파일은 이 브라우저에서 열 수 없는 형식입니다.`, "alert"); }
-  }
+  for (const p of await loadMany(list)) { delete p.desc; state.docs.push(p); }
   state.include.docs = true;
   renderDocList(); saveSoon();
 });
