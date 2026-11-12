@@ -1412,7 +1412,7 @@ function renderKakao(v) {
   $("kCopy").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText(out.value); }
     catch (e) { out.select(); document.execCommand("copy"); }
-    showSheet("복사했습니다", "카톡 대화방에 붙여 넣으세요.", "alert");
+    showSheet("복사했습니다", "", "alert");
   });
 }
 
