@@ -234,6 +234,7 @@ const state = {
   pads: { body: [], sketch: [] },  // 손그림(정규화 좌표 선 목록)
   photos: [], perPage: 2,          // {id, blob, rot, desc}
   docs: [],                          // 문서 사진 {id, blob, rot}: 쪽마다 한 장
+  kakao: { summary: "", notes: "", morgue: "" },   // 카톡 보고에만 있는 칸
   items: [], confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" },
   sigs: { det: [], sci: [], hf: [], ht: [] }, // 서명(손글씨): 유류물 목록 담당 형사·과학수사, 인수인계서 인계자·인수자
   hand: null,                                // 의뢰증거물 인수인계서
@@ -452,7 +453,7 @@ const RRN = { top: { p: 1, x0: 165, x1: 288, y: 270 }, bottom: { p: 1, x0: 165, 
 let route = "home";
 // 폰의 뒤로 가기: 문서 화면이면 첫 화면으로, 첫 화면이면 앱 종료(브라우저 기본 동작)
 function go(r, fromBack) {
-  if (r !== "home" && route === "home" && !fromBack) history.pushState({ kcsi: r }, "", "#" + r);
+  if (r !== "home" && (route === "home" || r === "kakao") && !fromBack) history.pushState({ kcsi: r }, "", "#" + r);
   else if (r !== "home" && route !== "home" && !fromBack) history.replaceState({ kcsi: r }, "", "#" + r);
   route = r; $("back").classList.toggle("hide", r === "home"); window.scrollTo(0, 0); render();
 }
@@ -469,12 +470,13 @@ window.addEventListener("popstate", () => {
 
 function render() {
   const v = $("view");
-  const titles = { home: "KCSI Photo Editor", check: "변사 현장 점검 목록표", photos: "현장 사진", items: "유류물 목록", hand: "의뢰증거물 인수인계서", docs: "문서 사진" };
+  const titles = { home: "KCSI Photo Editor", check: "변사 현장 점검 목록표", photos: "현장 사진", items: "유류물 목록", hand: "의뢰증거물 인수인계서", docs: "문서 사진", kakao: "카톡 보고" };
   $("title").textContent = titles[route];
   if (route === "home") renderHome(v);
   if (route === "check") renderCheck(v);
   if (route === "photos") renderPhotos(v);
   if (route === "docs") renderDocs(v);
+  if (route === "kakao") renderKakao(v);
   if (route === "items") renderItems(v);
   if (route === "hand") renderHand(v);
   updateDock();
@@ -580,7 +582,9 @@ function renderCheck(v) {
     for (const f of sec.fields) html += fieldHtml(f, C);
     html += `</div></details>`;
   });
+  html += `<button id="toKakao" class="btn primary" type="button">카톡 보고 만들기</button>`;
   v.innerHTML = html;
+  $("toKakao").addEventListener("click", () => go("kakao"));
   v.querySelectorAll("details.acc").forEach((d) => d.addEventListener("toggle", () => { d.open ? checkOpen.add(+d.dataset.si) : checkOpen.delete(+d.dataset.si); }));
   const recount = (el) => {          // 입력할 때마다 그 항목의 "N개 입력됨"을 고침
     const d = el.closest("details.acc"); if (!d) return;
@@ -1355,6 +1359,67 @@ async function drawDocs() {
   return out;
 }
 
+
+// ---------- 카톡 보고(변사 임장보고): 점검 목록표 내용으로 글을 만들고, 없는 것만 입력 ----------
+function kakaoText() {
+  const C = state.check, K = state.kakao, t = (x) => String(x ?? "").trim();
+  const station = (t(C.dep_org).match(/\S+서/) || [])[0] || "○○서";
+  let when = "";
+  if (C.t_found) { const [d, hm] = C.t_found.split("T"), [, m, dd] = d.split("-"); when = `${m}. ${dd}. ${hm || ""}경`.replace(" 경", "경"); }
+  const name = [...t(C.v_name).replace(/\s/g, "")].join(" ");
+  const who = [t(C.v_age) && `${t(C.v_age)}세`, t(C.v_sex)].filter(Boolean).join(", ");
+  const notes = t(K.notes).split("\n").map((l) => l.replace(/^\s*[-•·]\s*/, "").trim()).filter(Boolean);
+  const auto = [];                                    // 점검표에서 고른 값으로 만드는 줄
+  if (C.door_st) auto.push(`출입문 ${C.door_st}`);
+  if (C.intr === "없음" && C.rummage === "없음") auto.push("침입 및 물색 흔적 없음");
+  else {
+    if (C.intr === "없음") auto.push("침입 흔적 없음");
+    if (C.intr === "있음") auto.push("침입 흔적 있음" + ([t(C.intr_in), t(C.intr_how)].filter(Boolean).length ? `(${[t(C.intr_in), t(C.intr_how)].filter(Boolean).join(", ")})` : ""));
+    if (C.rummage === "없음") auto.push("물색 흔적 없음");
+    if (C.rummage === "있음") auto.push("물색 흔적 있음" + (t(C.rummage_d) ? `(${t(C.rummage_d)})` : ""));
+  }
+  if (C.will === "있음") auto.push("유서 발견" + (t(C.will_d) ? `(${t(C.will_d)})` : ""));
+  if (C.tool === "있음") auto.push("범행 도구 발견" + (t(C.tool_d) ? `(${t(C.tool_d)})` : ""));
+  if (C.inj === "없음") auto.push("신체 외표 특이외상 없음");
+  if (C.inj === "있음") {
+    const list = ["inj1", "inj2", "inj3"].map((k) => [0, 1, 2].map((i) => t(C[`${k}_${i}`])).filter(Boolean).join(" ")).filter(Boolean);
+    auto.push("신체 외상 있음" + (list.length ? `(${list.join(", ")})` : ""));
+  }
+  return [
+    `${station} 변사 임장보고`, "",
+    "1. 발생일시 장소", `   - ${when}`, `   - ${t(C.v_addr)}`, "",
+    "2. 변사자", `   ${name}${who ? `(${who})` : ""}`, "",
+    "3. 개요", t(K.summary), "",
+    "4. 현장 및 참고사항", ...notes.concat(auto).map((l) => ` - ${l}`), "",
+    "5. 안치", `  ${t(K.morgue)}`, "",
+    "6. 담당수사관", `  ${[t(C.dep_org), t(C.dep_name)].filter(Boolean).join(" ")}`,
+  ].join("\n");
+}
+function renderKakao(v) {
+  const K = state.kakao;
+  v.innerHTML = `
+    <section class="panel">
+      <label class="f">개요<textarea data-k="summary" rows="2">${esc(K.summary)}</textarea></label>
+      <label class="f">현장 및 참고사항 (한 줄에 하나씩)<textarea data-k="notes" rows="4">${esc(K.notes)}</textarea></label>
+      <label class="f">안치<input data-k="morgue" type="text" value="${esc(K.morgue)}" autocomplete="off"></label>
+    </section>
+    <section class="panel"><h2>보고 글</h2><textarea id="kakaoOut" rows="22" style="font-size:14px"></textarea>
+      <div class="row"><button id="kCopy" class="btn" type="button">복사</button><button id="kShare" class="btn primary" type="button">카톡으로 보내기</button></div>
+    </section>`;
+  const out = $("kakaoOut"), fill = () => { out.value = kakaoText(); };
+  fill();
+  v.querySelectorAll("[data-k]").forEach((el) => el.addEventListener("input", () => { K[el.dataset.k] = el.value; fill(); saveSoon(); }));
+  $("kCopy").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(out.value); }
+    catch (e) { out.select(); document.execCommand("copy"); }
+    showSheet("복사했습니다", "카톡 대화방에 붙여 넣으세요.", "alert");
+  });
+  $("kShare").addEventListener("click", async () => {
+    if (navigator.share) { try { await navigator.share({ text: out.value }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
+    try { await navigator.clipboard.writeText(out.value); showSheet("복사했습니다", "카톡 대화방에 붙여 넣으세요.", "alert"); } catch (e) {}
+  });
+}
+
 // ---------- 아래 버튼 ----------
 function chosen() {
   const c = counts();
@@ -1386,7 +1451,7 @@ $("no").addEventListener("click", () => $("sheet").classList.add("hide"));
 $("yes").addEventListener("click", () => {
   state.photos.concat(state.docs).forEach((p) => p.url && URL.revokeObjectURL(p.url));
   Object.assign(state, { caseName: "", date: today(), include: { check: true, photos: true, items: true, hand: true, docs: true }, check: {}, pads: { body: [], sketch: [] },
-    photos: [], docs: [], items: [], confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" }, sigs: { det: [], sci: [], hf: [], ht: [] }, hand: handDefault() });
+    photos: [], docs: [], kakao: { summary: "", notes: "", morgue: "" }, items: [], confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" }, sigs: { det: [], sci: [], hf: [], ht: [] }, hand: handDefault() });
   applyDefaults(); applyUser({}, state.user); $("sheet").classList.add("hide"); saveNow(); go("home");
 });
 
@@ -1999,7 +2064,7 @@ $("openKcsi").addEventListener("change", async (ev) => {
     Object.assign(state, { caseName: st.caseName || "", date: st.date || today(), include: { check: true, photos: true, items: true, hand: true, docs: true, ...(st.include || {}) },
       check: st.check || {}, pads: { body: (st.pads || {}).body || [], sketch: fixSketch((st.pads || {}).sketch) }, perPage: st.perPage === 4 ? 4 : 2, items: st.items || [],
       confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "", ...(st.confirm || {}) }, sigs: { det: [], sci: [], hf: [], ht: [], ...(st.sigs || {}) },
-      hand: fixHand(st.hand) });
+      hand: fixHand(st.hand), kakao: { summary: "", notes: "", morgue: "", ...(st.kakao || {}) } });
     state.photos = m.photos.filter((p) => z[p.file]).map((p, i) => ({ id: String(Date.now()) + i, blob: new Blob([z[p.file]], { type: "image/jpeg" }), rot: p.rot || 0, desc: p.desc || "" }));
     state.docs = (m.docs || []).filter((d) => z[d.file]).map((d, i) => ({ id: "d" + Date.now() + i, blob: new Blob([z[d.file]], { type: "image/jpeg" }), rot: 0 }));
     saveNow(); go("home");
@@ -2094,13 +2159,14 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
   }
   state.include = { check: true, photos: true, items: true, hand: true, docs: true, ...(state.include || {}) };
   state.docs = Array.isArray(state.docs) ? state.docs : [];
+  state.kakao = { summary: "", notes: "", morgue: "", ...(state.kakao || {}) };
   profiles = (await DB.get("profiles")) || [];
   applyDefaults();
   setTimeout(showInstall, 600);
   const r = location.hash.slice(1);
   history.replaceState(null, "", location.pathname + location.search);
   route = "home";
-  go(["check", "photos", "items", "hand", "docs"].includes(r) ? r : "home");
+  go(["check", "photos", "items", "hand", "docs", "kakao"].includes(r) ? r : "home");
 })();
 </script>
 </body>
