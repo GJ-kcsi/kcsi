@@ -234,7 +234,7 @@ const state = {
   pads: { body: [], sketch: [] },  // 손그림(정규화 좌표 선 목록)
   photos: [], perPage: 2,          // {id, blob, rot, desc}
   docs: [],                          // 문서 사진 {id, blob, rot}: 쪽마다 한 장
-  kakao: { summary: "", notes: "", morgue: "" },   // 카톡 보고에만 있는 칸
+  kakao: { summary: "", notes: "", morgue: "" },   // 간이 보고서에만 있는 칸
   items: [], confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" },
   sigs: { det: [], sci: [], hf: [], ht: [] }, // 서명(손글씨): 유류물 목록 담당 형사·과학수사, 인수인계서 인계자·인수자
   hand: null,                                // 의뢰증거물 인수인계서
@@ -470,7 +470,7 @@ window.addEventListener("popstate", () => {
 
 function render() {
   const v = $("view");
-  const titles = { home: "KCSI Photo Editor", check: "변사 현장 점검 목록표", photos: "현장 사진", items: "유류물 목록", hand: "의뢰증거물 인수인계서", docs: "문서 사진", kakao: "카톡 보고" };
+  const titles = { home: "KCSI Photo Editor", check: "변사 현장 점검 목록표", photos: "현장 사진", items: "유류물 목록", hand: "의뢰증거물 인수인계서", docs: "문서 사진", kakao: "간이 보고서" };
   $("title").textContent = titles[route];
   if (route === "home") renderHome(v);
   if (route === "check") renderCheck(v);
@@ -582,7 +582,7 @@ function renderCheck(v) {
     for (const f of sec.fields) html += fieldHtml(f, C);
     html += `</div></details>`;
   });
-  html += `<button id="toKakao" class="btn primary" type="button">카톡 보고 만들기</button>`;
+  html += `<button id="toKakao" class="btn primary" type="button">간이 보고서 생성</button>`;
   v.innerHTML = html;
   $("toKakao").addEventListener("click", () => go("kakao"));
   v.querySelectorAll("details.acc").forEach((d) => d.addEventListener("toggle", () => { d.open ? checkOpen.add(+d.dataset.si) : checkOpen.delete(+d.dataset.si); }));
@@ -1360,7 +1360,7 @@ async function drawDocs() {
 }
 
 
-// ---------- 카톡 보고(변사 임장보고): 점검 목록표 내용으로 글을 만들고, 없는 것만 입력 ----------
+// ---------- 간이 보고서(변사 임장보고): 점검 목록표 내용으로 글을 만들고, 없는 것만 입력 ----------
 function kakaoText() {
   const C = state.check, K = state.kakao, t = (x) => String(x ?? "").trim();
   const station = (t(C.dep_org).match(/\S+서/) || [])[0] || "○○서";
@@ -1404,7 +1404,7 @@ function renderKakao(v) {
       <label class="f">안치<input data-k="morgue" type="text" value="${esc(K.morgue)}" autocomplete="off"></label>
     </section>
     <section class="panel"><h2>보고 글</h2><textarea id="kakaoOut" rows="22" style="font-size:14px"></textarea>
-      <div class="row"><button id="kCopy" class="btn" type="button">복사</button><button id="kShare" class="btn primary" type="button">카톡으로 보내기</button></div>
+      <button id="kCopy" class="btn primary" type="button">복사</button>
     </section>`;
   const out = $("kakaoOut"), fill = () => { out.value = kakaoText(); };
   fill();
@@ -1413,10 +1413,6 @@ function renderKakao(v) {
     try { await navigator.clipboard.writeText(out.value); }
     catch (e) { out.select(); document.execCommand("copy"); }
     showSheet("복사했습니다", "카톡 대화방에 붙여 넣으세요.", "alert");
-  });
-  $("kShare").addEventListener("click", async () => {
-    if (navigator.share) { try { await navigator.share({ text: out.value }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
-    try { await navigator.clipboard.writeText(out.value); showSheet("복사했습니다", "카톡 대화방에 붙여 넣으세요.", "alert"); } catch (e) {}
   });
 }
 
