@@ -47,6 +47,15 @@ header{background:var(--navy);color:var(--navy-ink);padding-top:env(safe-area-in
 main{padding:12px max(16px,env(safe-area-inset-right,0px)) 130px max(16px,env(safe-area-inset-left,0px));max-width:760px;margin:0 auto;display:grid;gap:12px}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:10px}
 .panel h2{margin:0;font-size:15px;color:var(--navy)}
+details.acc{display:block;padding:0}
+details.acc>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:14px 12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary h2{flex:1}
+details.acc>summary .cnt{font-size:13px;color:var(--muted);white-space:nowrap}
+details.acc>summary .cnt.on{color:var(--navy);font-weight:600}
+details.acc>summary::after{content:"›";font-size:20px;color:var(--muted);transform:rotate(90deg);transition:transform .15s}
+details.acc[open]>summary::after{transform:rotate(-90deg)}
+details.acc .body{display:grid;gap:10px;padding:0 12px 12px}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .panel h2{color:var(--accent)}}
 label.f{display:grid;gap:4px;font-size:13px;color:var(--muted);min-width:0}
 input[type=text],input[type=date],input[type=datetime-local],input[type=number],textarea,select{font:inherit;font-size:15px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
@@ -555,15 +564,31 @@ function renderHome(v) {
 }
 
 // ---------- 점검 목록표 입력 ----------
+const checkOpen = new Set();   // 펼쳐 둔 항목(앱을 쓰는 동안 기억)
+function secCount(sec) {        // 항목 안에서 입력한 칸 수
+  const C = state.check, has = (x) => Array.isArray(x) ? x.length > 0 : String(x ?? "").trim() !== "";
+  return sec.fields.filter((f) => f.type === "pad" ? (state.pads[f.id] || []).length > 0
+    : f.type === "t3" ? [0, 1, 2].some((i) => has(C[`${f.id}_${i}`])) : has(C[f.id])).length;
+}
+function secLabel(n) { return n ? "입력됨" : "입력 안 함"; }
 function renderCheck(v) {
   const C = state.check;
   let html = "";
   CHECK.forEach((sec, si) => {
-    html += `<section class="panel"><h2>${esc(sec.sec)}</h2>`;
+    const n = secCount(sec);
+    html += `<details class="panel acc" data-si="${si}"${checkOpen.has(si) ? " open" : ""}><summary><h2>${esc(sec.sec)}</h2><span class="cnt${n ? " on" : ""}">${secLabel(n)}</span></summary><div class="body">`;
     for (const f of sec.fields) html += fieldHtml(f, C);
-    html += `</section>`;
+    html += `</div></details>`;
   });
   v.innerHTML = html;
+  v.querySelectorAll("details.acc").forEach((d) => d.addEventListener("toggle", () => { d.open ? checkOpen.add(+d.dataset.si) : checkOpen.delete(+d.dataset.si); }));
+  const recount = (el) => {          // 입력할 때마다 그 항목의 "N개 입력됨"을 고침
+    const d = el.closest("details.acc"); if (!d) return;
+    const n = secCount(CHECK[+d.dataset.si]), c = d.querySelector(".cnt");
+    c.textContent = secLabel(n); c.classList.toggle("on", n > 0);
+  };
+  v.addEventListener("input", (e) => recount(e.target));
+  v.addEventListener("click", (e) => { if (e.target.closest("[data-c],[data-now]")) setTimeout(() => recount(e.target), 0); });
   // 연결
   v.querySelectorAll("[data-t]").forEach((el) => el.addEventListener("input", () => {
     if (el.dataset.t === "v_rrn") {               // 000000-0000000 형태로, 7번째 숫자로 성별 자동 선택
@@ -611,13 +636,13 @@ function renderCheck(v) {
       }
     };
     draw();
-    bp.addEventListener("click", () => openBody(draw));
+    bp.addEventListener("click", () => openBody(() => { draw(); recount(bp); }));
   }
   const sk = v.querySelector("[data-sketch]");
   if (sk) {
     const draw = () => paintSketchPreview(sk.querySelector("canvas"));
     draw();
-    sk.addEventListener("click", () => openSketch(draw));
+    sk.addEventListener("click", () => openSketch(() => { draw(); recount(sk); }));
   }
 }
 function fieldById(id) { for (const s of CHECK) for (const f of s.fields) if (f.id === id) return f; }
