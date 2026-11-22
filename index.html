@@ -581,6 +581,8 @@ function renderHome(v) {
     ${menu("hand", 3, "의뢰증거물 인수인계서", c.hand ? `증거물 ${c.hand}개 입력됨` : "입력 안 함")}
     ${menu("photos", 4, "현장 사진", c.photos ? `사진 ${c.photos}장` : "입력 안 함")}
     ${menu("docs", 5, "문서 사진", c.docs ? `${c.docs}장` : "입력 안 함")}
+    <button class="menu" id="goFingerprint" type="button"><span class="n">6</span>
+      <span><b>지문 채취</b><small>신원확인 · 수사자료표</small></span><span aria-hidden="true">›</span></button>
     <section class="panel" aria-label="출력할 문서">
       <h2>출력할 문서</h2>
       <label class="inc"><input type="checkbox" id="inc_check"> 변사 현장 점검 목록표</label>
@@ -624,6 +626,7 @@ function renderHome(v) {
     box.addEventListener("change", () => { state.include[k] = box.checked; saveSoon(); });
   }
   v.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
+  $("goFingerprint").addEventListener("click", () => { location.href = "./fingerprint.html"; });
   $("saveKcsi").addEventListener("click", saveKcsi);
   $("reset").addEventListener("click", () => showSheet("모두 지울까요?", "점검 목록표, 유류물 목록, 인수인계서, 채증물, 사진, 문서 사진, 사건명이 모두 지워집니다. 되돌릴 수 없습니다.", "confirm"));
 }
