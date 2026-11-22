@@ -626,7 +626,7 @@ function renderHome(v) {
   }
   v.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
   $("saveKcsi").addEventListener("click", saveKcsi);
-  $("reset").addEventListener("click", () => showSheet("모두 지울까요?", "점검 목록표, 유류물 목록, 인수인계서, 채증물, 사진, 문서 사진, 사건명이 모두 지워집니다. 되돌릴 수 없습니다.", "confirm"));
+  $("reset").addEventListener("click", () => showSheet("모두 지울까요?", "점검 목록표, 유류물 목록, 인수인계서, 채증물, 사진, 문서 사진, 지문 채취, 사건명이 모두 지워집니다. 되돌릴 수 없습니다.", "confirm"));
 }
 
 // ---------- 점검 목록표 입력 ----------
@@ -1513,6 +1513,13 @@ $("yes").addEventListener("click", () => {
   Object.assign(state, { caseName: "", date: today(), include: { check: true, photos: true, items: true, hand: true, docs: true }, check: {}, pads: { body: [], sketch: [] },
     photos: [], docs: [], kakao: { summary: "", notes: "", morgue: "" }, items: [], confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" }, sigs: { det: [], sci: [], hf: [], ht: [] }, hand: handDefault(), autopsy: autDefault(), evid: evDefault() });
   applyDefaults(); applyUser({}, state.user); $("sheet").classList.add("hide"); saveNow(); go("home");
+  try {   // 지문 채취(fingerprint.html)의 사진도 함께 지움 (촬영 설정은 남김)
+    const r = indexedDB.open("kcsi-fingerprint", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("kv");
+    r.onsuccess = () => { try { const db = r.result, t = db.transaction("kv", "readwrite"), st = t.objectStore("kv"), q = st.get("case3");
+      q.onsuccess = () => { const o = q.result; if (o) st.put({ mode: "id", kind: null, one: null, autoShot: o.autoShot, lastMm: o.lastMm, flash: o.flash, outPpi: o.outPpi, info: {}, f: {} }, "case3"); };
+      t.oncomplete = () => db.close(); } catch (e) {} };
+  } catch (e) {}
 });
 
 // ================= PDF 그리기 =================

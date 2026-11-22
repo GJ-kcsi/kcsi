@@ -3,25 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#0f1418">
+<meta name="theme-color" content="#1f3a5f">
 <title>KCSI Docs · 지문 채취</title>
 <link rel="manifest" href="manifest.webmanifest">
 <style>
-:root{--bg:#0f1418;--panel:#182027;--line:#2a3540;--tx:#e6edf2;--sub:#8b9aa6;--acc:#3fa7ff;--ok:#3ccf8e;--warn:#ffb347}
+:root{--bg:#eef1f4;--panel:#ffffff;--line:#d5dbe1;--tx:#1d2731;--sub:#66727d;--acc:#2f6fb2;--navy:#1f3a5f;--chip:#e4eaf1;--ok:#2e9d6a;--warn:#c27a12;--danger:#b23a3a;color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#12171c;--panel:#1b2229;--line:#2e3943;--tx:#e6ebf0;--sub:#98a4af;--acc:#7fb2e6;--navy:#2b4f7d;--chip:#25303a;--ok:#3ccf8e;--warn:#ffb347;--danger:#e07b7b;color-scheme:dark}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;overscroll-behavior:none}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR","Noto Sans CJK KR",system-ui,sans-serif;overscroll-behavior:none}
 button{font:inherit;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}
-button:active{filter:brightness(1.3)}
-button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
-button.on{background:#1d3a55;border-color:var(--acc);color:#cfe8ff}
-button.danger{color:#ff8a8a}
-input,select{font:inherit;color:var(--tx);background:#0b1014;border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%}
+button:active{filter:brightness(.92)}
+button.pri{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:600}
+button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+button.danger{color:var(--danger)}
+input,select{font:inherit;color:var(--tx);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%}
 .screen{display:none;height:100%;flex-direction:column}
 .screen.act{display:flex}
-header{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;flex:none}
+header{padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top,0px));background:var(--navy);color:#fff;display:flex;align-items:center;gap:8px;flex:none}
 header h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-header .cnt{font-size:13px;color:var(--sub)}
-header button{padding:7px 12px}
+header .cnt{font-size:13px;color:rgba(255,255,255,.8)}
+header button{padding:6px 12px;background:transparent;border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:8px}
+header button.pri{background:#fff;color:var(--navy);border-color:#fff}
 main{flex:1;overflow:auto;padding:12px 12px 20px}
 .info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
 .info .full{grid-column:1/-1}
@@ -72,9 +74,9 @@ header button.back{padding:7px 12px}
 .bar button{flex:1;padding:12px 6px}
 #stage{flex:1;position:relative;background:#000;min-height:0;overflow:hidden}
 #cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-#calBar{position:absolute;left:8px;right:8px;bottom:8px;display:none;gap:6px;align-items:center;background:rgba(15,20,24,.92);border:1px solid var(--line);border-radius:10px;padding:8px}
+#calBar{color:#fff;position:absolute;left:8px;right:8px;bottom:8px;display:none;gap:6px;align-items:center;background:rgba(15,20,24,.92);border:1px solid var(--line);border-radius:10px;padding:8px}
 #calBar input{width:80px}
-#calBar span{font-size:13px;color:var(--sub)}
+#calBar span{font-size:13px;color:#cfd6dc}
 .tools{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;border-top:1px solid var(--line);flex:none}
 .tools button{flex:none;padding:8px 11px;font-size:14px}
 .seg{display:flex;flex:none;border:1px solid var(--line);border-radius:10px;overflow:hidden}
@@ -89,10 +91,11 @@ header button.back{padding:7px 12px}
 .sheet .box{width:100%;background:var(--panel);border-radius:16px 16px 0 0;padding:14px 12px calc(14px + env(safe-area-inset-bottom));display:grid;gap:8px}
 .sheet .ttl{font-size:15px;font-weight:600;padding:0 4px 4px}
 .sheet button{padding:13px}
-#busy{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:30;font-size:15px}
+#busy{position:fixed;inset:0;background:rgba(0,0,0,.6);color:#fff;display:none;align-items:center;justify-content:center;z-index:30;font-size:15px}
 #busy.act{display:flex}
-#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#263340;padding:9px 16px;border-radius:20px;font-size:14px;display:none;z-index:40}
-#camStage{position:relative;flex:1;background:#000;overflow:hidden}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#263340;color:#fff;padding:9px 16px;border-radius:20px;font-size:14px;display:none;z-index:40}
+#camStage{position:relative;flex:1;background:#000;overflow:hidden;color:#fff}
+#camStage button{color:#fff}
 #vid,#ov{position:absolute;inset:0;width:100%;height:100%}
 #vid{object-fit:cover}
 #camTop{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(rgba(0,0,0,.6),transparent)}
@@ -137,6 +140,7 @@ header button.back{padding:7px 12px}
 <section id="pick" class="screen">
   <header><button class="back" id="pickBack">‹</button><h1 id="pickTitle"></h1></header>
   <main class="menuMain">
+    <button id="pResume" class="card" style="display:none"><span id="pResumeTxt"></span><span class="chev">›</span></button>
     <button class="big fill" id="pTen"><svg viewBox="0 0 50 24" width="130" height="62" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(24,0) scale(-1,1)"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></g><g transform="translate(26,0)"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></g></svg><span>십지지문</span></button>
     <button class="big fill" id="pOne"><svg viewBox="0 0 24 24" width="62" height="62" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 14a8 8 0 0 1-8 8"/><path d="M18 11v-1a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V9a2 2 0 0 0-2-2a2 2 0 0 0-2 2v1"/><path d="M10 9.5V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v10"/><path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg><span>일지 지문</span></button>
     <div id="onePick" style="display:none;flex:1;flex-direction:column">
@@ -223,7 +227,7 @@ header button.back{padding:7px 12px}
   </div>
   <div class="tools">
     <button id="tCal">자 보정</button>
-    <div class="seg" id="tMode"><button data-m="gray">원본</button><button data-m="enh">강조</button><button data-m="bin">흑백</button></div>
+    <div class="seg" id="tMode"><button data-m="raw">원본</button><button data-m="gray">대비</button><button data-m="enh">강조</button><button data-m="bin">흑백</button></div>
     <button id="tMore" style="margin-left:auto">⚙</button>
   </div>
   <div class="tools" id="moreRow" style="display:none">
@@ -239,7 +243,7 @@ header button.back{padding:7px 12px}
   <div id="camStage">
     <video id="vid" playsinline muted autoplay></video>
     <canvas id="ov"></canvas>
-    <div id="camTop"><button id="camX">✕</button><span id="camTitle"></span><button id="camTorch">⚡ 끔</button></div>
+    <div id="camTop"><button id="camX">✕</button><span id="camTitle"></span><button id="camFlipV">⇅</button><button id="camTorch">⚡ 끔</button></div>
     <div id="camDots"><span id="dPos">위치</span><span id="dStill">흔들림</span><span id="dFocus">초점</span></div>
     <div id="camBot"><button id="camAuto" class="sm">자동</button><button id="shutter" aria-label="촬영"></button><button id="camSkip" class="sm">건너뛰기</button></div>
   </div>
@@ -277,7 +281,9 @@ header button.back{padding:7px 12px}
 const FN=['','왼손 시지','왼손 중지','왼손 환지','왼손 소지','왼손 무지','오른손 시지','오른손 중지','오른손 환지','오른손 소지','오른손 무지'];
 const SN=['','시지','중지','환지','소지','무지','시지','중지','환지','소지','무지'];
 const OUT_PPMM=500/25.4, TMAX=70*Math.PI/180, DEF_FW=16, MAXW=4096;
-const DEFO={flip:true,inv:true,curve:true,mode:'enh'};
+const DEFO={flip:true,inv:false,curve:false,mode:'raw'};
+const TONEN={raw:'원본',gray:'대비',enh:'강조',bin:'흑백'};
+const procTxt=o=>[o.flip?'좌우반전':'',o.inv?'명암반전':'',o.curve?'곡면보정':'',o.mode&&o.mode!=='raw'?TONEN[o.mode]:''].filter(Boolean).join('·')||'보정 없음';
 const $=id=>document.getElementById(id);
 let S={info:{},f:{}};
 
@@ -432,7 +438,9 @@ function processFinger(W,p,o,cal,maxSide,ppi){
 }
 function tone(val,msk,w,h,o,pxmm){
   const n=w*h,res=new Float32Array(n);
-  if(o.mode==='gray'){
+  if(o.mode==='raw'||!o.mode){
+    for(let i=0;i<n;i++)res[i]=clamp(val[i]/255);
+  }else if(o.mode==='gray'){
     const hist=new Float64Array(256);let tot=0;
     for(let i=0;i<n;i++)if(msk[i]>0.5){hist[Math.max(0,Math.min(255,val[i]|0))]++;tot++}
     let lo=0,hi=255,c=0;
@@ -449,10 +457,24 @@ function tone(val,msk,w,h,o,pxmm){
       const m=bsum(I1,w,h,x,y,R)/s0,vv=Math.max(0,bsum(I2,w,h,x,y,R)/s0-m*m);
       z[i]=(val[i]-m)/Math.sqrt(vv+4);
     }
-    const Iz=integ(z,w,h);
+    // 융선 방향을 따라 매끄럽게 하고(끊긴 융선 잇기), 가로질러서는 또렷하게
+    const gxx=new Float32Array(n),gyy=new Float32Array(n),gxy=new Float32Array(n);
+    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const i=y*w+x,gx=z[i+1]-z[i-1],gy=z[i+w]-z[i-w];gxx[i]=gx*gx;gyy[i]=gy*gy;gxy[i]=gx*gy}
+    const Rt=Math.max(3,Math.round(pxmm*0.45)),Ixx=integ(gxx,w,h),Iyy=integ(gyy,w,h),Ixy=integ(gxy,w,h);
+    const sm=new Float32Array(n),st=Math.max(0.6,pxmm*0.055),K=5,wt=[];let ws=0;
+    for(let k=-K;k<=K;k++){const v=Math.exp(-(k*k)/(2*(K*0.55)**2));wt.push(v);ws+=v}
     for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-      const i=y*w+x,zs=bsum(Iz,w,h,x,y,1)/9;
-      res[i]=o.mode==='bin'?(zs>0?1:0):clamp(0.5+zs*0.25);
+      const i=y*w+x;if(msk[i]<=0)continue;
+      const a=bsum(Ixx,w,h,x,y,Rt),c=bsum(Iyy,w,h,x,y,Rt),bb=bsum(Ixy,w,h,x,y,Rt);
+      const phi=0.5*Math.atan2(2*bb,a-c),dx=-Math.sin(phi)*st,dy=Math.cos(phi)*st;
+      let acc=0;for(let k=-K;k<=K;k++){const xx=x+k*dx,yy=y+k*dy;acc+=wt[k+K]*(xx<0||yy<0||xx>w-1||yy>h-1?0:bil(z,w,h,xx,yy))}
+      sm[i]=acc/ws;
+    }
+    // 가로 방향 선명화(언샤프)
+    const Is=integ(sm,w,h),r2=Math.max(1,Math.round(pxmm*0.06));
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+      const i=y*w+x,bl=bsum(Is,w,h,x,y,r2)/((2*r2+1)**2),zs=sm[i]+0.8*(sm[i]-bl);
+      res[i]=o.mode==='bin'?(zs>0?1:0):clamp(0.5+zs*0.32);
     }
   }
   for(let i=0;i<n;i++){let v=o.inv?1-res[i]:res[i];res[i]=msk[i]*v+(1-msk[i])}
@@ -463,6 +485,19 @@ function toCanvas(R,c){
   const x=c.getContext('2d'),im=x.createImageData(R.ow,R.oh),d=im.data;
   for(let i=0,j=0;i<R.res.length;i++,j+=4){const v=R.res[i]*255;d[j]=d[j+1]=d[j+2]=v;d[j+3]=255}
   x.putImageData(im,0,0);return c;
+}
+function scaledPhoto(bm,flip,ppmm,mode){
+  const w=bm.width||bm.naturalWidth,h=bm.height||bm.naturalHeight,bar=Math.max(90,Math.round(Math.min(w,h)*0.07)),c=document.createElement('canvas');
+  c.width=w;c.height=h+bar;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h+bar);
+  x.save();if(flip){x.translate(w,0);x.scale(-1,1)}x.drawImage(bm,0,0,w,h);x.restore();
+  let mm=10;while(mm*ppmm>w*0.45&&mm>1)mm=mm>5?5:1;while(mm*ppmm<w*0.12&&mm<50)mm*=2;
+  const x0=Math.round(bar*0.4),y0=h+Math.round(bar*0.72),L=mm*ppmm,lw=Math.max(2,Math.round(bar/30));
+  x.strokeStyle='#000';x.fillStyle='#000';x.lineWidth=lw;x.beginPath();x.moveTo(x0,y0);x.lineTo(x0+L,y0);
+  const step=mm<=10?1:mm<=20?2:5;for(let i=0;i<=mm;i+=step){const t=i%(step*5)===0||i===mm?bar*0.38:bar*0.2,xx=x0+i*ppmm;x.moveTo(xx,y0);x.lineTo(xx,y0-t)}
+  x.stroke();x.font=`bold ${Math.round(bar*0.32)}px sans-serif`;x.textBaseline='alphabetic';x.textAlign='left';x.fillText(`${mm} mm`,x0+L+bar*0.25,y0);
+  x.font=`${Math.round(bar*0.24)}px sans-serif`;x.textAlign='right';x.fillStyle='#555';
+  x.fillText(`${({ruler:'자 보정',ridge:'융선 자동',width:'추정'})[mode]} · ${(ppmm*25.4).toFixed(0)} ppi${flip?' · 좌우반전':''}`,w-bar*0.4,y0);
+  return c;
 }
 function afisCanvas(src,R){
   const N=600,PX=500/25.4,c=document.createElement('canvas');c.width=N;c.height=N;const x=c.getContext('2d');
@@ -566,16 +601,23 @@ $('infoDone').onclick=()=>{
   if(S.mode==='crim'){const a=ageFromRrn(S.info.rrn);if(a!=null&&a<19){toast('미성년자 — 잉크로 10지를 채취하십시오');return}}
   infoFlow=false;goHome();
 };
+function startNew(kind,one){
+  if(Object.keys(S.f).length&&!confirm('이전에 찍은 지문을 지우고 새로 채취할까요?'))return;
+  S={mode:'id',kind,one:one||null,tipDown:S.tipDown,autoShot:S.autoShot,lastMm:S.lastMm,flash:S.flash,outPpi:S.outPpi,info:{},f:{}};save();goHome();
+}
 function openPick(){
   $('pickTitle').textContent='지문 채취';$('onePick').style.display='none';$('pTen').style.display='';$('pOne').style.display='';
-  for(const [row,from] of [['pickL',1],['pickR',6]]){const el=$(row);el.innerHTML='';for(let n=from;n<from+5;n++){const b=document.createElement('button');b.textContent=SN[n];b.onclick=()=>{S.kind='one';S.one=n;save();goHome()};el.appendChild(b)}}
+  const has=S.kind&&Object.keys(S.f).length;$('pResume').style.display=has?'':'none';
+  if(has){const r=req();$('pResumeTxt').innerHTML=`이어서 · ${S.kind==='one'?'일지 '+FN[S.one]:'십지지문'} ${r.filter(n=>S.f[n]).length}/${r.length}`}
+  for(const [row,from] of [['pickL',1],['pickR',6]]){const el=$(row);el.innerHTML='';for(let n=from;n<from+5;n++){const b=document.createElement('button');b.textContent=SN[n];b.onclick=()=>startNew('one',n);el.appendChild(b)}}
   show('pick');
 }
+$('pResume').onclick=()=>goHome();
 function toDocs(){let same=false;try{same=document.referrer&&new URL(document.referrer).origin===location.origin}catch(e){}if(same&&history.length>1)history.back();else location.href='./index.html#check'}
-$('pickBack').onclick=()=>{if($('onePick').style.display!=='none'){$('onePick').style.display='none';$('pTen').style.display='';$('pOne').style.display='';return}if(S.kind)goHome();else toDocs()};
-$('homeBack').onclick=()=>toDocs();
-$('pTen').onclick=()=>{S.kind='ten';S.one=null;save();goHome()};
-$('pOne').onclick=()=>{$('pTen').style.display='none';$('pOne').style.display='none';$('onePick').style.display='flex'};
+$('pickBack').onclick=()=>{if($('onePick').style.display!=='none'){openPick();return}toDocs()};
+$('homeBack').onclick=()=>openPick();
+$('pTen').onclick=()=>startNew('ten');
+$('pOne').onclick=()=>{$('pTen').style.display='none';$('pOne').style.display='none';$('pResume').style.display='none';$('onePick').style.display='flex'};
 $('btnStart').onclick=()=>{const n=nextEmpty(req()[0]);if(n)openCam(n);else toast('촬영 완료')};
 const syncPpi=()=>document.querySelectorAll('#ppiSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.p===(S.outPpi||1000)));
 document.querySelectorAll('#ppiSeg button').forEach(b=>b.onclick=()=>{S.outPpi=+b.dataset.p;save();syncPpi()});
@@ -604,7 +646,7 @@ for(const id of ['fCam','fGal'])$(id).onchange=async e=>{
   const file=e.target.files[0];e.target.value='';if(!file)return;
   if(pick==='extra'){S.f[cur].extras=S.f[cur].extras||[];S.f[cur].extras.push(file);save();renderHome();toast('추가 사진 저장됨');return}
   const old=S.f[cur];
-  S.f[cur]={orig:file,name:file.name||'',taken:new Date().toISOString(),extras:old&&old.extras||[],p:null,o:{...(old&&old.o||DEFO)},cal:null,thumb:null};
+  S.f[cur]={orig:file,name:file.name||'',taken:new Date().toISOString(),extras:old&&old.extras||[],p:null,o:{...DEFO},cal:null,thumb:null};
   save();openEditor(cur);
 };
 
@@ -616,7 +658,7 @@ async function openEditor(n){
   try{
     const f=S.f[n];W=await loadWork(f.orig);
     let p0=f.p?{...f.p}:null;
-    if(!p0&&f.hint&&Math.abs(W.w/W.h-f.hint.asp)<0.03)p0={cx:f.hint.cx*W.w,cy:f.hint.cy*W.h,a:f.hint.a*W.w,b:f.hint.b*W.h,ang:0};
+    if(!p0&&f.hint&&Math.abs(W.w/W.h-f.hint.asp)<0.03)p0={cx:f.hint.cx*W.w,cy:f.hint.cy*W.h,a:f.hint.a*W.w,b:f.hint.b*W.h,ang:f.hint.ang||0};
     E={n,p:p0||defParams(W),o:{...DEFO,...f.o},cal:f.cal||null,calMode:!f.cal&&!f.p,calPts:[]};
     $('calMm').value=S.lastMm||10;
   }catch(err){busy(false);toast('사진을 열 수 없습니다');return}
@@ -731,14 +773,14 @@ let pvT=0;
 function schedPv(){clearTimeout(pvT);pvT=setTimeout(updPv,70)}
 function updPv(){
   if(!E)return;
-  const R=processFinger(W,E.p,E.o,E.cal,800);toCanvas(R,pv);
+  const R=processFinger(W,E.p,E.o,E.cal,560);toCanvas(R,pv);
   const fs=sizeInfo(E);
   $('pvInfo').innerHTML=
     `<div>배율 <b>${SCN[fs.mode]}</b>${fs.mode==='width'?' <span class="w">(손가락 폭 16mm 가정)</span>':fs.mode==='ridge'?' <span class="w">(±15%)</span>':''}</div>`+
     `<div>크기 <b>${fs.wmm.toFixed(1)} × ${fs.hmm.toFixed(1)} mm</b></div>`+
     `<div>원본 <b>${W.srcW} × ${W.srcH}</b> · 지두 <b>${Math.round(2*E.p.a*W.srcW/W.w)} px</b></div>`+
     `<div>출력 <b>${Math.round(fs.ow*(S.outPpi||1000)/500)} × ${Math.round(fs.oh*(S.outPpi||1000)/500)} px · ${S.outPpi||1000} ppi</b></div>`+
-    `<div>${[E.o.flip?'좌우반전':'',E.o.inv?'명암반전':'',E.o.curve?'곡면보정':''].filter(Boolean).join(' · ')||'보정 없음'}</div>`;
+    `<div>${procTxt(E.o)}</div>`;
 }
 function sizeInfo(e){
   const sc=scaleOf(W,e.p,e.cal),ppmm=sc.ppmm,srcW=e.o.curve?2*e.p.a*TMAX:2*e.p.a,srcH=2*e.p.b;
@@ -766,7 +808,10 @@ let stream=null,track=null,camN=1,loopT=0,okRun=0,peak=0,prevG=null,lastTick=0,t
 const FLN={off:'⚡ 끔',auto:'⚡ 자동',on:'⚡ 켬'};
 async function setTorch(on){if(!canTorch||!track)return;try{await track.applyConstraints({advanced:[{torch:on}]});torchOn=on}catch(e){}}
 function syncFlash(){const m=S.flash||'off';$('camTorch').textContent=FLN[m];$('camTorch').classList.toggle('on',m!=='off')}
-const NEED=5,CAM_ZOOM=2.2;let holdRun=0;
+const NEED=5,CAM_ZOOM=3;let holdRun=0,expCap=null,expVal=0,expT=0;
+function autoExpose(M,t){if(!expCap||!track||!M||t-expT<450)return;const st=expCap.step||1/3;let v=expVal;
+  if(M.clip>0.04||M.mean>185)v-=st;else if(M.mean<85&&M.clip<0.005)v+=st;else return;
+  v=Math.max(expCap.min,Math.min(expCap.max,v));if(Math.abs(v-expVal)<1e-6)return;expVal=v;expT=t;track.applyConstraints({advanced:[{exposureCompensation:v}]}).catch(()=>{})}
 async function openCam(n){
   camN=n;
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast(isSecureContext?'카메라를 지원하지 않는 브라우저입니다':'https 주소에서만 자동 촬영이 됩니다');$('fCam').click();return}
@@ -777,14 +822,17 @@ async function openCam(n){
   try{const c=track.getCapabilities?track.getCapabilities():{};
     if(c.focusMode&&c.focusMode.includes('continuous'))await track.applyConstraints({advanced:[{focusMode:'continuous'}]});
     try{await track.applyConstraints({advanced:[{pointsOfInterest:[{x:0.5,y:0.4}]}]})}catch(e){}
-    canTorch=!!c.torch;}catch(e){canTorch=false}
+    canTorch=!!c.torch;
+    expCap=c.exposureCompensation&&c.exposureCompensation.max>c.exposureCompensation.min?c.exposureCompensation:null;
+    if(expCap){expVal=Math.max(expCap.min,Math.min(expCap.max,-0.7));try{await track.applyConstraints({advanced:[{exposureMode:'continuous',exposureCompensation:expVal}]})}catch(e){expCap=null}}
+  }catch(e){canTorch=false}
   canFlash=false;try{if(window.ImageCapture){const pc=await new ImageCapture(track).getPhotoCapabilities();canFlash=!!(pc.fillLightMode&&pc.fillLightMode.includes('flash'))}}catch(e){}
   $('camTorch').style.display=canTorch||canFlash?'':'none';
   if(!canTorch&&S.flash==='on')S.flash='auto';
   torchOn=false;syncFlash();if(S.flash==='on')setTorch(true);
   vid.srcObject=stream;await vid.play().catch(()=>{});
   okRun=0;holdRun=0;peak=0;prevG=null;grabbing=false;lastM=null;
-  $('camTitle').textContent=n+'. '+FN[n];
+  $('camTitle').textContent=n+'. '+FN[n];$('camFlipV').classList.toggle('on',!!S.tipDown);
   $('camAuto').classList.toggle('on',S.autoShot!==false);
   show('cam');
   cancelAnimationFrame(loopT);loopT=requestAnimationFrame(camLoop);
@@ -792,7 +840,7 @@ async function openCam(n){
 function stopCam(){cancelAnimationFrame(loopT);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;track=null;vid.srcObject=null}
 function guide(){
   const r=ov.getBoundingClientRect(),cw=r.width,ch=r.height,vw=vid.videoWidth||1,vh=vid.videoHeight||1;
-  const Z=CAM_ZOOM,a=cw*0.22,b=a*1.4,cx=cw*0.5,cy=ch*0.4,s=Math.max(cw/vw,ch/vh),dx=(cw-vw*s)/2,dy=(ch-vh*s)/2;
+  const Z=CAM_ZOOM,a=cw*0.3,b=a*1.4,cx=cw*0.5,cy=ch*0.42,s=Math.max(cw/vw,ch/vh),dx=(cw-vw*s)/2,dy=(ch-vh*s)/2;
   const tf=`scale(${Z})`,to=`${cx}px ${cy}px`;if(vid.style.transform!==tf)vid.style.transform=tf;if(vid.style.transformOrigin!==to)vid.style.transformOrigin=to;
   return {cw,ch,cx,cy,a,b,vw,vh,vcx:(cx-dx)/s,vcy:(cy-dy)/s,va:a/(s*Z),vb:b/(s*Z),
     rx:cx-a*1.1,rw:a*2.2,ry:cy+b+cw*0.04,rh:cw*0.1};
@@ -807,10 +855,10 @@ function analyze(G){
   const d=actx.getImageData(0,0,w,h).data,g=new Float32Array(w*h);
   for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=0.2*d[j]+0.7*d[j+1]+0.1*d[j+2];
   const ex=(G.vcx-bx0)*k,ey=(G.vcy-by0)*k,ea=G.va*k,eb=G.vb*k;
-  let n=0,s=0,lap=0;
+  let n=0,s=0,lap=0,clip=0;
   for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
     const ux=(x-ex)/ea,uy=(y-ey)/eb;if(ux*ux+uy*uy>=0.5)continue;
-    const i=y*w+x,v=g[i];n++;s+=v;lap+=Math.abs(4*v-g[i-1]-g[i+1]-g[i-w]-g[i+w]);
+    const i=y*w+x,v=g[i];n++;s+=v;if(v>=245)clip++;lap+=Math.abs(4*v-g[i-1]-g[i+1]-g[i-w]-g[i+w]);
   }
   if(!n)return null;
   const m=s/n;
@@ -820,7 +868,7 @@ function analyze(G){
   let mot=99;
   if(prevG&&prevG.length===cg.length){let t=0;for(let i=0;i<cg.length;i++)t+=Math.abs(cg[i]-prevG[i]);mot=t/cg.length/(m+10)}
   prevG=cg;
-  return {mean:m,sharp:lap/n/(m+10),motion:mot};
+  return {mean:m,sharp:lap/n/(m+10),motion:mot,clip:clip/n};
 }
 function camLoop(t){
   loopT=requestAnimationFrame(camLoop);
@@ -828,7 +876,8 @@ function camLoop(t){
   if(t-lastTick>90&&!grabbing){
     lastTick=t;const M=analyze(G);lastM=M;
     if(M){
-      M.lit=M.mean>25&&M.mean<248;
+      autoExpose(M,t);
+      M.lit=M.mean>25&&M.mean<235&&M.clip<0.2;
       M.placed=M.lit&&M.sharp>0.012;
       if(M.placed)peak=Math.max(peak*0.985,M.sharp);else peak*=0.95;
       M.still=M.motion<0.05;
@@ -847,15 +896,10 @@ function camLoop(t){
 function drawOv(G,M){
   const dpr=devicePixelRatio||1;if(ov.width!==Math.round(G.cw*dpr)||ov.height!==Math.round(G.ch*dpr)){ov.width=Math.round(G.cw*dpr);ov.height=Math.round(G.ch*dpr)}
   const x=ov.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,G.cw,G.ch);
-  x.fillStyle='rgba(0,0,0,.35)';x.beginPath();x.rect(0,0,G.cw,G.ch);x.ellipse(G.cx,G.cy,G.a,G.b,0,0,Math.PI*2);x.rect(G.rx,G.ry,G.rw,G.rh);x.fill('evenodd');
+  x.fillStyle='rgba(0,0,0,.35)';x.beginPath();x.rect(0,0,G.cw,G.ch);x.ellipse(G.cx,G.cy,G.a,G.b,0,0,Math.PI*2);x.fill('evenodd');
   const col=M&&M.ok?'#3ccf8e':M&&M.placed?'#ffde3f':'#ffffff';
   x.strokeStyle=col;x.lineWidth=3;x.beginPath();x.ellipse(G.cx,G.cy,G.a,G.b,0,0,Math.PI*2);x.stroke();
-  x.fillStyle=col;x.beginPath();x.moveTo(G.cx,G.cy-G.b-10);x.lineTo(G.cx-10,G.cy-G.b+5);x.lineTo(G.cx+10,G.cy-G.b+5);x.closePath();x.fill();
-  {const rr=6,X0=G.rx,Y0=G.ry,RW=G.rw,RH=G.rh;x.save();
-   x.beginPath();x.roundRect?x.roundRect(X0,Y0,RW,RH,rr):x.rect(X0,Y0,RW,RH);x.fillStyle='rgba(255,255,255,.45)';x.fill();x.lineWidth=1.5;x.strokeStyle='rgba(255,255,255,.75)';x.stroke();
-   const mm=2*G.a/16;x.strokeStyle='rgba(0,0,0,.85)';x.lineWidth=1.4;x.beginPath();
-   for(let i=0,px=X0+mm;px<X0+RW-2;i++,px+=mm){const L=(i+1)%10===0?RH*.55:(i+1)%5===0?RH*.38:RH*.22;x.moveTo(Math.round(px)+.5,Y0+1);x.lineTo(Math.round(px)+.5,Y0+1+L)}
-   x.stroke();x.restore();}
+  {const d=S.tipDown?-1:1,ty=G.cy-d*G.b;x.fillStyle=col;x.beginPath();x.moveTo(G.cx,ty-d*14);x.lineTo(G.cx-14,ty+d*6);x.lineTo(G.cx+14,ty+d*6);x.closePath();x.fill();}
   if(okRun>0&&S.autoShot!==false){x.strokeStyle='#3ccf8e';x.lineWidth=7;x.beginPath();x.ellipse(G.cx,G.cy,G.a+9,G.b+9,-Math.PI/2,0,Math.PI*2*Math.min(1,okRun/NEED));x.stroke()}
 }
 let photoMax=null;
@@ -886,6 +930,12 @@ async function alignPhoto(blob,frame){
   if(bm.close)bm.close();
   return {blob:out,pw,ph,score:best.sc};
 }
+function mapGuide(G,vw,vh,pw,ph){const va=vw/vh,pa=pw/ph;let nx=G.vcx/vw,ny=G.vcy/vh,na=G.va/vw,nb=G.vb/vh;
+  if(pa>va){const f=va/pa;nx=0.5+(nx-0.5)*f;na*=f}else if(pa<va){const f=pa/va;ny=0.5+(ny-0.5)*f;nb*=f}return {cx:nx,cy:ny,a:na,b:nb,asp:pa}}
+function clipFrac(src,w,h,g){const N=96,c=document.createElement('canvas');c.width=N;c.height=Math.round(N*g.b*h/(g.a*w))||N;const x=c.getContext('2d');
+  x.drawImage(src,(g.cx-g.a)*w,(g.cy-g.b)*h,2*g.a*w,2*g.b*h,0,0,c.width,c.height);const d=x.getImageData(0,0,c.width,c.height).data;let n=0,k=0;
+  for(let yy=0;yy<c.height;yy++)for(let xx=0;xx<N;xx++){const ux=(xx+.5)/N*2-1,uy=(yy+.5)/c.height*2-1;if(ux*ux+uy*uy>0.6)continue;const i=(yy*N+xx)*4;n++;if(.3*d[i]+.59*d[i+1]+.11*d[i+2]>=245)k++}
+  return n?k/n:0}
 async function grab(){
   if(grabbing||!stream)return;grabbing=true;
   const G=guide(),vw=G.vw,vh=G.vh;let blob=null;
@@ -903,15 +953,17 @@ async function grab(){
   busy(true,'저장 중…');
   let pw=vw,ph=vh;
   if(blob){try{const al=await alignPhoto(blob,fr);if(al.score>0.3){blob=al.blob;pw=al.pw;ph=al.ph}else blob=null}catch(e){blob=null}}
+  if(blob){try{const hp=mapGuide(G,vw,vh,pw,ph),bm=await decode(blob),cp=clipFrac(bm,pw,ph,hp),cf=clipFrac(fr,vw,vh,mapGuide(G,vw,vh,vw,vh));if(bm.close)bm.close();
+    if(cp>0.08&&cp>cf*2+0.03)blob=null}catch(e){}}
   if(!blob){blob=await new Promise(r=>fr.toBlob(r,'image/jpeg',0.95));pw=vw;ph=vh}
   // map guide (video coords) → photo coords assuming centered crop
   const va=vw/vh,pa=pw/ph;let nx=G.vcx/vw,ny=G.vcy/vh,na=G.va/vw,nb=G.vb/vh;
   if(pa>va){const f=va/pa;nx=0.5+(nx-0.5)*f;na*=f}else if(pa<va){const f=pa/va;ny=0.5+(ny-0.5)*f;nb*=f}
-  const hint={cx:nx,cy:ny,a:na,b:nb,asp:pa};
+  const hint={cx:nx,cy:ny,a:na,b:nb,asp:pa,ang:S.tipDown?Math.PI:0};
   const n=camN,old=S.f[n],file=new File([blob],`finger_${pad(n)}.jpg`,{type:blob.type||'image/jpeg'});
-  S.f[n]={orig:file,name:file.name,taken:new Date().toISOString(),extras:old&&old.extras||[],p:null,hint,o:{...(old&&old.o||DEFO)},cal:null,thumb:null,res:[pw,ph]};
+  S.f[n]={orig:file,name:file.name,taken:new Date().toISOString(),extras:old&&old.extras||[],p:null,hint,o:{...DEFO},cal:null,thumb:null,res:[pw,ph]};
   cur=n;save();
-  try{const Wk=await loadWork(file),h=hint,pp=Math.abs(Wk.w/Wk.h-h.asp)<0.03?{cx:h.cx*Wk.w,cy:h.cy*Wk.h,a:h.a*Wk.w,b:h.b*Wk.h,ang:0}:defParams(Wk);
+  try{const Wk=await loadWork(file),h=hint,pp=Math.abs(Wk.w/Wk.h-h.asp)<0.03?{cx:h.cx*Wk.w,cy:h.cy*Wk.h,a:h.a*Wk.w,b:h.b*Wk.h,ang:h.ang||0}:defParams(Wk);
     S.f[n].p=pp;S.f[n].thumb=toCanvas(processFinger(Wk,pp,S.f[n].o,null,640)).toDataURL('image/jpeg',0.92);save()}catch(e){}
   busy(false);
   const nx2=nextEmpty(n%10+1);
@@ -919,6 +971,7 @@ async function grab(){
 }
 $('camSkip').onclick=()=>{const from=camN,nx=nextEmpty(from%10+1);stopCam();if(nx&&nx!==from)openCam(nx);else goHome()};
 $('shutter').onclick=()=>grab();
+$('camFlipV').onclick=e=>{e.stopPropagation();S.tipDown=!S.tipDown;$('camFlipV').classList.toggle('on',!!S.tipDown);save()};
 ov.addEventListener('click',()=>grab());
 $('camX').onclick=()=>{stopCam();goHome()};
 $('camAuto').onclick=()=>{S.autoShot=S.autoShot===false;okRun=0;$('camAuto').classList.toggle('on',S.autoShot!==false);save()};
@@ -933,7 +986,7 @@ async function processAll(){
     await new Promise(r=>setTimeout(r,10));
     const Wk=await loadWork(f.orig),p=f.p||defParams(Wk),o={...DEFO,...f.o};
     const pp=S.outPpi||1000,R=processFinger(Wk,p,o,f.cal,4000,pp),FR=processFinger(Wk,p,{...o,curve:false},f.cal,4000,pp),R5=pp===500?R:processFinger(Wk,p,o,f.cal,4000,500);
-    out[n]={R,c:toCanvas(R),FR,fc:toCanvas(FR),R5,c5:pp===500?null:toCanvas(R5),o,cal:f.cal,src:[Wk.srcW,Wk.srcH]};
+    out[n]={R,c:toCanvas(R),FR,fc:toCanvas(FR),R5,c5:pp===500?null:toCanvas(R5),o,cal:f.cal,src:[Wk.srcW,Wk.srcH],ppmmO:R.ppmm*Wk.srcW/Wk.w};
   }
   return out;
 }
@@ -1004,7 +1057,7 @@ function renderForm9(P){
   fnt(2.6);x.textAlign='left';
   const modes=[...new Set(Object.values(P).map(q=>q.R.mode))].map(m=>SCN[m]).join('·');
   const shrunk=Object.keys(fit).filter(n=>fit[n]<1);
-  x.fillText(`※ 스마트폰 촬영 영상 변환본(좌우반전·명암반전·곡면보정, 배율: ${modes||'-'})${shrunk.length?` / 칸에 맞춰 축소: ${shrunk.join(',')}번`:''}. 평면압날란은 회전지문 사진의 중앙부 변환본임. 원본 사진 별도 보존.`,X0*MM,(Y0+bottom+5)*MM,229*MM);
+  x.fillText(`※ 스마트폰 촬영 영상(${[...new Set(Object.values(P).map(q=>procTxt(q.o)))].join(' / ')}, 배율: ${modes||'-'})${shrunk.length?` / 칸에 맞춰 축소: ${shrunk.join(',')}번`:''}. 평면압날란은 회전지문 사진의 중앙부 변환본임. 원본 사진 별도 보존.`,X0*MM,(Y0+bottom+5)*MM,229*MM);
   x.textAlign='right';x.fillText('297㎜×210㎜(보존용지 120g/㎡)',(X0+229)*MM,(Y0+bottom+10)*MM);
   return c;
 }
@@ -1072,7 +1125,7 @@ async function renderFormImg(kind,P){
   }
   const modes=[...new Set(Object.values(P).map(q=>q.R.mode))].map(m=>SCN[m]).join('·');
   font(30);x.textAlign='left';x.fillStyle='#000';
-  x.fillText(`※ 스마트폰 촬영 영상 변환본(좌우반전·명암반전·곡면보정, 배율: ${modes||'-'})${shrunk.length?` / 칸에 맞춰 축소: ${shrunk.join(',')}번`:''}${kind==='f2'?'. 평면지문란은 회전지문 사진의 중앙부 변환본임':''}. 원본 사진 별도 보존.`,X(90),Y(kind==='f1'?2690:2320),img.width*k*0.92);
+  x.fillText(`※ 스마트폰 촬영 영상(${[...new Set(Object.values(P).map(q=>procTxt(q.o)))].join(' / ')}, 배율: ${modes||'-'})${shrunk.length?` / 칸에 맞춰 축소: ${shrunk.join(',')}번`:''}${kind==='f2'?'. 평면지문란은 회전지문 사진의 중앙부 변환본임':''}. 원본 사진 별도 보존.`,X(90),Y(kind==='f1'?2690:2320),img.width*k*0.92);
   return c;
 }
 
@@ -1099,9 +1152,13 @@ $('btnZip').onclick=async()=>{closeOut();
       const ob=await u8(f.orig),on=`원본/${pre}_원본.${extOf(f.orig)}`;files.push({name:on,data:ob});
       log.push(`[${n}] ${FN[n]}`,`  원본: ${on} (${f.name||'촬영'}, ${q.src[0]}×${q.src[1]}px)`,`  원본 SHA-256: ${await sha256(f.orig)}`);
       (f.extras||[]).forEach((x,i)=>files.push({name:`추가사진/${pre}_추가${i+1}.${extOf(x)}`,data:null,blob:x}));
-      const pb=await pngWithDpi(q.c,q.R.ppi);files.push({name:`보정/${pre}_${Math.round(q.R.ppi)}ppi.png`,data:await u8(pb)});
+      {const bm=await decode(f.orig);
+        for(const fl of [false,true]){const c=scaledPhoto(bm,fl,q.ppmmO,q.R.mode);
+          files.push({name:fl?`좌우반전/${pre}_좌우반전_스케일.jpg`:`원본/${pre}_원본_스케일.jpg`,data:await u8(await new Promise(rs=>c.toBlob(rs,'image/jpeg',0.95)))})}
+        if(bm.close)bm.close()}
+      const pb=await pngWithDpi(q.c,q.R.ppi);files.push({name:`지문/${pre}_${Math.round(q.R.ppi)}ppi.png`,data:await u8(pb)});
       files.push({name:`AFIS/${pre}_500ppi_600x600.png`,data:await u8(await pngWithDpi(afisCanvas(q.c5||q.c,q.R5),500))});
-      log.push(`  처리: ${[q.o.flip?'좌우반전':'',q.o.inv?'명암반전':'',q.o.curve?'곡면보정(원통 ±70°)':''].filter(Boolean).join(', ')||'없음'} / 톤: ${({gray:'원본',enh:'강조',bin:'흑백'})[q.o.mode]}`,
+      log.push(`  처리: ${[q.o.flip?'좌우반전':'',q.o.inv?'명암반전':'',q.o.curve?'곡면보정(원통 ±70°)':''].filter(Boolean).join(', ')||'없음'} / 톤: ${TONEN[q.o.mode||'raw']}`,
         `  배율: ${({ruler:'자 보정',ridge:`융선 간격 자동 (평균 ${RIDGE_MM}mm 가정, 오차 약 ±15%)`,width:'추정 (손가락 폭 16mm 가정)'})[q.R.mode]} — ${q.R.ppmm.toFixed(2)} px/mm (작업 영상 기준)`,
         `  출력: ${q.R.ow}×${q.R.oh}px, ${q.R.wmm.toFixed(1)}×${q.R.hmm.toFixed(1)}mm, ${Math.round(q.R.ppi)}ppi`,
         `  추가 사진: ${(f.extras||[]).length}장`,'');
@@ -1122,7 +1179,7 @@ $('btnZip').onclick=async()=>{closeOut();
   if(!S.info)S.info={};
   S.mode='id';
   await loadDocs();
-  if(S.kind)goHome();else openPick();
+  openPick();
 })();
 window.addEventListener('pageshow',e=>{if(e.persisted)loadDocs().then(()=>{if($('home').classList.contains('act'))renderHome()})});
 </script>
