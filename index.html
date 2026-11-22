@@ -143,6 +143,7 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 .isize{display:flex;align-items:center;gap:6px}.isize input{width:64px!important;text-align:center}
 .bodymap{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}.bodymap canvas{display:block;width:100%;height:auto;touch-action:manipulation}
 .ligm{display:grid;gap:6px;padding:8px 10px;border:1px solid var(--line);border-radius:8px}.lrow{display:grid;grid-template-columns:7.5em 1fr auto;align-items:center;gap:8px;font-size:14px}
+.dt24{display:flex;gap:6px;flex:1;min-width:0}.dt24 input{flex:2.2;min-width:0;padding-left:6px;padding-right:4px}.dt24 select{flex:1;min-width:0;padding-left:6px;padding-right:2px}
 .injdot{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;color:#fff;font-style:normal;font-size:12px;font-weight:700;margin-right:2px}
 .pickhead{display:flex;align-items:center;gap:8px}.pickhead b{flex:1;font-size:16px}
 .isheet{position:fixed;left:0;right:0;bottom:0;z-index:12;display:flex;justify-content:center;pointer-events:none}
@@ -2116,7 +2117,7 @@ function injText(x, i) {
   const no = i !== undefined && state.autopsy.diagram ? `(${injNo(i)})` : "";
   const P = injParts(x);
   const loc = P.length > 2 ? `${P.join(", ")}에 걸쳐 ` : P.length === 2 ? `${P[0]}에서 ${P[1]}에 걸쳐 ` : where ? where + "에 " : "";
-  return (`${loc}${size}${x.type || "외상"}${cnt && cnt !== "1" ? (/^\d+$/.test(cnt) ? ` ${cnt}개` : ` ${cnt === "다수" ? "여러" : cnt} 개`) : ""} ${end}`.replace(/\s+/g, " ").trim()) + no;
+  return (`${loc}${size}${x.desc ? x.desc + " " : ""}${x.type || "외상"}${cnt && cnt !== "1" ? (/^\d+$/.test(cnt) ? ` ${cnt}개` : ` ${cnt === "다수" ? "여러" : cnt} 개`) : ""} ${end}`.replace(/\s+/g, " ").trim()) + no;
 }
 function autLines(n) {
   const A = state.autopsy, F = A.f, C = state.check, L = [], sec = AUT.find((s) => s.n === n);
@@ -2162,7 +2163,7 @@ function autOpinion() {
   return AUT_OP.filter(([k]) => A.op.includes(k)).map((o) => o[1]).concat(tt(A.opMemo).split("\n").map((x) => x.trim().replace(/^[-•·]\s*/, "")).filter(Boolean));
 }
 const autPlace = () => tt(state.autopsy.place) || (state.check.ex_pl === "기타" ? tt(state.check.ex_pl_d) : tt(state.check.ex_pl));
-const autExaminer = () => tt(state.autopsy.examiner) || tt(state.user.name);
+const autExaminer = () => tt(state.autopsy.examiner);
 function autFilled(n) {
   const A = state.autopsy, F = A.f, sec = AUT.find((s) => s.n === n);
   return A.finds.some((x) => x.n === n) || sec.rows.some((r) => (r.tog ? r.tog.some(([k]) => F[k]) : tt(F[r.k]) || tt(F[r.k + "_t"]))) || A.inj.some((x) => x.n === n) || !!tt(A.memo[n])
@@ -2189,17 +2190,17 @@ function autHtml() {
   h += acc("info", "조사 정보", !!(A.start || A.end), `
     ${["start", "end"].map((k) => `<div class="q"><span>${k === "start" ? "조사 시작" : "조사 종료"}</span><div style="display:flex;gap:6px"><input id="aut_${k}" data-ai="${k}" type="datetime-local" value="${esc(A[k])}"><button class="btn small" type="button" data-anow="${k}">지금</button></div></div>`).join("")}
     <label class="f">조사장소<input data-ai="place" type="text" value="${esc(A.place)}" placeholder="${esc(autPlace())}" autocomplete="off"></label>
-    <label class="f">검시조사관<input data-ai="examiner" type="text" value="${esc(A.examiner)}" placeholder="${esc(tt(state.user.name))}" autocomplete="off"></label>`);
+    <label class="f">검시조사관<input data-ai="examiner" type="text" value="${esc(A.examiner)}" autocomplete="off"></label>`);
   const sec = (S) => acc("s" + S.n, S.name, autFilled(S.n), S.rows.map(row).join("")
     + `<label class="f">직접 쓰기<textarea rows="2" data-am="${S.n}">${esc(A.memo[S.n] || "")}</textarea></label>` + out("aout" + S.n, autLines(S.n)));
+  h += sec(AUT[0]) + sec(AUT[1]);
   const rest = A.dictRest || [];
   h += acc("dict", "받아쓰기", !!tt(A.dictText), `<textarea rows="6" id="dictText">${esc(A.dictText || "")}</textarea>
-    <div class="two"><a class="btn" id="dictRec" href="intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.sec.android.app.voicenote;end">녹음 앱 열기</a>
+    <div class="two"><a class="btn" id="dictRec" href="intent:#Intent;action=android.provider.MediaStore.RECORD_SOUND;end">녹음 앱 열기</a>
     <button class="btn primary" type="button" id="dictGo">정리하기</button></div>
     <div id="dictRes" class="${A.dictRes ? "" : "hide"}" style="font-size:14px">${esc(A.dictRes || "")}</div>
     ${rest.length ? `<div class="aout"><b>정리하지 못한 문장</b>${rest.map((l) => `<div>- ${esc(l)}</div>`).join("")}</div>` : ""}
     ${AUT.slice(2).map((S) => `<div class="aout"><b>${esc(S.name)}</b><div id="aout${S.n}">${autLines(S.n).map((l) => `<div>- ${esc(l)}</div>`).join("")}</div></div>`).join("")}`);
-  h += sec(AUT[0]) + sec(AUT[1]);
   // 외상: 그림에서 부위를 누르고 종류·크기·개수
   h += acc("op", "의견", !!(A.op.length || tt(A.opMemo)), `<div class="chips" style="display:grid;gap:6px">${AUT_OP.map(([k, t]) => `<button type="button" class="chip" style="text-align:left;border-radius:10px" data-aop="${k}" aria-pressed="${A.op.includes(k)}">${esc(t)}</button>`).join("")}</div>
     <label class="f">직접 쓰기<textarea rows="3" data-aopm="1">${esc(A.opMemo)}</textarea></label>` + out("aoutop", autOpinion()));
@@ -2484,18 +2485,34 @@ function dictSide(s) {
   if (/왼쪽|왼|좌측|(?<![가-힣])좌(?=\s)/.test(s)) return "좌측";
   return "";
 }
-function dictPart(s) {
-  for (const [re, base, sided, reg] of DICT_PART) {
-    if (!re.test(s)) continue;
-    const side = sided ? dictSide(s) : "", name = (side ? side + " " : "") + base;
-    const want = reg || base, pref = (side === "좌측" ? "좌측 " : "우측 ") + want;
-    let cands = AUT_REG.filter((R) => R.name === (sided ? pref : want));
+// 글 안의 부위를 모두 찾음(앞에 둔 구체적인 말이 먼저, 겹치는 자리는 건너뜀). 좌우는 그 부위 바로 앞의 말, 없으면 앞 부위의 좌우를 이어받음
+function dictPartsAll(s) {
+  const hits = [], used = [];
+  DICT_PART.forEach(([re, base, sided, reg]) => {
+    const g = new RegExp(re.source, "g"); let m;
+    while ((m = g.exec(s))) {
+      const a = m.index, b = a + m[0].length;
+      if (!m[0].length) { g.lastIndex++; continue; }
+      if (used.some(([x, y]) => a < y && b > x)) continue;
+      used.push([a, b]); hits.push({ a, b, base, sided, reg });
+    }
+  });
+  hits.sort((p, q) => p.a - q.a);
+  let prevSide = "", prevEnd = 0;
+  return hits.map((h) => {
+    const before = s.slice(prevEnd, h.a);
+    let side = h.sided ? dictSide(before + " ") || prevSide : "";
+    if (h.sided && !prevEnd && !side) side = dictSide(s.slice(h.a, h.b + 6) + " ");     // "입가 왼쪽"처럼 뒤에 붙는 좌우
+    if (side) prevSide = side;
+    prevEnd = h.b;
+    const name = (side ? side + " " : "") + h.base, want = h.reg || h.base, pref = (side === "좌측" ? "좌측 " : "우측 ") + want;
+    let cands = AUT_REG.filter((R) => R.name === (h.sided ? pref : want));
     if (!cands.length) cands = AUT_REG.filter((R) => R.name === want);
     const R = cands.find((c) => inView(c, AUT_VIEWS[0][1]) || inView(c, AUT_VIEWS[6][1])) || cands[0];
-    return { name, R };
-  }
-  return null;
+    return { name, R, a: h.a };
+  });
 }
+function dictPart(s) { return dictPartsAll(s)[0] || null; }
 function dictSize(s) {
   let m = /(\d+(?:\.\d+)?)×(\d+(?:\.\d+)?)/.exec(s);
   if (m) return { w: m[1], h: m[2] };
@@ -2578,12 +2595,21 @@ function dictApply(text) {
     if (/방어흔/.test(c) && /없/.test(c)) { addFind("def0", "전완부(아래팔)", AUT_REG.find((R) => R.name === "우측 전완부(아래팔)")); used = true; }
     if (/특기할\s*외상|외상\s*(?:은\s*)?없/.test(c) && !P) used = true;
     // 외상
-    const T = DICT_TYPE.find(([re]) => re.test(c));
-    if (T && P && !(T[1] === "골절" && /늑골|갈비/.test(c))) {
-      const R = P.R || AUT_REG[0], k = (seen[R.name] = (seen[R.name] || 0) + 1) - 1;
-      const sz = dictSize(c), off = [[0, 0], [14, 10], [-14, 10], [14, -10], [-14, -10]][k % 5];
-      A.inj.push({ n: R.n, part: P.name, parts: [P.name], x: R.x + off[0], y: R.y + off[1], pts: [{ x: R.x + off[0], y: R.y + off[1] }],
-        type: T[1], w: T[1] === "골절" ? "" : sz.w, h: T[1] === "골절" ? "" : sz.h, cnt: dictCount(c), src: "d" });
+    // 외상: 종류가 여럿이면 종류마다, 부위가 '~에서 ~로 이어지는/까지/걸쳐'면 한 상흔이 여러 부위를 거침, 아니면 부위마다
+    const types = [];
+    DICT_TYPE.forEach(([re, t]) => { const m = re.exec(c); if (m && !types.some((x) => x.t === t)) types.push({ t, i: m.index }); });
+    types.sort((p, q) => p.i - q.i);
+    const parts = dictPartsAll(c).filter((p) => !(/늑골|갈비/.test(c) && /흉부/.test(p.name)));
+    const span = parts.length > 1 && /에서|부터|~|까지|걸쳐|이어지|이어진|이르는|이른|연결/.test(c);
+    const sz = dictSize(c), desc = /광범위|넓게|넓은/.test(c) ? "광범위한" : "";
+    for (const { t } of types) {
+      if (!parts.length || (t === "골절" && /늑골|갈비/.test(c))) continue;
+      for (const grp of span ? [parts] : parts.map((p) => [p])) {
+        const R = grp[0].R || AUT_REG[0], k = (seen[R.name] = (seen[R.name] || 0) + 1) - 1, off = [[0, 0], [14, 10], [-14, 10], [14, -10], [-14, -10]][k % 5];
+        const pts = grp.map((p, j) => { const Q = p.R || R; return { x: Q.x + (j ? 0 : off[0]), y: Q.y + (j ? 0 : off[1]) }; });
+        A.inj.push({ n: R.n, part: grp[0].name, parts: grp.map((p) => p.name), x: pts[0].x, y: pts[0].y, pts,
+          type: t, desc, w: t === "골절" ? "" : sz.w, h: t === "골절" ? "" : sz.h, cnt: dictCount(c), src: "d" });
+      }
       used = true;
     }
     if (!used) rest.push(c);
@@ -2607,6 +2633,32 @@ async function autShareIn() {
   ["dict", "s1", "s2"].forEach((k) => autOpen.add(k));
   saveNow(); go("autopsy");
 }
+// ---------- 날짜·시각 입력을 24시간으로: datetime-local 칸을 날짜 + 시(00~23) + 분(00~59) 고르기로 바꿔 보여 줌 ----------
+// 원래 칸은 숨겨 두고 값(YYYY-MM-DDTHH:MM)만 맞춰 주므로, 저장·'지금' 버튼 등 기존 처리는 그대로 동작
+function dt24(inp) {
+  if (inp.dataset.dt24) return;
+  inp.dataset.dt24 = "1"; inp.style.display = "none";
+  const pad = (n) => String(n).padStart(2, "0");
+  const box = document.createElement("div"); box.className = "dt24";
+  box.innerHTML = `<input type="date" aria-label="날짜"><select aria-label="시"><option value="">시</option>${Array.from({ length: 24 }, (_, i) => `<option>${pad(i)}</option>`).join("")}</select>`
+    + `<select aria-label="분"><option value="">분</option>${Array.from({ length: 60 }, (_, i) => `<option>${pad(i)}</option>`).join("")}</select>`;
+  inp.after(box);
+  const [d, h, m] = box.children;
+  const show = () => { const [dd, tt2] = (inp.value || "").split("T"); d.value = dd || ""; const [hh, mm] = (tt2 || "").split(":"); h.value = hh || ""; m.value = mm || ""; };
+  const put = () => {
+    if (!d.value && (h.value || m.value)) { const n = nowLocal(); d.value = n.slice(0, 10); }
+    inp.value = d.value ? `${d.value}T${h.value || "00"}:${m.value || "00"}` : "";
+    if (d.value && !h.value) h.value = "00";
+    if (d.value && !m.value) m.value = "00";
+    inp.dispatchEvent(new Event("input", { bubbles: true }));
+  };
+  [d, h, m].forEach((el) => el.addEventListener("change", put));
+  inp.addEventListener("input", (e) => { if (e.isTrusted === false && document.activeElement !== d) show(); });
+  show();
+}
+new MutationObserver(() => document.querySelectorAll('input[type="datetime-local"]:not([data-dt24])').forEach(dt24))
+  .observe(document.body, { childList: true, subtree: true });
+document.querySelectorAll('input[type="datetime-local"]').forEach(dt24);
 // ================= 작업 파일(.kcsi) 저장·불러오기 =================
 // .kcsi = ZIP(압축 없음): project.json(PC 프로그램 작업 형식) + 사진/001.jpg… + 첨부/점검표·유류물 쪽 그림
 const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
