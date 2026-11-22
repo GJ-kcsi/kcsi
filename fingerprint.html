@@ -107,6 +107,16 @@ header button.back{padding:7px 12px}
 #camDots span{font-size:12px;padding:3px 9px;border-radius:12px;background:rgba(0,0,0,.55);color:#aab4bc;border:1px solid rgba(255,255,255,.2)}
 #camDots span.on{background:rgba(60,207,142,.85);color:#fff;border-color:#3ccf8e}
 #shutter{width:74px;height:74px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.4);background-clip:padding-box;padding:0}
+#camTop{padding:14px 12px calc(14px) 12px!important;gap:8px!important}
+#camTop span{font-size:20px!important}
+#camTop button{font-size:19px;font-weight:700;padding:11px 15px;border-radius:12px;min-width:52px;background:rgba(0,0,0,.6)!important;border:1.5px solid rgba(255,255,255,.7)}
+#camTop button.on{background:#fff!important;color:var(--navy)!important}
+#camBot{padding:18px 18px calc(22px + env(safe-area-inset-bottom))!important}
+#camBot button.sm{width:auto!important;min-width:104px;font-size:19px;font-weight:700;padding:16px 14px!important;border-radius:14px;background:rgba(0,0,0,.6)!important;border:1.5px solid rgba(255,255,255,.7)}
+#camBot button.sm.on{background:#fff!important;color:var(--navy)!important}
+#shutter{width:92px!important;height:92px!important;border-width:7px!important}
+#camDots{bottom:calc(150px + env(safe-area-inset-bottom))!important;gap:10px!important}
+#camDots span{font-size:16px!important;font-weight:700;padding:6px 14px!important;border-radius:16px!important}
 #printArea{display:none}
 @media print{
   @page{size:A4 landscape;margin:0}
@@ -228,12 +238,12 @@ header button.back{padding:7px 12px}
   <div class="tools">
     <button id="tCal">자 보정</button>
     <div class="seg" id="tMode"><button data-m="raw">원본</button><button data-m="gray">대비</button><button data-m="enh">강조</button><button data-m="bin">흑백</button></div>
+    <button id="tCurve">곡면보정</button>
     <button id="tMore" style="margin-left:auto">⚙</button>
   </div>
   <div class="tools" id="moreRow" style="display:none">
     <button id="tFlip">좌우반전</button>
     <button id="tInv">명암반전</button>
-    <button id="tCurve">곡면보정</button>
     <button id="tSave">이미지 저장</button>
   </div>
   <div class="prev"><canvas id="pv"></canvas><div id="pvInfo"></div></div>
@@ -243,7 +253,7 @@ header button.back{padding:7px 12px}
   <div id="camStage">
     <video id="vid" playsinline muted autoplay></video>
     <canvas id="ov"></canvas>
-    <div id="camTop"><button id="camX">✕</button><span id="camTitle"></span><button id="camFlipV">⇅</button><button id="camTorch">⚡ 끔</button></div>
+    <div id="camTop"><button id="camX">✕</button><span id="camTitle"></span><button id="camLens" style="display:none"></button><button id="camFlipV">⇅</button><button id="camTorch">⚡ 끔</button></div>
     <div id="camDots"><span id="dPos">위치</span><span id="dStill">흔들림</span><span id="dFocus">초점</span></div>
     <div id="camBot"><button id="camAuto" class="sm">자동</button><button id="shutter" aria-label="촬영"></button><button id="camSkip" class="sm">건너뛰기</button></div>
   </div>
@@ -360,7 +370,7 @@ async function loadWork(blob){
   const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(bm,0,0,w,h);if(bm.close)bm.close();
   const d=x.getImageData(0,0,w,h).data,g=new Float32Array(w*h);
   for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=0.2*d[j]+0.7*d[j+1]+0.1*d[j+2];
-  return {c,w,h,g,srcW:bw,srcH:bh};
+  return {c,w,h,g,d,srcW:bw,srcH:bh};
 }
 function bil(g,w,h,x,y){
   if(x<0||y<0||x>w-1||y>h-1)return 128;
@@ -419,21 +429,26 @@ function processFinger(W,p,o,cal,maxSide,ppi){
   if(maxSide){const m=Math.max(ow,oh);if(m>maxSide){const f=maxSide/m;ow=Math.max(8,Math.round(ow*f));oh=Math.max(8,Math.round(oh*f))}}
   const kx=ow/srcW,n=kx<0.4?3:kx<0.75?2:1,N=n*n;
   const ca=Math.cos(p.ang),sa=Math.sin(p.ang),g=W.g,w=W.w,h=W.h,a2=p.a*p.a,b2=p.b*p.b;
-  const val=new Float32Array(ow*oh),msk=new Float32Array(ow*oh);
+  const val=new Float32Array(ow*oh),msk=new Float32Array(ow*oh),col=(o.mode==='raw'||!o.mode)&&!o.inv&&W.d,rgb=col?new Uint8ClampedArray(ow*oh*4):null,D=W.d;
+  const bc=(x,y,k)=>{if(x<0||y<0||x>w-1||y>h-1)return 128;const x0=x|0,y0=y|0,fx=x-x0,fy=y-y0,i=(y0*w+x0)*4+k,dx=x0<w-1?4:0,dy=y0<h-1?w*4:0;
+    return D[i]*(1-fx)*(1-fy)+D[i+dx]*fx*(1-fy)+D[i+dy]*(1-fx)*fy+D[i+dx+dy]*fx*fy};
   for(let v=0;v<oh;v++)for(let u=0;u<ow;u++){
     const i=v*ow+u,s0=((u+.5)/ow-.5)*srcW,y0=((v+.5)/oh-.5)*srcH,x0=o.curve?r*Math.sin(s0/r):s0;
     const e=x0*x0/a2+y0*y0/b2;
-    if(e>=1)continue;
-    msk[i]=Math.min(1,(1-e)/0.08);
-    let acc=0;
+    if(e>=1){if(rgb){rgb[i*4]=rgb[i*4+1]=rgb[i*4+2]=255;rgb[i*4+3]=255}continue}
+    const mk=Math.min(1,(1-e)/0.08);msk[i]=mk;
+    let acc=0,ar=0,ag=0,ab=0;
     for(let j=0;j<n;j++)for(let q=0;q<n;q++){
       const s=((u+(q+.5)/n)/ow-.5)*srcW,yL=((v+(j+.5)/n)/oh-.5)*srcH;
       let xL=o.curve?r*Math.sin(s/r):s;if(o.flip)xL=-xL;
-      acc+=bil(g,w,h,p.cx+xL*ca-yL*sa,p.cy+xL*sa+yL*ca);
+      const X=p.cx+xL*ca-yL*sa,Y=p.cy+xL*sa+yL*ca;
+      if(rgb){ar+=bc(X,Y,0);ag+=bc(X,Y,1);ab+=bc(X,Y,2)}else acc+=bil(g,w,h,X,Y);
     }
-    val[i]=acc/N;
+    if(rgb){const k=i*4;rgb[k]=mk*ar/N+(1-mk)*255;rgb[k+1]=mk*ag/N+(1-mk)*255;rgb[k+2]=mk*ab/N+(1-mk)*255;rgb[k+3]=255}
+    else val[i]=acc/N;
   }
   const pxmm=ow/(srcW/ppmm);
+  if(rgb)return {rgb,res:null,ow,oh,ppi:pxmm*25.4,mode:sc.mode,ppmm,wmm:srcW/ppmm,hmm:srcH/ppmm};
   return {res:tone(val,msk,ow,oh,o,pxmm),ow,oh,ppi:pxmm*25.4,mode:sc.mode,ppmm,wmm:srcW/ppmm,hmm:srcH/ppmm};
 }
 function tone(val,msk,w,h,o,pxmm){
@@ -483,7 +498,7 @@ function tone(val,msk,w,h,o,pxmm){
 function toCanvas(R,c){
   c=c||document.createElement('canvas');c.width=R.ow;c.height=R.oh;
   const x=c.getContext('2d'),im=x.createImageData(R.ow,R.oh),d=im.data;
-  for(let i=0,j=0;i<R.res.length;i++,j+=4){const v=R.res[i]*255;d[j]=d[j+1]=d[j+2]=v;d[j+3]=255}
+  if(R.rgb)d.set(R.rgb);else for(let i=0,j=0;i<R.res.length;i++,j+=4){const v=R.res[i]*255;d[j]=d[j+1]=d[j+2]=v;d[j+3]=255}
   x.putImageData(im,0,0);return c;
 }
 function scaledPhoto(bm,flip,ppmm,mode){
@@ -504,6 +519,7 @@ function afisCanvas(src,R){
   x.fillStyle='#fff';x.fillRect(0,0,N,N);
   const bar=46,aw=N,ah=N-bar,sw=Math.min(R.ow,aw),sh=Math.min(R.oh,ah),sx=(R.ow-sw)/2,sy=(R.oh-sh)/2;
   x.drawImage(src,sx,sy,sw,sh,(aw-sw)/2,(ah-sh)/2,sw,sh);
+  {const im=x.getImageData(0,0,N,N),q=im.data;for(let i=0;i<q.length;i+=4){const v=.299*q[i]+.587*q[i+1]+.114*q[i+2];q[i]=q[i+1]=q[i+2]=v}x.putImageData(im,0,0)}
   const x0=24,y0=N-14,L=10*PX;x.strokeStyle='#000';x.fillStyle='#000';x.lineWidth=2;
   x.beginPath();x.moveTo(x0,y0);x.lineTo(x0+L,y0);
   for(let i=0;i<=10;i++){const t=i%5===0?16:9,xx=Math.round(x0+i*PX)+.5;x.moveTo(xx,y0);x.lineTo(xx,y0-t)}
@@ -520,7 +536,7 @@ function docName(){return S.mode==='crim'?(S.kind==='one'?'수사자료표 (별�
 function slotBtn(n){
   const f=S.f[n],b=document.createElement('button');
   b.className='slot'+(f&&f.thumb?' done':'');
-  b.innerHTML=(f&&f.thumb?`<img src="${f.thumb}" alt="">`:'<span class="plus">+</span>')+`<span class="no">${n}</span><span class="lb">${S.kind==='one'?FN[n]:SN[n]}</span>`+(f&&f.extras&&f.extras.length?`<span class="ex">+${f.extras.length}</span>`:'');
+  b.innerHTML=(f&&f.thumb?`<img src="${f.thumb}" alt="">`:'<span class="plus">+</span>')+`<span class="no">${n}</span><span class="lb">${S.kind==='one'?FN[n]:SN[n]}</span>`+(f&&f.extras&&f.extras.length?`<span class="ex">+${f.extras.length}</span>`:'')+(f&&f.blurry?'<span class="ex" style="left:auto;right:4px;top:auto;bottom:26px;background:var(--danger);color:#fff">흐림</span>':'');
   b.onclick=()=>f?openAct(n):openCam(n);return b;
 }
 function fillInfo(){document.querySelectorAll('.info [data-k]').forEach(i=>{i.value=S.info[i.dataset.k]||''})}
@@ -603,7 +619,7 @@ $('infoDone').onclick=()=>{
 };
 function startNew(kind,one){
   if(Object.keys(S.f).length&&!confirm('이전에 찍은 지문을 지우고 새로 채취할까요?'))return;
-  S={mode:'id',kind,one:one||null,tipDown:S.tipDown,autoShot:S.autoShot,lastMm:S.lastMm,flash:S.flash,outPpi:S.outPpi,info:{},f:{}};save();goHome();
+  S={mode:'id',kind,one:one||null,tipDown:S.tipDown,camId:S.camId,autoShot:S.autoShot,lastMm:S.lastMm,flash:S.flash,outPpi:S.outPpi,info:{},f:{}};save();goHome();
 }
 function openPick(){
   $('pickTitle').textContent='지문 채취';$('onePick').style.display='none';$('pTen').style.display='';$('pOne').style.display='';
@@ -670,7 +686,7 @@ async function openEditor(n){
 }
 function fit(){const r=cv.getBoundingClientRect();V.s=Math.min(r.width/W.w,r.height/W.h)*0.96;V.tx=(r.width-W.w*V.s)/2;V.ty=(r.height-W.h*V.s)/2}
 function syncTools(){
-  $('tFlip').classList.toggle('on',E.o.flip);$('tInv').classList.toggle('on',E.o.inv);$('tCurve').classList.toggle('on',E.o.curve);
+  $('tFlip').classList.toggle('on',E.o.flip);$('tInv').classList.toggle('on',E.o.inv);$('tCurve').classList.toggle('on',E.o.curve);$('tCurve').textContent=E.o.curve?'곡면보정 ON':'곡면보정 OFF';
   $('tCal').classList.toggle('on',E.calMode||!!E.cal);$('tCal').textContent=E.cal?'자 보정 ✓':'자 보정';
   $('tMode').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.m===E.o.mode));
   $('calBar').style.display=E.calMode&&E.calPts.length===2?'flex':'none';
@@ -808,20 +824,29 @@ let stream=null,track=null,camN=1,loopT=0,okRun=0,peak=0,prevG=null,lastTick=0,t
 const FLN={off:'⚡ 끔',auto:'⚡ 자동',on:'⚡ 켬'};
 async function setTorch(on){if(!canTorch||!track)return;try{await track.applyConstraints({advanced:[{torch:on}]});torchOn=on}catch(e){}}
 function syncFlash(){const m=S.flash||'off';$('camTorch').textContent=FLN[m];$('camTorch').classList.toggle('on',m!=='off')}
-const NEED=5,CAM_ZOOM=3;let holdRun=0,expCap=null,expVal=0,expT=0;
+const NEED=5,TARGET_ZOOM=3.5;let cssZoom=TARGET_ZOOM,camList=[],focusModes=[];let holdRun=0,expCap=null,expVal=0,expT=0;
 function autoExpose(M,t){if(!expCap||!track||!M||t-expT<450)return;const st=expCap.step||1/3;let v=expVal;
   if(M.clip>0.04||M.mean>185)v-=st;else if(M.mean<85&&M.clip<0.005)v+=st;else return;
   v=Math.max(expCap.min,Math.min(expCap.max,v));if(Math.abs(v-expVal)<1e-6)return;expVal=v;expT=t;track.applyConstraints({advanced:[{exposureCompensation:v}]}).catch(()=>{})}
 async function openCam(n){
   camN=n;
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast(isSecureContext?'카메라를 지원하지 않는 브라우저입니다':'https 주소에서만 자동 촬영이 됩니다');$('fCam').click();return}
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:4096},height:{ideal:4096}}});
-  }catch(e){toast('카메라를 열 수 없어 기본 카메라로 전환합니다');$('fCam').click();return}
+  const vc=id=>({audio:false,video:{...(id?{deviceId:{exact:id}}:{facingMode:{ideal:'environment'}}),width:{ideal:4096},height:{ideal:4096}}});
+  try{stream=await navigator.mediaDevices.getUserMedia(vc(S.camId))}
+  catch(e){try{S.camId=null;stream=await navigator.mediaDevices.getUserMedia(vc(null))}catch(e2){toast('카메라를 열 수 없어 기본 카메라로 전환합니다');$('fCam').click();return}}
   track=stream.getVideoTracks()[0];
+  try{const ds=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='videoinput');
+    let back=ds.filter(d=>/back|rear|environment|후면/i.test(d.label));if(!back.length)back=ds.filter(d=>!/front|user|전면/i.test(d.label));
+    camList=back.map(d=>d.deviceId).filter(Boolean);
+    const curId=(track.getSettings&&track.getSettings().deviceId)||S.camId;
+    $('camLens').style.display=camList.length>1?'':'none';$('camLens').textContent='렌즈 '+(Math.max(0,camList.indexOf(curId))+1)+'/'+camList.length;
+  }catch(e){$('camLens').style.display='none'}
   try{const c=track.getCapabilities?track.getCapabilities():{};
-    if(c.focusMode&&c.focusMode.includes('continuous'))await track.applyConstraints({advanced:[{focusMode:'continuous'}]});
-    try{await track.applyConstraints({advanced:[{pointsOfInterest:[{x:0.5,y:0.4}]}]})}catch(e){}
+    focusModes=c.focusMode||[];
+    if(focusModes.includes('continuous'))await track.applyConstraints({advanced:[{focusMode:'continuous'}]});
+    cssZoom=TARGET_ZOOM;
+    if(c.zoom&&c.zoom.max>=1.5){const z=Math.min(c.zoom.max,TARGET_ZOOM);try{await track.applyConstraints({advanced:[{zoom:z}]});cssZoom=Math.max(1,TARGET_ZOOM/z)}catch(e){}}
+    try{await track.applyConstraints({advanced:[{pointsOfInterest:[{x:0.5,y:0.42}]}]})}catch(e){}
     canTorch=!!c.torch;
     expCap=c.exposureCompensation&&c.exposureCompensation.max>c.exposureCompensation.min?c.exposureCompensation:null;
     if(expCap){expVal=Math.max(expCap.min,Math.min(expCap.max,-0.7));try{await track.applyConstraints({advanced:[{exposureMode:'continuous',exposureCompensation:expVal}]})}catch(e){expCap=null}}
@@ -840,7 +865,7 @@ async function openCam(n){
 function stopCam(){cancelAnimationFrame(loopT);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;track=null;vid.srcObject=null}
 function guide(){
   const r=ov.getBoundingClientRect(),cw=r.width,ch=r.height,vw=vid.videoWidth||1,vh=vid.videoHeight||1;
-  const Z=CAM_ZOOM,a=cw*0.3,b=a*1.4,cx=cw*0.5,cy=ch*0.42,s=Math.max(cw/vw,ch/vh),dx=(cw-vw*s)/2,dy=(ch-vh*s)/2;
+  const Z=cssZoom,a=cw*0.3,b=a*1.4,cx=cw*0.5,cy=ch*0.42,s=Math.max(cw/vw,ch/vh),dx=(cw-vw*s)/2,dy=(ch-vh*s)/2;
   const tf=`scale(${Z})`,to=`${cx}px ${cy}px`;if(vid.style.transform!==tf)vid.style.transform=tf;if(vid.style.transformOrigin!==to)vid.style.transformOrigin=to;
   return {cw,ch,cx,cy,a,b,vw,vh,vcx:(cx-dx)/s,vcy:(cy-dy)/s,va:a/(s*Z),vb:b/(s*Z),
     rx:cx-a*1.1,rw:a*2.2,ry:cy+b+cw*0.04,rh:cw*0.1};
@@ -880,7 +905,7 @@ function camLoop(t){
       M.lit=M.mean>25&&M.mean<235&&M.clip<0.2;
       M.placed=M.lit&&M.sharp>0.012;
       if(M.placed)peak=Math.max(peak*0.985,M.sharp);else peak*=0.95;
-      M.still=M.motion<0.05;
+      M.still=M.motion<0.04;
       M.focus=M.placed&&M.sharp>=peak*0.8;
       M.ok=M.placed&&M.still;
       okRun=M.ok?okRun+1:Math.max(0,okRun-1);
@@ -936,43 +961,59 @@ function clipFrac(src,w,h,g){const N=96,c=document.createElement('canvas');c.wid
   x.drawImage(src,(g.cx-g.a)*w,(g.cy-g.b)*h,2*g.a*w,2*g.b*h,0,0,c.width,c.height);const d=x.getImageData(0,0,c.width,c.height).data;let n=0,k=0;
   for(let yy=0;yy<c.height;yy++)for(let xx=0;xx<N;xx++){const ux=(xx+.5)/N*2-1,uy=(yy+.5)/c.height*2-1;if(ux*ux+uy*uy>0.6)continue;const i=(yy*N+xx)*4;n++;if(.3*d[i]+.59*d[i+1]+.11*d[i+2]>=245)k++}
   return n?k/n:0}
+function sharpOf(src,w,h,g){const W2=280,sc=W2/(2*g.a*w),cw=Math.round(2*g.a*w*sc),chh=Math.max(8,Math.round(2*g.b*h*sc)),c=document.createElement('canvas');c.width=cw;c.height=chh;
+  const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(src,(g.cx-g.a)*w,(g.cy-g.b)*h,2*g.a*w,2*g.b*h,0,0,cw,chh);const d=x.getImageData(0,0,cw,chh).data,gg=new Float32Array(cw*chh);
+  for(let i=0;i<gg.length;i++)gg[i]=.2*d[i*4]+.7*d[i*4+1]+.1*d[i*4+2];let n=0,m=0,l=0;
+  for(let yy=1;yy<chh-1;yy++)for(let xx=1;xx<cw-1;xx++){const ux=(xx+.5)/cw*2-1,uy=(yy+.5)/chh*2-1;if(ux*ux+uy*uy>0.5)continue;const i=yy*cw+xx,v=gg[i];n++;m+=v;l+=Math.abs(4*v-gg[i-1]-gg[i+1]-gg[i-cw]-gg[i+cw])}
+  return n?l/n/(m/n+10):0}
+async function takeOnce(fm){
+  if(!(window.ImageCapture&&track))return null;
+  try{const ic=new ImageCapture(track),ps={};
+    if(!photoMax){try{const pc=await ic.getPhotoCapabilities();photoMax=pc.imageWidth&&pc.imageWidth.max?{w:pc.imageWidth.max,h:pc.imageHeight.max}:{}}catch(e){photoMax={}}}
+    if(photoMax.w){ps.imageWidth=photoMax.w;ps.imageHeight=photoMax.h}
+    if(canFlash)ps.fillLightMode=fm==='auto'&&!torchOn?'flash':'off';
+    return await ic.takePhoto(ps)}catch(e){return null}
+}
+async function refocus(){if(!track)return;try{if(focusModes.includes('single-shot')){await track.applyConstraints({advanced:[{focusMode:'single-shot',pointsOfInterest:[{x:0.5,y:0.42}]}]});await new Promise(r=>setTimeout(r,650))}}catch(e){}}
 async function grab(){
   if(grabbing||!stream)return;grabbing=true;
   const G=guide(),vw=G.vw,vh=G.vh;let blob=null;
   const fm=S.flash||'off';let tmpTorch=false;
   if(fm==='auto'&&!canFlash&&canTorch&&!torchOn){await setTorch(true);tmpTorch=true;await new Promise(r=>setTimeout(r,450))}
   const fr=document.createElement('canvas');fr.width=vw;fr.height=vh;fr.getContext('2d').drawImage(vid,0,0);
-  try{if(window.ImageCapture&&track){const ic=new ImageCapture(track),ps={};
-    if(!photoMax){try{const pc=await ic.getPhotoCapabilities();photoMax=pc.imageWidth&&pc.imageWidth.max?{w:pc.imageWidth.max,h:pc.imageHeight.max}:{}}catch(e){photoMax={}}}
-    if(photoMax.w){ps.imageWidth=photoMax.w;ps.imageHeight=photoMax.h}
-    if(canFlash)ps.fillLightMode=fm==='auto'&&!torchOn?'flash':'off';
-    blob=await ic.takePhoto(ps)}}catch(e){blob=null}
+  const gv=mapGuide(G,vw,vh,vw,vh),fs=sharpOf(fr,vw,vh,gv);
+  let pw=vw,ph=vh,tries=0,blurry=false;
+  while(tries<2){
+    tries++;
+    let b=await takeOnce(fm),bw=0,bh=0;
+    if(b){try{const al=await alignPhoto(b,fr);if(al.score>0.3){b=al.blob;bw=al.pw;bh=al.ph}else b=null}catch(e){b=null}}
+    if(b){try{const hp=mapGuide(G,vw,vh,bw,bh),bm=await decode(b),cp=clipFrac(bm,bw,bh,hp),cf=clipFrac(fr,vw,vh,gv),ps=sharpOf(bm,bw,bh,hp);if(bm.close)bm.close();
+      if(cp>0.08&&cp>cf*2+0.03)b=null;else if(ps<fs*0.7){blurry=true;if(tries<2){toast('초점 다시 맞추는 중');await refocus();continue}}else blurry=false}catch(e){}}
+    if(b){blob=b;pw=bw;ph=bh}
+    break;
+  }
   if(tmpTorch)await setTorch(false);
   if(navigator.vibrate)navigator.vibrate(60);
   stopCam();
   busy(true,'저장 중…');
-  let pw=vw,ph=vh;
-  if(blob){try{const al=await alignPhoto(blob,fr);if(al.score>0.3){blob=al.blob;pw=al.pw;ph=al.ph}else blob=null}catch(e){blob=null}}
-  if(blob){try{const hp=mapGuide(G,vw,vh,pw,ph),bm=await decode(blob),cp=clipFrac(bm,pw,ph,hp),cf=clipFrac(fr,vw,vh,mapGuide(G,vw,vh,vw,vh));if(bm.close)bm.close();
-    if(cp>0.08&&cp>cf*2+0.03)blob=null}catch(e){}}
   if(!blob){blob=await new Promise(r=>fr.toBlob(r,'image/jpeg',0.95));pw=vw;ph=vh}
   // map guide (video coords) → photo coords assuming centered crop
   const va=vw/vh,pa=pw/ph;let nx=G.vcx/vw,ny=G.vcy/vh,na=G.va/vw,nb=G.vb/vh;
   if(pa>va){const f=va/pa;nx=0.5+(nx-0.5)*f;na*=f}else if(pa<va){const f=pa/va;ny=0.5+(ny-0.5)*f;nb*=f}
   const hint={cx:nx,cy:ny,a:na,b:nb,asp:pa,ang:S.tipDown?Math.PI:0};
   const n=camN,old=S.f[n],file=new File([blob],`finger_${pad(n)}.jpg`,{type:blob.type||'image/jpeg'});
-  S.f[n]={orig:file,name:file.name,taken:new Date().toISOString(),extras:old&&old.extras||[],p:null,hint,o:{...DEFO},cal:null,thumb:null,res:[pw,ph]};
+  S.f[n]={orig:file,name:file.name,taken:new Date().toISOString(),extras:old&&old.extras||[],p:null,hint,o:{...DEFO},cal:null,thumb:null,res:[pw,ph],blurry};
   cur=n;save();
   try{const Wk=await loadWork(file),h=hint,pp=Math.abs(Wk.w/Wk.h-h.asp)<0.03?{cx:h.cx*Wk.w,cy:h.cy*Wk.h,a:h.a*Wk.w,b:h.b*Wk.h,ang:h.ang||0}:defParams(Wk);
     S.f[n].p=pp;S.f[n].thumb=toCanvas(processFinger(Wk,pp,S.f[n].o,null,640)).toDataURL('image/jpeg',0.92);save()}catch(e){}
   busy(false);
   const nx2=nextEmpty(n%10+1);
-  if(nx2){toast(`${n}. ${FN[n]} 저장 · ${pw}×${ph}`);openCam(nx2)}else{goHome();toast('촬영 완료')}
+  if(nx2){toast(blurry?`${n}. ${FN[n]} 흐림 — 확인 필요`:`${n}. ${FN[n]} 저장 · ${pw}×${ph}`);openCam(nx2)}else{goHome();toast(blurry?`${n}. ${FN[n]} 흐림 — 확인 필요`:'촬영 완료')}
 }
 $('camSkip').onclick=()=>{const from=camN,nx=nextEmpty(from%10+1);stopCam();if(nx&&nx!==from)openCam(nx);else goHome()};
 $('shutter').onclick=()=>grab();
+$('camLens').onclick=async e=>{e.stopPropagation();if(camList.length<2)return;const cur=(track&&track.getSettings&&track.getSettings().deviceId)||S.camId;S.camId=camList[(Math.max(0,camList.indexOf(cur))+1)%camList.length];save();const n=camN;stopCam();await openCam(n)};
 $('camFlipV').onclick=e=>{e.stopPropagation();S.tipDown=!S.tipDown;$('camFlipV').classList.toggle('on',!!S.tipDown);save()};
-ov.addEventListener('click',()=>grab());
 $('camX').onclick=()=>{stopCam();goHome()};
 $('camAuto').onclick=()=>{S.autoShot=S.autoShot===false;okRun=0;$('camAuto').classList.toggle('on',S.autoShot!==false);save()};
 $('camTorch').onclick=async()=>{const order=canTorch?['off','auto','on']:['off','auto'],m=S.flash||'off';S.flash=order[(order.indexOf(m)+1)%order.length];save();syncFlash();await setTorch(S.flash==='on')};
@@ -1181,7 +1222,9 @@ $('btnZip').onclick=async()=>{closeOut();
   await loadDocs();
   openPick();
 })();
-window.addEventListener('pageshow',e=>{if(e.persisted)loadDocs().then(()=>{if($('home').classList.contains('act'))renderHome()})});
+window.addEventListener('pageshow',async e=>{if(!e.persisted)return;   // 뒤로 가기로 다시 열린 경우: 점검 목록표와 지문 기록을 새로 읽음(새 사건이면 비어 있음)
+  clearTimeout(saveT);const s2=await DB.get('case3');S=s2&&s2.f?s2:{mode:'id',kind:null,one:null,info:{},f:{}};if(!S.info)S.info={};S.mode='id';
+  await loadDocs();if(!(S.kind&&Object.keys(S.f).length))openPick();else if($('home').classList.contains('act'))renderHome();else openPick()});
 </script>
 </body>
 </html>
