@@ -143,6 +143,9 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 .isize{display:flex;align-items:center;gap:6px}.isize input{width:64px!important;text-align:center}
 .bodymap{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}.bodymap canvas{display:block;width:100%;height:auto;touch-action:manipulation}
 .ligm{display:grid;gap:6px;padding:8px 10px;border:1px solid var(--line);border-radius:8px}.lrow{display:grid;grid-template-columns:7.5em 1fr auto;align-items:center;gap:8px;font-size:14px}
+.vtabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;max-width:760px;margin:10px auto 0;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+.vtabs button{font:inherit;font-size:13px;font-weight:700;line-height:1.25;padding:8px 2px;word-break:keep-all;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px}
+.vtabs button[aria-pressed=true]{background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
 .dt24{display:flex;gap:6px;flex:1;min-width:0}.dt24 input{flex:2.2;min-width:0;padding-left:6px;padding-right:4px}.dt24 select{flex:1;min-width:0;padding-left:6px;padding-right:2px}
 .injdot{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;color:#fff;font-style:normal;font-size:12px;font-weight:700;margin-right:2px}
 .pickhead{display:flex;align-items:center;gap:8px}.pickhead b{flex:1;font-size:16px}
@@ -163,6 +166,7 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
   <h1 id="title">KCSI Photo Editor</h1>
 </div></header>
 
+<div id="vtabs" class="vtabs hide"><button type="button" data-vt="check">점검 목록표</button><button type="button" data-vt="items">유류물 목록</button><button type="button" data-vt="kakao">간이 보고서</button><button type="button" data-vt="autopsy">검시결과 보고서</button></div>
 <main id="view"></main>
 
 <footer class="dock"><div class="in">
@@ -469,10 +473,11 @@ const RRN = { top: { p: 1, x0: 165, x1: 288, y: 270 }, bottom: { p: 1, x0: 165, 
 let route = "home";
 // 폰의 뒤로 가기: 문서 화면이면 첫 화면으로, 첫 화면이면 앱 종료(브라우저 기본 동작)
 function go(r, fromBack) {
-  if (r !== "home" && (route === "home" || r === "kakao" || r === "autopsy") && !fromBack) history.pushState({ kcsi: r }, "", "#" + r);
+  if (r !== "home" && route === "home" && !fromBack) history.pushState({ kcsi: r }, "", "#" + r);
   else if (r !== "home" && route !== "home" && !fromBack) history.replaceState({ kcsi: r }, "", "#" + r);
   route = r; $("back").classList.toggle("hide", r === "home"); window.scrollTo(0, 0); render();
 }
+document.querySelectorAll("[data-vt]").forEach((b) => b.addEventListener("click", () => { if (b.dataset.vt !== route) go(b.dataset.vt); }));
 $("back").addEventListener("click", () => { if (history.state && history.state.kcsi) history.back(); else go("home", true); });
 window.addEventListener("popstate", () => {
   if (!$("sheet").classList.contains("hide") || !$("install").classList.contains("hide")) {   // 열린 창이 있으면 그것부터 닫기
@@ -488,6 +493,8 @@ function render() {
   const v = $("view");
   const titles = { home: "KCSI Photo Editor", check: "변사 현장 점검 목록표", photos: "현장 사진", items: "유류물 목록", hand: "의뢰증거물 인수인계서", docs: "문서 사진", kakao: "간이 보고서", autopsy: "검시결과보고서" };
   $("title").textContent = titles[route];
+  $("vtabs").classList.toggle("hide", !["check", "items", "kakao", "autopsy"].includes(route));
+  document.querySelectorAll("[data-vt]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.vt === route));
   if (route === "home") renderHome(v);
   if (route === "check") renderCheck(v);
   if (route === "photos") renderPhotos(v);
@@ -530,11 +537,10 @@ function renderHome(v) {
       <label class="f">사건명 (파일 이름·사진 머리말)<input id="caseName" type="text" autocomplete="off"></label>
       <label class="f">작성일<input id="date" type="date"></label>
     </section>
-    ${menu("check", 1, "변사 현장 점검 목록표", c.check ? "입력됨" : "입력 안 함")}
-    ${menu("items", 2, "유류물 목록", c.items ? `${c.items}개 입력됨` : "입력 안 함")}
-    ${menu("hand", 3, "의뢰증거물 인수인계서", c.hand ? `증거물 ${c.hand}개 입력됨` : "입력 안 함")}
-    ${menu("photos", 4, "현장 사진", c.photos ? `사진 ${c.photos}장` : "입력 안 함")}
-    ${menu("docs", 5, "문서 사진", c.docs ? `${c.docs}장` : "입력 안 함")}
+    ${menu("check", 1, "변사 사건", [c.check ? "점검표" : "", c.items ? `유류물 ${c.items}개` : "", autAny() ? "검시결과보고서" : ""].filter(Boolean).join(" · ") || "입력 안 함")}
+    ${menu("hand", 2, "의뢰증거물 인수인계서", c.hand ? `증거물 ${c.hand}개 입력됨` : "입력 안 함")}
+    ${menu("photos", 3, "현장 사진", c.photos ? `사진 ${c.photos}장` : "입력 안 함")}
+    ${menu("docs", 4, "문서 사진", c.docs ? `${c.docs}장` : "입력 안 함")}
     <section class="panel" aria-label="출력할 문서">
       <h2>출력할 문서</h2>
       <label class="inc"><input type="checkbox" id="inc_check"> 변사 현장 점검 목록표</label>
@@ -599,11 +605,7 @@ function renderCheck(v) {
     for (const f of sec.fields) html += fieldHtml(f, C);
     html += `</div></details>`;
   });
-  html += `<button id="toKakao" class="btn primary" type="button">간이 보고서 생성</button>`;
-  html += `<button id="toAut" class="btn primary" type="button" style="background:#2F6FB5;border-color:#2F6FB5">검시결과보고서 초안 작성</button>`;
   v.innerHTML = html;
-  $("toAut").addEventListener("click", () => go("autopsy"));
-  $("toKakao").addEventListener("click", () => go("kakao"));
   v.querySelectorAll("details.acc").forEach((d) => d.addEventListener("toggle", () => { d.open ? checkOpen.add(+d.dataset.si) : checkOpen.delete(+d.dataset.si); }));
   const recount = (el) => {          // 입력할 때마다 그 항목의 "N개 입력됨"을 고침
     const d = el.closest("details.acc"); if (!d || d.dataset.si === undefined) return;
@@ -2013,7 +2015,7 @@ const AUT_REG = (() => {
   // 몸 앞(그림 왼쪽 = 우측)
   const front = (side, m) => {
     add(5, `${side} 쇄골부(빗장뼈)`, m(310), 905, 45, 14); add(5, `${side} 흉부(가슴)`, m(305), 975, 55, 45); add(5, `${side} 측복부(옆구리)`, m(283), 1090, 18, 55);
-    add(6, `${side} 견부(어깨)`, m(240), 930, 28, 28); add(6, `${side} 상완부(위팔)`, m(220), 1015, 22, 55); add(6, `${side} 주관절부(팔꿈치)`, m(205), 1090, 22, 22);
+    add(5, `${side} 견부(어깨)`, m(240), 930, 28, 28); add(6, `${side} 상완부(위팔)`, m(220), 1015, 22, 55); add(6, `${side} 주관절부(팔꿈치)`, m(205), 1090, 22, 22);
     add(6, `${side} 전완부(아래팔)`, m(190), 1155, 22, 45); add(6, `${side} 수근부(손목)`, m(180), 1208, 22, 16); add(6, `${side} 수장부(손바닥)`, m(192), 1245, 32, 20);
     add(6, `${side} 수지(손가락)`, m(192), 1285, 42, 22);
     add(7, `${side} 대퇴부(넓적다리)`, m(305), 1310, 42, 75); add(7, `${side} 슬부(무릎)`, m(320), 1405, 28, 28); add(7, `${side} 하퇴부(정강이)`, m(320), 1500, 25, 60);
@@ -2025,7 +2027,7 @@ const AUT_REG = (() => {
   // 몸 뒤(그림 왼쪽 = 좌측)
   const back = (side, m) => {
     add(5, `${side} 배부(등)`, m(880), 1000, 50, 60); add(5, `${side} 둔부(엉덩이)`, m(885), 1230, 48, 40);
-    add(6, `${side} 견부(어깨)`, m(825), 930, 28, 25); add(6, `${side} 상완부(위팔)`, m(800), 1015, 22, 55); add(6, `${side} 주관절부(팔꿈치)`, m(805), 1095, 22, 22);
+    add(5, `${side} 견부(어깨)`, m(825), 930, 28, 25); add(6, `${side} 상완부(위팔)`, m(800), 1015, 22, 55); add(6, `${side} 주관절부(팔꿈치)`, m(805), 1095, 22, 22);
     add(6, `${side} 전완부(아래팔)`, m(795), 1165, 22, 45); add(6, `${side} 수배부(손등)`, m(770), 1265, 32, 25);
     add(7, `${side} 대퇴부(넓적다리)`, m(885), 1340, 40, 60); add(7, `${side} 슬와부(오금)`, m(885), 1435, 25, 22); add(7, `${side} 비복부(종아리)`, m(880), 1510, 25, 55);
     add(7, `${side} 종부(발뒤꿈치)`, m(880), 1640, 25, 25);
@@ -2086,10 +2088,10 @@ const AUT_OP = [["noinj", "외표 검사상 사인과 관련된 특기할 외상
 // 점검표 외상 위치 → 부위 (PC Report Studio와 같은 기준: 팔·다리를 목보다 먼저 봄)
 const AUT_RE = [
   [7, /다리|허벅지|대퇴|무릎|정강이|종아리|발목|발등|발바닥|발가락|발뒤꿈치|하지|(?<![가-힣])발(?![가-힣]{0,1}견)/],
-  [6, /팔|어깨|팔꿈치|손목|손등|손바닥|손가락|손톱|상지|(?<![가-힣])손(?![가-힣]{0,1}상)/],
+  [6, /팔|팔꿈치|손목|손등|손바닥|손가락|손톱|상지|(?<![가-힣])손(?![가-힣]{0,1}상)/],
   [4, /(?<![손발])목|경부|삭흔|액흔/],
   [3, /머리|두부|두피|이마|얼굴|안면|눈|코|입술|(?<![가-힣])입(?![가-힣])|턱|귀|뺨|볼|관자|뒤통수|정수리/],
-  [5, /몸통|가슴|흉부|복부|배꼽|(?<![가-힣])배(?![가-힣])|(?<![손발])등|허리|엉덩이|둔부|옆구리|늑골|쇄골|회음/],
+  [5, /몸통|어깨|견부|겨드랑|가슴|흉부|복부|배꼽|(?<![가-힣])배(?![가-힣])|(?<![손발])등|허리|엉덩이|둔부|옆구리|늑골|쇄골|회음/],
 ];
 const autDefault = () => ({ start: "", end: "", place: "", examiner: "", f: {}, memo: {}, memoInj: "", op: [], opMemo: "", diagram: false, dstrokes: [], inj: [], finds: [] });
 function fixAut(a) {
@@ -2196,8 +2198,7 @@ function autHtml() {
   h += sec(AUT[0]) + sec(AUT[1]);
   const rest = A.dictRest || [];
   h += acc("dict", "받아쓰기", !!tt(A.dictText), `<textarea rows="6" id="dictText">${esc(A.dictText || "")}</textarea>
-    <div class="two"><a class="btn" id="dictRec" href="intent:#Intent;action=android.provider.MediaStore.RECORD_SOUND;end">녹음 앱 열기</a>
-    <button class="btn primary" type="button" id="dictGo">정리하기</button></div>
+    <button class="btn primary" type="button" id="dictGo">정리하기</button>
     <div id="dictRes" class="${A.dictRes ? "" : "hide"}" style="font-size:14px">${esc(A.dictRes || "")}</div>
     ${rest.length ? `<div class="aout"><b>정리하지 못한 문장</b>${rest.map((l) => `<div>- ${esc(l)}</div>`).join("")}</div>` : ""}
     ${AUT.slice(2).map((S) => `<div class="aout"><b>${esc(S.name)}</b><div id="aout${S.n}">${autLines(S.n).map((l) => `<div>- ${esc(l)}</div>`).join("")}</div></div>`).join("")}`);
@@ -2439,6 +2440,7 @@ async function makeAutopsy() {
   }
 }
 
+const autAny = () => { const A = state.autopsy || {}; return !!(tt(A.dictText) || tt(A.start) || Object.values(A.f || {}).some((x) => tt(x))); };
 function renderAutopsy(v) {
   v.innerHTML = autHtml();
   bindAut(v);
