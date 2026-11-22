@@ -15,15 +15,15 @@
 <!-- 카카오톡·문자로 주소를 보내면 이 정보로 미리보기 카드가 뜸 (주소가 바뀌면 BASE 부분만 고치기) -->
 <meta name="description" content="변사 현장 점검 목록표 · 유류물 목록 · 현장 사진을 폰에서 작성해 PDF로 만듭니다. 입력 내용은 기기 밖으로 전송되지 않습니다.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="KCSI Photo Editor">
-<meta property="og:title" content="KCSI Photo Editor">
+<meta property="og:site_name" content="KCSI Docs">
+<meta property="og:title" content="KCSI Docs">
 <meta property="og:description" content="모바일 | 광주경찰청 과학수사계">
 <meta property="og:url" content="https://gj-kcsi.github.io/kcsi/">
 <meta property="og:image" content="https://gj-kcsi.github.io/kcsi/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<title>KCSI Photo Editor</title>
-<!-- KCSI Photo Editor 모바일 v0.2 · 기획·설계·개발: 김경엽 (AI 코딩 어시스트 활용) · © 2026 김경엽. 무단 복제·수정·재배포 금지 -->
+<title>KCSI Docs</title>
+<!-- KCSI Docs v0.2 · 기획·설계·개발: 김경엽 (AI 코딩 어시스트 활용) · © 2026 김경엽. 무단 복제·수정·재배포 금지 -->
 <style>
 /* 첫 화면: 문서 3종 메뉴 → 각 입력 화면. 아래 고정 버튼으로 PDF. 모든 처리는 기기 안에서 */
 :root{
@@ -163,7 +163,7 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 <body>
 <header><div class="bar">
   <button id="back" class="back hide" type="button">← 처음</button>
-  <h1 id="title">KCSI Photo Editor</h1>
+  <h1 id="title">KCSI Docs</h1>
 </div></header>
 
 <div id="vtabs" class="vtabs hide"><button type="button" data-vt="check">점검 목록표</button><button type="button" data-vt="items">유류물 목록</button><button type="button" data-vt="kakao">간이 보고서</button><button type="button" data-vt="autopsy">검시결과 보고서</button></div>
@@ -491,7 +491,7 @@ window.addEventListener("popstate", () => {
 
 function render() {
   const v = $("view");
-  const titles = { home: "KCSI Photo Editor", check: "변사 현장 점검 목록표", photos: "현장 사진", items: "유류물 목록", hand: "의뢰증거물 인수인계서", docs: "문서 사진", kakao: "간이 보고서", autopsy: "검시결과보고서" };
+  const titles = { home: "KCSI Docs", check: "변사 현장 점검 목록표", photos: "현장 사진", items: "유류물 목록", hand: "의뢰증거물 인수인계서", docs: "문서 사진", kakao: "간이 보고서", autopsy: "검시결과보고서" };
   $("title").textContent = titles[route];
   $("vtabs").classList.toggle("hide", !["check", "items", "kakao", "autopsy"].includes(route));
   document.querySelectorAll("[data-vt]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.vt === route));
@@ -550,7 +550,7 @@ function renderHome(v) {
       <label class="inc"><input type="checkbox" id="inc_docs"> 문서 사진</label>
     </section>
     <footer class="brand">
-      <div class="mark"><b>KCSI Photo Editor</b><span>Mobile ${VERSION}</span></div>
+      <div class="mark"><b>KCSI Docs</b><span>${VERSION}</span></div>
       <div class="org">광주경찰청 과학수사계</div>
       <div>© 2026 Gwangju Metropolitan Police Agency, Forensic Science Division. All rights reserved.</div>
     </footer>`;
@@ -1742,7 +1742,7 @@ async function buildPdf(jpegs) {
   const obj = (id, body) => { offsets[id] = size; push(`${id} 0 obj\n`); push(body); push("\nendobj\n"); };
   obj(1, "<< /Type /Catalog /Pages 2 0 R >>");
   obj(2, `<< /Type /Pages /Count ${n} /Kids [${jpegs.map((_, i) => `${pageId(i)} 0 R`).join(" ")}] >>`);
-  obj(3, `<< /Producer (KCSI Photo Editor Mobile ${VERSION}) /Creator (KCSI Photo Editor Mobile ${VERSION}) >>`);
+  obj(3, `<< /Producer (KCSI Docs ${VERSION}) /Creator (KCSI Docs ${VERSION}) >>`);
   for (let i = 0; i < n; i++) {
     const id = pageId(i), bytes = new Uint8Array(await jpegs[i].arrayBuffer()), draw = `q ${W} 0 0 ${H} 0 0 cm /Im0 Do Q`;
     obj(id, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /XObject << /Im0 ${id + 2} 0 R >> >> /Contents ${id + 1} 0 R >>`);
@@ -2737,7 +2737,7 @@ async function saveKcsi() {
       checklist: attach, checklist_rel: attach, checklist_rotations: attach.map(() => 0), pdf_enabled: true,
       cover: { enabled: true, "제목": "현장사진 보고서", "소속": state.user.org.trim(), "사건명": state.caseName, "작성일": dotDate(state.date), "촬영자": rankName(state.user) },
       photos,
-      mobile: { app: "KCSI Photo Editor Mobile", version: VERSION, state: rest, photos: state.photos.map((p, i) => ({ file: `사진/${pad(i + 1)}.jpg`, rot: p.rot, desc: p.desc })),
+      mobile: { app: "KCSI Docs", version: VERSION, state: rest, photos: state.photos.map((p, i) => ({ file: `사진/${pad(i + 1)}.jpg`, rot: p.rot, desc: p.desc })),
         docs: pages.filter((pg) => pg.doc).map((pg) => ({ file: pg.n })) },
     };
     files.unshift({ name: "project.json", data: enc.encode(JSON.stringify(project, null, 1)) });

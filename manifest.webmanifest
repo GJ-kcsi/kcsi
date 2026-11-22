@@ -1,7 +1,7 @@
 {
- "name": "KCSI Photo Editor",
- "short_name": "KCSI",
- "description": "변사 현장 점검 목록표 · 유류물 목록 · 현장 사진 PDF 작성",
+ "name": "KCSI Docs",
+ "short_name": "KCSI Docs",
+ "description": "변사 사건 · 의뢰증거물 인수인계서 · 현장 사진 · 문서 사진",
  "lang": "ko",
  "start_url": "./",
  "scope": "./",
@@ -33,5 +33,23 @@
    "url": "https://gj-kcsi.github.io/kcsi/manifest.webmanifest"
   }
  ],
- "id": "/kcsi/"
+ "id": "/kcsi/",
+ "share_target": {
+  "action": "./share-target",
+  "method": "POST",
+  "enctype": "multipart/form-data",
+  "params": {
+   "title": "title",
+   "text": "text",
+   "files": [
+    {
+     "name": "file",
+     "accept": [
+      "text/plain",
+      ".txt"
+     ]
+    }
+   ]
+  }
+ }
 }
