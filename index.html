@@ -144,7 +144,12 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 .bodymap{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}.bodymap canvas{display:block;width:100%;height:auto;touch-action:manipulation}
 .ligm{display:grid;gap:6px;padding:8px 10px;border:1px solid var(--line);border-radius:8px}.lrow{display:grid;grid-template-columns:7.5em 1fr auto;align-items:center;gap:8px;font-size:14px}
 .injdot{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;color:#fff;font-style:normal;font-size:12px;font-weight:700;margin-right:2px}
-.pickhead{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.pickhead{display:flex;align-items:center;gap:8px}.pickhead b{flex:1;font-size:16px}
+.isheet{position:fixed;left:0;right:0;bottom:0;z-index:12;display:flex;justify-content:center;pointer-events:none}
+.isheet .ibox{pointer-events:auto;background:var(--card);border-top:3px solid var(--accent);border-radius:14px 14px 0 0;box-shadow:0 -6px 18px rgba(0,0,0,.25);width:100%;max-width:760px;max-height:62vh;overflow:auto;display:grid;gap:8px;padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px))}
+.isz{display:flex;align-items:center;gap:6px}.isf{flex:1;font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:4px 6px;text-align:center;display:grid}
+.isf small{font-size:11px;color:var(--muted)}.isf b{font-size:18px;min-height:24px}.isf.on{border:2px solid var(--accent);background:var(--chip)}
+.keypad{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.keypad button{font:inherit;font-size:18px;font-weight:700;padding:9px 0;border:1px solid var(--line);border-radius:8px;background:var(--chip);color:var(--ink)}
 .injpick{display:grid;gap:8px;padding:10px;border:2px solid var(--accent);border-radius:10px}.injpick b{font-size:16px}
 .bigtype{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.bigtype .chip{padding:12px 4px;font-size:15px;border-radius:10px;text-align:center}
 .hide{display:none!important}
@@ -487,7 +492,7 @@ function render() {
   if (route === "photos") renderPhotos(v);
   if (route === "docs") renderDocs(v);
   if (route === "kakao") renderKakao(v);
-  if (route === "autopsy") renderAutopsy(v);
+  if (route === "autopsy") renderAutopsy(v); else autSheet(false);
   if (route === "items") renderItems(v);
   if (route === "hand") renderHand(v);
   updateDock();
@@ -2094,6 +2099,8 @@ function fixAut(a) {
   if (!Array.isArray(a.inj)) a.inj = [];
   if (typeof a.memoInj !== "string") a.memoInj = "";
   if (!Array.isArray(a.finds)) a.finds = [];
+  if (typeof a.dictText !== "string") a.dictText = "";
+  if (!Array.isArray(a.dictRest)) a.dictRest = [];
   if (!Array.isArray(a.op)) a.op = [];
   return a;
 }
@@ -2109,7 +2116,7 @@ function injText(x, i) {
   const no = i !== undefined && state.autopsy.diagram ? `(${injNo(i)})` : "";
   const P = injParts(x);
   const loc = P.length > 2 ? `${P.join(", ")}에 걸쳐 ` : P.length === 2 ? `${P[0]}에서 ${P[1]}에 걸쳐 ` : where ? where + "에 " : "";
-  return (`${loc}${size}${x.type || "외상"}${cnt && cnt !== "1" ? ` ${cnt}개` : ""} ${end}`.replace(/\s+/g, " ").trim()) + no;
+  return (`${loc}${size}${x.type || "외상"}${cnt && cnt !== "1" ? (/^\d+$/.test(cnt) ? ` ${cnt}개` : ` ${cnt === "다수" ? "여러" : cnt} 개`) : ""} ${end}`.replace(/\s+/g, " ").trim()) + no;
 }
 function autLines(n) {
   const A = state.autopsy, F = A.f, C = state.check, L = [], sec = AUT.find((s) => s.n === n);
@@ -2165,7 +2172,7 @@ function autFilled(n) {
 const autRo = (w) => { const c = w.charCodeAt(w.length - 1); if (c < 0xac00 || c > 0xd7a3) return "으로"; const j = (c - 0xac00) % 28; return j === 0 || j === 8 ? "로" : "으로"; };
 
 // ---------- 화면 ----------
-const autOpen = new Set(["info"]);
+const autOpen = new Set(["info", "dict"]);
 let autSpan = false;                    // 켜면 다음에 누르는 부위를 '걸친 부위'로 이어 붙임
 let autTab = 0, autSel = [];            // 외상 그림: 보기(AUT_VIEWS 번호), 고른 부위들 [{r, x, y}] (여러 부위에 걸친 상처)
 function autHtml() {
@@ -2185,22 +2192,15 @@ function autHtml() {
     <label class="f">검시조사관<input data-ai="examiner" type="text" value="${esc(A.examiner)}" placeholder="${esc(tt(state.user.name))}" autocomplete="off"></label>`);
   const sec = (S) => acc("s" + S.n, S.name, autFilled(S.n), S.rows.map(row).join("")
     + `<label class="f">직접 쓰기<textarea rows="2" data-am="${S.n}">${esc(A.memo[S.n] || "")}</textarea></label>` + out("aout" + S.n, autLines(S.n)));
+  const rest = A.dictRest || [];
+  h += acc("dict", "받아쓰기", !!tt(A.dictText), `<textarea rows="6" id="dictText">${esc(A.dictText || "")}</textarea>
+    <div class="two"><a class="btn" id="dictRec" href="intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.sec.android.app.voicenote;end">녹음 앱 열기</a>
+    <button class="btn primary" type="button" id="dictGo">정리하기</button></div>
+    <div id="dictRes" class="${A.dictRes ? "" : "hide"}" style="font-size:14px">${esc(A.dictRes || "")}</div>
+    ${rest.length ? `<div class="aout"><b>정리하지 못한 문장</b>${rest.map((l) => `<div>- ${esc(l)}</div>`).join("")}</div>` : ""}
+    ${AUT.slice(2).map((S) => `<div class="aout"><b>${esc(S.name)}</b><div id="aout${S.n}">${autLines(S.n).map((l) => `<div>- ${esc(l)}</div>`).join("")}</div></div>`).join("")}`);
   h += sec(AUT[0]) + sec(AUT[1]);
   // 외상: 그림에서 부위를 누르고 종류·크기·개수
-  const injDone = [3, 4, 5, 6, 7].some(autFilled);
-  h += acc("inj", "외상 및 소견", injDone, `
-    <div class="chips">${AUT_VIEWS.map(([name], i) => `<button type="button" class="chip" data-itab="${i}" aria-pressed="${i === autTab}">${name}</button>`).join("")}</div>
-    <div class="bodymap"><canvas id="injMap"></canvas></div>
-    <div class="injpick${autSel.length ? "" : " hide"}" id="injPick"><div class="pickhead"><b id="injPart">${esc(autSel.map((s) => AUT_REG[s.r].name).join(" ~ "))}</b><button type="button" class="chip" id="injSpan" aria-pressed="${autSpan}">+ 걸친 부위</button></div>
-      <div id="findBox">${autFindHtml()}</div>
-      <div class="bigtype">${AUT_INJ_BIG.map((t) => `<button type="button" class="chip" data-ity="${t}" style="border-left:6px solid ${AUT_INJ_COLOR[t]}">${t}</button>`).join("")}</div>
-      <input type="text" id="injType" placeholder="직접 입력" autocomplete="off">
-      <div class="isize"><span>약</span><input type="text" inputmode="decimal" id="injW" aria-label="가로"><span>×</span><input type="text" inputmode="decimal" id="injH" aria-label="세로"><span>cm</span><span style="margin-left:6px">개수</span><input type="text" inputmode="numeric" id="injN" aria-label="개수"></div>
-      <button class="btn primary" type="button" id="injAdd">외상 추가</button></div>
-    ${A.inj.map((x, i) => `<div class="injrow"><span><i class="injdot" style="background:${injColor(x)}">${i + 1}</i> ${esc(injText(x))}</span><button class="icon del" type="button" data-adel="${i}" aria-label="지우기">✕</button></div>`).join("")}
-    ${A.finds.map((x, i) => `<div class="injrow"><span>· ${esc(findText(x))}</span><button class="icon del" type="button" data-fdel="${i}" aria-label="지우기">✕</button></div>`).join("")}
-    <label class="f">직접 쓰기<textarea rows="3" data-am="inj">${esc(A.memoInj)}</textarea></label>
-    ${AUT.slice(2).map((S) => `<div class="aout"><b>${esc(S.name)}</b><div id="aout${S.n}">${autLines(S.n).map((l) => `<div>- ${esc(l)}</div>`).join("")}</div></div>`).join("")}`);
   h += acc("op", "의견", !!(A.op.length || tt(A.opMemo)), `<div class="chips" style="display:grid;gap:6px">${AUT_OP.map(([k, t]) => `<button type="button" class="chip" style="text-align:left;border-radius:10px" data-aop="${k}" aria-pressed="${A.op.includes(k)}">${esc(t)}</button>`).join("")}</div>
     <label class="f">직접 쓰기<textarea rows="3" data-aopm="1">${esc(A.opMemo)}</textarea></label>` + out("aoutop", autOpinion()));
   h += `<label class="inc"><input type="checkbox" id="autDiag"${A.diagram ? " checked" : ""}> 변사자손상도 붙이기</label>
@@ -2208,21 +2208,36 @@ function autHtml() {
     <button id="autMake" class="btn primary" type="button" style="background:#2F6FB5;border-color:#2F6FB5">검시결과보고서 HWPX</button>`;
   return h;
 }
-// 고른 부위(첫 부위)의 소견 버튼. 누르면 바로 넣고 다시 누르면 뺌
-function autFindHtml() {
-  if (!autSel.length) return "";
-  const R = AUT_REG[autSel[0].r], L = findsFor(R.name), A = state.autopsy;
-  if (!L.length) return "";
+// ---------- 부위를 누르면 아래에서 올라오는 입력창: 소견 · 외상 종류 · 크기(숫자판) ----------
+let autEntry = { type: "피하출혈", custom: false, w: "", h: "", cnt: "", f: "w" };   // 종류는 마지막 고른 것을 그대로 둠
+function autSheetHtml() {
+  const A = state.autopsy, R = AUT_REG[autSel[0].r], L = findsFor(R.name), E = autEntry;
   const has = (k, t) => A.finds.some((x) => x.key === k && x.n === R.n && (t.includes("{p}") ? x.part === R.name : true));
   const lig = A.finds.find((x) => x.key === "lig");
-  return `<div class="chips">${L.map(([k, lab, t]) => `<button type="button" class="chip" data-fk="${k}" aria-pressed="${has(k, t)}">${esc(lab)}</button>`).join("")}</div>`
-    + (lig && L.some((f) => f[0] === "lig") ? `<div class="ligm">${LIGM.map(([k, l]) => `<label class="lrow"><span>${l}</span><input type="text" inputmode="decimal" data-lm="${k}" value="${esc((lig.m || {})[k] ?? "")}" autocomplete="off"><span>cm</span></label>`).join("")}</div>` : "");
+  const fld = (f, label) => `<button type="button" class="isf${E.f === f ? " on" : ""}" data-isf="${f}"><small>${label}</small><b>${esc(E[f]) || " "}</b></button>`;
+  return `<div class="pickhead"><b>${esc(autSel.map((s) => AUT_REG[s.r].name).join(" ~ "))}</b>
+      <button type="button" class="chip" id="isSpan" aria-pressed="${autSpan}">+ 걸친 부위</button><button type="button" class="icon" id="isClose" aria-label="닫기">✕</button></div>`
+    + (L.length ? `<div class="chips">${L.map(([k, lab, t]) => `<button type="button" class="chip" data-fk="${k}" aria-pressed="${has(k, t)}">${esc(lab)}</button>`).join("")}</div>` : "")
+    + (lig && L.some((f) => f[0] === "lig") ? `<div class="ligm">${LIGM.map(([k, l]) => `<label class="lrow"><span>${l}</span><input type="text" inputmode="decimal" data-lm="${k}" value="${esc((lig.m || {})[k] ?? "")}" autocomplete="off"><span>cm</span></label>`).join("")}</div>` : "")
+    + `<div class="bigtype">${AUT_INJ_BIG.map((t) => `<button type="button" class="chip" data-ity="${t}" aria-pressed="${!E.custom && E.type === t}" style="border-left:6px solid ${AUT_INJ_COLOR[t]}">${t}</button>`).join("")}
+       <button type="button" class="chip" data-ity="" aria-pressed="${E.custom}">직접 입력</button></div>`
+    + `<input type="text" id="isType" class="${E.custom ? "" : "hide"}" value="${esc(E.custom ? E.type : "")}" autocomplete="off">`
+    + `<div class="isz">${fld("w", "가로")}<span>×</span>${fld("h", "세로")}<span>cm</span>${fld("cnt", "개수")}</div>`
+    + `<div class="keypad">${["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫"].map((k) => `<button type="button" data-kp="${k}">${k}</button>`).join("")}</div>`
+    + `<button class="btn primary" type="button" id="isAdd">외상 넣기</button>`;
 }
-function autFindBind() {
-  const A = state.autopsy, box = $("findBox"); if (!box) return;
-  box.innerHTML = autFindHtml();
-  box.querySelectorAll("[data-fk]").forEach((b) => b.addEventListener("click", () => {
-    const R = AUT_REG[autSel[0].r], [k, , t] = findsFor(R.name).find((f) => f[0] === b.dataset.fk);
+function autSheet(open) {
+  let el = $("injSheet");
+  if (!open) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement("div"); el.id = "injSheet"; el.className = "isheet"; document.body.appendChild(el); }
+  el.classList.remove("hide");
+  el.innerHTML = `<div class="ibox">${autSheetHtml()}</div>`;
+  const A = state.autopsy, E = autEntry, R = AUT_REG[autSel[0].r], box = el.firstElementChild;
+  const close = () => { autSel = []; autSpan = false; autSheet(false); autMapDraw(); };
+  $("isClose").onclick = close;
+  $("isSpan").onclick = () => { autSpan = true; el.classList.add("hide"); };            // 그림에서 이어지는 부위를 누르면 다시 열림
+  box.querySelectorAll("[data-fk]").forEach((b) => (b.onclick = () => {
+    const [k, , t] = findsFor(R.name).find((f) => f[0] === b.dataset.fk);
     const same = (x) => x.key === k && x.n === R.n && (t.includes("{p}") ? x.part === R.name : true);
     const i = A.finds.findIndex(same);
     if (i >= 0) A.finds.splice(i, 1);
@@ -2230,20 +2245,38 @@ function autFindBind() {
       if (/[01]$/.test(k)) A.finds = A.finds.filter((x) => !(x.key.slice(0, -1) === k.slice(0, -1) && /[01]$/.test(x.key)));   // 있음/없음 하나만
       A.finds.push({ n: R.n, part: R.name, key: k, text: t, m: k === "lig" ? {} : undefined });
     }
-    saveSoon(); render();
+    saveSoon(); render(); autSheet(true);
   }));
-  box.querySelectorAll("[data-lm]").forEach((el) => el.addEventListener("input", () => {
+  box.querySelectorAll("[data-lm]").forEach((inp) => inp.addEventListener("input", () => {
     const lig = A.finds.find((x) => x.key === "lig"); if (!lig) return;
-    lig.m = { ...(lig.m || {}), [el.dataset.lm]: el.value }; autRefresh(4);
+    lig.m = { ...(lig.m || {}), [inp.dataset.lm]: inp.value }; autRefresh(4);
   }));
+  box.querySelectorAll("[data-ity]").forEach((b) => (b.onclick = () => {
+    if (b.dataset.ity) { E.type = b.dataset.ity; E.custom = false; } else { E.custom = true; E.type = ""; }
+    autSheet(true); if (E.custom) $("isType").focus();
+  }));
+  $("isType").addEventListener("input", () => { E.type = $("isType").value; });
+  box.querySelectorAll("[data-isf]").forEach((b) => (b.onclick = () => { E.f = b.dataset.isf; autSheet(true); }));
+  box.querySelectorAll("[data-kp]").forEach((b) => (b.onclick = () => {
+    const k = b.dataset.kp, v = E[E.f];
+    E[E.f] = k === "⌫" ? v.slice(0, -1) : k === "." ? (v.includes(".") || E.f === "cnt" ? v : (v || "0") + ".") : (v + k).slice(0, 5);
+    const f = box.querySelector(`[data-isf="${E.f}"] b`); f.textContent = E[E.f] || " ";
+  }));
+  $("isAdd").onclick = () => {
+    const type = tt(E.type); if (!type) return;
+    A.inj.push({ n: R.n, part: R.name, parts: autSel.map((s) => AUT_REG[s.r].name), x: autSel[0].x, y: autSel[0].y, pts: autSel.map((s) => ({ x: s.x, y: s.y })),
+      type, w: E.w, h: E.h, cnt: E.cnt });
+    Object.assign(E, { w: "", h: "", cnt: "", f: "w" });
+    autSel = []; autSpan = false; autSheet(false); saveSoon(); render();
+  };
 }
 function autRefresh(n) {
   const A = state.autopsy;
   const el = $(n === "op" ? "aoutop" : "aout" + n);
   if (el) el.innerHTML = (n === "op" ? autOpinion() : autLines(n)).map((l) => `<div>- ${esc(l)}</div>`).join("") || "<div>-</div>";
-  const d = document.querySelector(`details.aut[data-ak="${n === "op" ? "op" : n >= 3 ? "inj" : "s" + n}"]`);
+  const d = document.querySelector(`details.aut[data-ak="${n === "op" ? "op" : n >= 3 ? "dict" : "s" + n}"]`);
   if (d) {
-    const on = n === "op" ? !!(A.op.length || tt(A.opMemo)) : n >= 3 ? [3, 4, 5, 6, 7].some(autFilled) : autFilled(n), c = d.querySelector(".cnt");
+    const on = n === "op" ? !!(A.op.length || tt(A.opMemo)) : n >= 3 ? !!tt(A.dictText) : autFilled(n), c = d.querySelector(".cnt");
     c.textContent = on ? "입력됨" : "입력 안 함"; c.classList.toggle("on", on);
   }
   saveSoon();
@@ -2313,49 +2346,6 @@ function bindAut(v) {
     autRefresh(partOfEl(b));
   }));
   // 외상 그림
-  v.querySelectorAll("[data-itab]").forEach((b) => b.addEventListener("click", () => {
-    autTab = +b.dataset.itab;
-    v.querySelectorAll("[data-itab]").forEach((x) => x.setAttribute("aria-pressed", x === b));
-    autMapDraw();
-  }));
-  $("injMap").addEventListener("click", (e) => {
-    const cv = $("injMap"), r = cv.getBoundingClientRect(), [, V] = AUT_VIEWS[autTab], [ox, oy] = V;
-    const x = ox + (e.clientX - r.left) * cv.width / r.width, y = oy + (e.clientY - r.top) * cv.height / r.height;
-    let best = -1, bestD = 1e9;
-    AUT_REG.forEach((R, i) => {
-      if (!inView(R, V)) return;
-      const d = ((x - R.x) / R.rx) ** 2 + ((y - R.y) / R.ry) ** 2;
-      const score = d <= 1 ? d * R.rx * R.ry : 1e6 + d;             // 안에 든 것 중 작은 부위 먼저
-      if (d < 2.2 && score < bestD) { bestD = score; best = i; }
-    });
-    if (best < 0) return;
-    const k = autSel.findIndex((s) => s.r === best), pt = { r: best, x: Math.round(x), y: Math.round(y) };
-    if (k >= 0) autSel.splice(k, 1);                               // 다시 누르면 뺌
-    else if (autSpan && autSel.length) autSel.push(pt);            // '걸친 부위'가 켜져 있으면 이어 붙임
-    else autSel = [pt];
-    $("injPart").textContent = autSel.map((s) => AUT_REG[s.r].name).join(" ~ "); $("injPick").classList.toggle("hide", !autSel.length);
-    autFindBind();
-    autMapDraw();
-  });
-  v.querySelectorAll("[data-ity]").forEach((b) => b.addEventListener("click", () => {
-    const on = b.getAttribute("aria-pressed") !== "true";
-    v.querySelectorAll("[data-ity]").forEach((x) => x.setAttribute("aria-pressed", "false"));
-    b.setAttribute("aria-pressed", on); if (on) $("injType").value = "";
-  }));
-  $("injType").addEventListener("input", () => { if ($("injType").value.trim()) v.querySelectorAll("[data-ity]").forEach((x) => x.setAttribute("aria-pressed", "false")); });
-  $("injAdd").addEventListener("click", () => {
-    if (!autSel.length) return;
-    const t = v.querySelector('[data-ity][aria-pressed="true"]'), type = tt($("injType").value) || (t ? t.dataset.ity : "");
-    const R = AUT_REG[autSel[0].r];
-    A.inj.push({ n: R.n, part: R.name, parts: autSel.map((s) => AUT_REG[s.r].name), x: autSel[0].x, y: autSel[0].y, pts: autSel.map((s) => ({ x: s.x, y: s.y })),
-      type, w: tt($("injW").value), h: tt($("injH").value), cnt: tt($("injN").value) });
-    autSel = []; autSpan = false; saveSoon(); render();
-  });
-  v.querySelectorAll("[data-adel]").forEach((b) => b.addEventListener("click", () => { A.inj.splice(+b.dataset.adel, 1); saveSoon(); render(); }));
-  $("injSpan").addEventListener("click", () => { autSpan = !autSpan; $("injSpan").setAttribute("aria-pressed", autSpan); });
-  v.querySelectorAll("[data-fdel]").forEach((b) => b.addEventListener("click", () => { A.finds.splice(+b.dataset.fdel, 1); saveSoon(); render(); }));
-  autFindBind();
-  if (autOpen.has("inj")) autMapDraw();
   v.querySelectorAll("[data-aop]").forEach((b) => b.addEventListener("click", () => {
     const k = b.dataset.aop, i = A.op.indexOf(k); i < 0 ? A.op.push(k) : A.op.splice(i, 1);
     b.setAttribute("aria-pressed", A.op.includes(k)); autRefresh("op");
@@ -2365,6 +2355,12 @@ function bindAut(v) {
   $("autPad").addEventListener("click", () => openBody(autPadDraw, autPadCfg()));
   if (A.diagram) autPadDraw();
   $("autMake").addEventListener("click", makeAutopsy);
+  $("dictText").addEventListener("input", () => { A.dictText = $("dictText").value; saveSoon(); });
+  $("dictGo").addEventListener("click", () => {
+    const res = dictApply($("dictText").value);
+    A.dictRes = `외상 ${res.inj}건 · 소견 ${res.finds}건` + (res.rest.length ? ` · 정리하지 못한 문장 ${res.rest.length}개` : "");
+    autOpen.add("s1"); autOpen.add("s2"); render();
+  });
 }
 
 // ---------- 한글 결과서 ----------
@@ -2418,7 +2414,7 @@ async function buildAutopsy() {
   x = autExpand(x, "@@OPINION@@", op.length ? op.map((l) => "- " + l) : [""]);
   x = autExpand(x, "@@SUMMARY@@", tt(state.kakao.summary).split("\n").map((l) => l.trimEnd()));
   x = autExpand(x, "@@SCENE@@", ["현장감식결과보고서 참고"]);
-  x = autExpand(x, "@@LEGEND@@", A.inj.map((y, i) => `${injNo(i)} ${injWhere(y)} - ${y.type || "외상"}${injSize(y) ? " 약 " + injSize(y).replace(/^약\s*/, "") : ""}${tt(y.cnt) && tt(y.cnt) !== "1" ? ` ${tt(y.cnt)}개` : ""}`));
+  x = autExpand(x, "@@LEGEND@@", A.inj.map((y, i) => `${injNo(i)} ${injWhere(y)} - ${y.type || "외상"}${injSize(y) ? " 약 " + injSize(y).replace(/^약\s*/, "") : ""}${tt(y.cnt) && tt(y.cnt) !== "1" ? (/^\d+$/.test(tt(y.cnt)) ? ` ${tt(y.cnt)}개` : " 여러 개") : ""}`));
   const pm = /(\S+서)(?=\s|$)/.exec(tt(C.dep_org));
   const one = { POLICE: pm ? pm[1] : "", DEP: tt(C.dep_name), VNAME: tt(C.v_name), VBIRTH: autBirth(C.v_rrn), VPLACE: tt(C.v_addr),
     START: dotDateTime(A.start), END: dotDateTime(A.end), PLACE: autPlace(), DATE: dotDate(state.date), ORG: tt(state.user.org), NAME: autExaminer() || "      " };
@@ -2445,6 +2441,171 @@ async function makeAutopsy() {
 function renderAutopsy(v) {
   v.innerHTML = autHtml();
   bindAut(v);
+}
+// ---------- 받아쓰기 정리: 검시관이 말한 글을 읽어 외상·소견·시체현상으로 나눔 ----------
+// 부위: [말 패턴, 결과서 부위 이름, 좌우를 붙이는 부위인지, 손상도 표시에 쓸 부위(없으면 같은 이름)]
+const DICT_PART = [
+  // 흔히 쓰는 말(먼저 봄)
+  [/앞\s*머리/, "전두부(이마)", 0], [/뒷\s*머리/, "후두부(뒤통수)", 0], [/옆\s*머리/, "측두부(관자)", 1], [/정수리|머리\s*꼭대기/, "두정부(정수리)", 0],
+  [/미간/, "미간부(미간)", 0, "전두부(이마)"], [/눈썹/, "눈썹부위", 1, "전두부(이마)"], [/광대/, "관골부(광대)", 1, "협부(뺨)"], [/인중/, "인중", 0, "구순부(입술)"],
+  [/입\s*가|입\s*꼬리/, "구각부(입가)", 1, "구순부(입술)"], [/아래\s*턱/, "하악부(턱)", 0], [/귓\s*볼/, "이개(귀)", 1], [/목\s*젖|울대/, "후두융기부(목젖)", 0, "전경부(앞목)"],
+  [/겨드랑/, "액와부(겨드랑이)", 1, "견부(어깨)"], [/날개\s*뼈|견갑/, "견갑부(어깨뼈)", 1, "배부(등)"], [/젖꼭지|유두/, "유두부", 1, "흉부(가슴)"], [/배꼽/, "제부(배꼽)", 0, "하복부(아랫배)"],
+  [/골반|엉치/, "장골부(골반)", 1, "측복부(옆구리)"], [/꼬리\s*뼈|미골|천골/, "천미골부(꼬리뼈)", 0, "요부(허리)"], [/팔\s*오금/, "주와부(팔오금)", 1, "주관절부(팔꿈치)"],
+  [/무릎\s*뒤/, "슬와부(오금)", 1], [/팔목/, "수근부(손목)", 1], [/손\s*날/, "손날(척측)", 1, "수배부(손등)"],
+  [/엄지|검지|중지|약지|새끼\s*손가락/, "수지(손가락)", 1], [/복사\s*뼈/, "족관절부(발목)", 1], [/아킬레스/, "아킬레스건부", 1, "비복부(종아리)"],
+  [/턱\s*밑|하악\s*하/, "하악부(턱밑)", 0], [/관자놀이|관자|측두/, "측두부(관자)", 1], [/뒤통수|후두부/, "후두부(뒤통수)", 0], [/정수리|두정/, "두정부(정수리)", 0],
+  [/이마|전두/, "전두부(이마)", 0], [/눈\s*꺼풀|눈두덩|눈\s*주위|안와|눈가|(?<![가-힣])눈(?![썹가-힣])/, "안와부(눈 주위)", 1], [/콧등|(?<![가-힣])코(?![가-힣]{0,1}피)/, "비부(코)", 0],
+  [/뺨|(?<![가-힣])볼(?![가-힣])|협부/, "협부(뺨)", 1], [/입술|구순/, "구순부(입술)", 0], [/(?<![가-힣])턱|하악/, "하악부(턱)", 0], [/귓바퀴|이개|(?<![가-힣])귀(?![가-힣]{0,1}볼)/, "이개(귀)", 1],
+  [/앞\s*목|목\s*앞|전경부/, "전경부(앞목)", 0], [/옆\s*목|목\s*옆|측경부/, "측경부(옆목)", 1], [/뒷\s*목|목덜미|후경부/, "후경부(뒷목)", 0],
+  [/쇄골|빗장/, "쇄골부(빗장뼈)", 1], [/명치|심와/, "심와부(명치)", 0], [/윗\s*배|상복부/, "상복부(윗배)", 0], [/아랫\s*배|하복부/, "하복부(아랫배)", 0],
+  [/옆구리|측복부/, "측복부(옆구리)", 1], [/사타구니|서혜/, "서혜부(사타구니)", 0], [/허리|요부/, "요부(허리)", 0], [/엉덩이|둔부/, "둔부(엉덩이)", 1],
+  [/가슴|흉부/, "흉부(가슴)", 1], [/(?<![가-힣손발])등(?![가-힣])|배부/, "배부(등)", 1], [/(?<![가-힣아윗])배(?![가-힣])|복부/, "복부", 0, "상복부(윗배)"],
+  [/어깨|견부/, "견부(어깨)", 1], [/팔꿈치|주관절/, "주관절부(팔꿈치)", 1], [/위\s*팔|윗\s*팔|상완/, "상완부(위팔)", 1], [/아래\s*팔|팔뚝|전완/, "전완부(아래팔)", 1],
+  [/손목|수근/, "수근부(손목)", 1], [/손바닥|수장/, "수장부(손바닥)", 1], [/손등|수배/, "수배부(손등)", 1], [/손가락|수지/, "수지(손가락)", 1],
+  [/허벅지|넓적다리|대퇴/, "대퇴부(넓적다리)", 1], [/오금|슬와/, "슬와부(오금)", 1], [/무릎|슬부/, "슬부(무릎)", 1], [/정강이|하퇴/, "하퇴부(정강이)", 1],
+  [/종아리|장딴지|비복/, "비복부(종아리)", 1], [/발목|족관절/, "족관절부(발목)", 1], [/발등|족배/, "족배부(발등)", 1], [/발뒤꿈치|뒤꿈치|종부/, "종부(발뒤꿈치)", 1],
+  [/발바닥|족저/, "족저부(발바닥)", 1, "종부(발뒤꿈치)"], [/발가락|족지/, "족지(발가락)", 1, "족배부(발등)"],
+  [/(?<![가-힣])손(?![가-힣]{0,1}[톱목등바가])/, "수배부(손등)", 1], [/(?<![가-힣])목(?![가-힣])/, "전경부(앞목)", 0],
+  [/(?<![가-힣])팔(?![꿈뚝])/, "상완부(위팔)", 1], [/(?<![가-힣])다리/, "대퇴부(넓적다리)", 1], [/(?<![가-힣])발(?![가-힣])/, "족배부(발등)", 1],
+];
+const DICT_TYPE = [
+  [/피하\s*출혈|멍|타박/, "피하출혈"], [/표피\s*박탈|찰과|긁힌|긁혔|까진|벗겨진/, "표피박탈"], [/열창|찢어진|찢긴|찢겨/, "열창"], [/자창|찔린|찔렸/, "자창"],
+  [/절창|베인|베였/, "절창"], [/할창/, "할창"], [/골절|부러/, "골절"], [/화상|데인|그을/, "화상"], [/주저흔/, "주저흔"], [/방어흔(?!.*없)/, "방어흔"],
+  [/흉터|반흔/, "흉터"], [/좌상/, "좌상"],
+];
+const NUMW = { 한: 1, 하나: 1, 두: 2, 둘: 2, 세: 3, 셋: 3, 네: 4, 넷: 4, 다섯: 5, 여섯: 6, 일곱: 7, 여덟: 8, 아홉: 9, 열: 10 };
+function dictNorm(s) {
+  return s.replace(/(\d)\s*점\s*(\d)/g, "$1.$2").replace(/센치|센티미터|센티|㎝|cm|씨엠/gi, "cm").replace(/(\d+(?:\.\d+)?)\s*(?:밀리|미리|mm)/gi, (m, v) => `${+v / 10}cm`)
+    .replace(/(\d)\s*(?:곱하기|바이|by|x|X|\*|×)\s*(\d)/g, "$1×$2").replace(/(\d+(?:\.\d+)?)\s*cm\s*(?:에|,)?\s*(\d+(?:\.\d+)?)\s*cm/g, "$1×$2cm");
+}
+function dictSide(s) {
+  if (/양쪽|양측|양\s/.test(s)) return "양측";
+  if (/오른쪽|오른|우측|(?<![가-힣])우(?=\s)/.test(s)) return "우측";
+  if (/왼쪽|왼|좌측|(?<![가-힣])좌(?=\s)/.test(s)) return "좌측";
+  return "";
+}
+function dictPart(s) {
+  for (const [re, base, sided, reg] of DICT_PART) {
+    if (!re.test(s)) continue;
+    const side = sided ? dictSide(s) : "", name = (side ? side + " " : "") + base;
+    const want = reg || base, pref = (side === "좌측" ? "좌측 " : "우측 ") + want;
+    let cands = AUT_REG.filter((R) => R.name === (sided ? pref : want));
+    if (!cands.length) cands = AUT_REG.filter((R) => R.name === want);
+    const R = cands.find((c) => inView(c, AUT_VIEWS[0][1]) || inView(c, AUT_VIEWS[6][1])) || cands[0];
+    return { name, R };
+  }
+  return null;
+}
+function dictSize(s) {
+  let m = /(\d+(?:\.\d+)?)×(\d+(?:\.\d+)?)/.exec(s);
+  if (m) return { w: m[1], h: m[2] };
+  const g = /가로\s*(\d+(?:\.\d+)?)/.exec(s), e = /세로\s*(\d+(?:\.\d+)?)/.exec(s);
+  if (g || e) return { w: g ? g[1] : "", h: e ? e[1] : "" };
+  m = /(\d+(?:\.\d+)?)\s*cm/.exec(s) || /(?:길이|크기)\s*(?:약\s*)?(\d+(?:\.\d+)?)/.exec(s);
+  return m ? { w: m[1], h: "" } : { w: "", h: "" };
+}
+function dictCount(s) {
+  const m = /(\d+|한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)\s*(?:개|군데|곳|줄)/.exec(s);
+  if (m) return String(NUMW[m[1]] || m[1]);
+  return /여러|다발|다수|수\s*개/.test(s) ? "다수" : "";
+}
+// 한 덩어리 글 → 문장 조각. 쉼표로 나눈 조각에 부위·종류가 없으면 앞 조각에 붙임
+function dictClauses(text) {
+  const out = [];
+  for (const sen of dictNorm(text).split(/\n|(?<!\d)\.|\.(?!\d)|[!?]|그리고|그 다음|다음은|다음에|또한/)) {
+    const start = out.length;
+    for (const piece of sen.split(/,|，/)) {
+      const p = piece.trim(); if (!p) continue;
+      const lone = !dictPart(p) && !DICT_TYPE.some(([re]) => re.test(p)) && !/일혈|삭흔|액흔|굳|강직|경직|시반|얼룩|신장|키\s*\d|체격|온도|거품|청색|부종|팽만|울혈|출혈/.test(p);
+      if (lone && out.length > start) out[out.length - 1] += ", " + p; else out.push(p);   // 같은 문장 안에서만 앞 조각에 붙임
+    }
+  }
+  return out;
+}
+function dictApply(text) {
+  const A = state.autopsy, F = A.f;
+  A.inj = []; A.finds = []; A.memoInj = "";                  // 외상·소견은 받아쓰기 글에서만 만듦(다시 정리하면 새로)
+  const rest = [], seen = {};
+  const addFind = (key, part, R, extra) => {
+    const def = AUT_FIND.flatMap((f) => f[1]).find((f) => f[0] === key); if (!def) return;
+    if (/[01]$/.test(key)) A.finds = A.finds.filter((x) => !(x.key.slice(0, -1) === key.slice(0, -1) && /[01]$/.test(x.key)));
+    A.finds = A.finds.filter((x) => !(x.key === key && x.part === part));
+    A.finds.push({ n: R ? R.n : 3, part, key, text: def[2], src: "d", ...(extra || {}) });
+  };
+  for (const c of dictClauses(text)) {
+    let used = false;
+    const P = dictPart(c), num = (re) => { const m = re.exec(c); return m ? m[1] : ""; };
+    // 시체굳음 · 시체얼룩 · 신장 · 체격 · 직장온도
+    if (/굳음|강직|경직/.test(c)) {
+      F.rig2 = /재경직/.test(c) ? "재경직" : /부패/.test(c) ? "부패" : /풀/.test(c) ? "풀림" : /없|안\s*됨|형성되지/.test(c) ? "없음" : /약/.test(c) ? "약하게" : /강|심/.test(c) ? "강하게" : F.rig2;
+      used = true;
+    }
+    if (/시반|시체\s*얼룩/.test(c)) {
+      if (/부패/.test(c)) F.livfade = "부패";
+      else {
+        if (/후면|뒤쪽|등쪽|등\s|배부/.test(c)) { F.livpos = "후면"; F.livpos_t = ""; } else if (/전면|앞쪽|앞\s/.test(c)) { F.livpos = "전면"; F.livpos_t = ""; }
+        const col = /(암적색|선홍색|자적색|적갈색|암자색)/.exec(c); if (col) { if (["암적색", "선홍색"].includes(col[1])) { F.livcol = col[1]; F.livcol_t = ""; } else { F.livcol = ""; F.livcol_t = col[1]; } }
+        if (/퇴색.*(없|안)|안\s*빠|고정/.test(c)) F.livfade = "퇴색없음"; else if (/퇴색|빠짐|사라/.test(c)) F.livfade = "퇴색있음";
+      }
+      used = true;
+    }
+    if (/신장|키\s*\d/.test(c)) { const h = num(/(?:신장|키)\s*(?:약\s*)?(\d{2,3}(?:\.\d+)?)/); if (h) { F.height = h; used = true; } }
+    const bd = /(마른|보통|비만|건장한|건장)\s*체격/.exec(c); if (bd) { F.build = bd[1] === "건장" ? "건장한" : bd[1]; used = true; }
+    if (/직장\s*온도|체온/.test(c)) { const t = num(/(\d{2}(?:\.\d+)?)\s*(?:도|℃)/); if (t) { F.temp = t; used = true; } }
+    // 부위에 딸린 소견
+    const eyeR = AUT_REG.find((R) => R.name === "우측 안와부(눈 주위)");
+    if (/일혈/.test(c) && !/얼굴/.test(c)) { addFind(/없|안\s*보|관찰되지|음성/.test(c) ? "pet0" : "pet1", "안와부(눈 주위)", eyeR); used = true; }
+    if (/결막.*(울혈|충혈)/.test(c)) { addFind("conj", "안와부(눈 주위)", eyeR); used = true; }
+    if (/얼굴.*울혈|안면.*울혈/.test(c)) { addFind("fcong", "협부(뺨)", eyeR); used = true; }
+    if (/얼굴.*일혈|안면.*일혈/.test(c)) { addFind("fpet", "협부(뺨)", eyeR); used = true; }
+    if (/코피|코.*출혈/.test(c)) { addFind("nbl", "비부(코)", eyeR); used = true; }
+    if (/거품|포말/.test(c)) { addFind("froth", "비부(코)", eyeR); used = true; }
+    if (/입\s*안.*출혈|구강.*출혈/.test(c)) { addFind("mbl", "구순부(입술)", eyeR); used = true; }
+    if (/귀.*출혈|이개.*출혈/.test(c)) { const p = dictPart(c.replace(/출혈/, "")); addFind("ebl", p ? p.name : "이개(귀)", eyeR); used = true; }
+    if (/삭흔/.test(c)) {
+      const m = {}, at = (re) => { const x = re.exec(c); return x ? x[1] : ""; };
+      m.chin = at(/턱\s*(?:끝|중앙)?\s*(?:에서|으로부터|부터)?\s*(?:약\s*)?(\d+(?:\.\d+)?)/); m.lear = at(/(?:왼쪽|좌측)\s*귓볼\s*(?:에서|으로부터|부터)?\s*(?:약\s*)?(\d+(?:\.\d+)?)/);
+      m.rear = at(/(?:오른쪽|우측)\s*귓볼\s*(?:에서|으로부터|부터)?\s*(?:약\s*)?(\d+(?:\.\d+)?)/); m.occ = at(/후두\s*융기\s*(?:에서|으로부터|부터)?\s*(?:약\s*)?(\d+(?:\.\d+)?)/);
+      m.w = at(/폭\s*(?:은|이)?\s*(?:약\s*)?(\d+(?:\.\d+)?)/);
+      addFind("lig", "전경부(앞목)", AUT_REG.find((R) => R.name === "전경부(앞목)"), { m }); used = true;
+    }
+    if (/액흔/.test(c)) { addFind("man", "전경부(앞목)", AUT_REG.find((R) => R.name === "전경부(앞목)")); used = true; }
+    if (/늑골|갈비/.test(c) && /골절|부러/.test(c)) { addFind("rib", P ? P.name : "흉부(가슴)", P && P.R ? P.R : AUT_REG.find((R) => R.name === "우측 흉부(가슴)")); used = true; }
+    if (/팽만|부풀/.test(c)) { addFind("abd", "복부", AUT_REG.find((R) => R.name === "상복부(윗배)")); used = true; }
+    if (/손톱/.test(c) && /청색|파랗/.test(c)) { addFind("cyanh", "수지(손가락)", AUT_REG.find((R) => R.name === "우측 수지(손가락)")); used = true; }
+    if (/발톱/.test(c) && /청색|파랗/.test(c)) { addFind("cyanf", "족배부(발등)", AUT_REG.find((R) => R.name === "우측 족배부(발등)")); used = true; }
+    if (/부종|붓기|부어/.test(c)) { addFind("edema", "하퇴부(정강이)", AUT_REG.find((R) => R.name === "우측 하퇴부(정강이)")); used = true; }
+    if (/방어흔/.test(c) && /없/.test(c)) { addFind("def0", "전완부(아래팔)", AUT_REG.find((R) => R.name === "우측 전완부(아래팔)")); used = true; }
+    if (/특기할\s*외상|외상\s*(?:은\s*)?없/.test(c) && !P) used = true;
+    // 외상
+    const T = DICT_TYPE.find(([re]) => re.test(c));
+    if (T && P && !(T[1] === "골절" && /늑골|갈비/.test(c))) {
+      const R = P.R || AUT_REG[0], k = (seen[R.name] = (seen[R.name] || 0) + 1) - 1;
+      const sz = dictSize(c), off = [[0, 0], [14, 10], [-14, 10], [14, -10], [-14, -10]][k % 5];
+      A.inj.push({ n: R.n, part: P.name, parts: [P.name], x: R.x + off[0], y: R.y + off[1], pts: [{ x: R.x + off[0], y: R.y + off[1] }],
+        type: T[1], w: T[1] === "골절" ? "" : sz.w, h: T[1] === "골절" ? "" : sz.h, cnt: dictCount(c), src: "d" });
+      used = true;
+    }
+    if (!used) rest.push(c);
+  }
+  A.dictText = text; A.dictRest = rest;
+  saveSoon();
+  return { inj: A.inj.filter((x) => x.src === "d").length, finds: A.finds.filter((x) => x.src === "d").length, rest };
+}
+
+// 녹음 앱 '공유'로 받은 받아쓰기 글: 서비스 워커가 기기 안 저장소(kcsi-share)에 넣어 둔 것을 꺼내 정리
+async function autShareIn() {
+  if (!/[?&]share=1/.test(location.search)) return;
+  history.replaceState(null, "", location.pathname);
+  let t = "";
+  try { const c = await caches.open("kcsi-share"), r = await c.match("./__share"); if (r) { t = await r.text(); await c.delete("./__share"); } } catch (e) {}
+  if (!t.trim()) return;
+  const A = state.autopsy;
+  A.dictText = [tt(A.dictText), t.trim()].filter(Boolean).join("\n");
+  const res = dictApply(A.dictText);
+  A.dictRes = `외상 ${res.inj}건 · 소견 ${res.finds}건` + (res.rest.length ? ` · 정리하지 못한 문장 ${res.rest.length}개` : "");
+  ["dict", "s1", "s2"].forEach((k) => autOpen.add(k));
+  saveNow(); go("autopsy");
 }
 // ================= 작업 파일(.kcsi) 저장·불러오기 =================
 // .kcsi = ZIP(압축 없음): project.json(PC 프로그램 작업 형식) + 사진/001.jpg… + 첨부/점검표·유류물 쪽 그림
@@ -2654,6 +2815,7 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
   history.replaceState(null, "", location.pathname + location.search);
   route = "home";
   go(["check", "photos", "items", "hand", "docs", "kakao", "autopsy"].includes(r) ? r : "home");
+  autShareIn();
 })();
 </script>
 </body>
