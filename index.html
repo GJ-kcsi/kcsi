@@ -143,7 +143,7 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 .isize{display:flex;align-items:center;gap:6px}.isize input{width:64px!important;text-align:center}
 .bodymap{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}.bodymap canvas{display:block;width:100%;height:auto;touch-action:manipulation}
 .ligm{display:grid;gap:6px;padding:8px 10px;border:1px solid var(--line);border-radius:8px}.lrow{display:grid;grid-template-columns:7.5em 1fr auto;align-items:center;gap:8px;font-size:14px}
-.vtabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;max-width:760px;margin:10px auto 0;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+.vtabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;max-width:760px;margin:10px auto 0;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
 .vtabs button{font:inherit;font-size:13px;font-weight:700;line-height:1.25;padding:8px 2px;word-break:keep-all;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px}
 .vtabs button[aria-pressed=true]{background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
 .dt24{display:flex;gap:6px;flex:1;min-width:0}.dt24 input{flex:2.2;min-width:0;padding-left:6px;padding-right:4px}.dt24 select{flex:1;min-width:0;padding-left:6px;padding-right:2px}
@@ -191,7 +191,7 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
   <h1 id="title">KCSI Docs</h1>
 </div></header>
 
-<div id="vtabs" class="vtabs hide"><button type="button" data-vt="check">점검 목록표</button><button type="button" data-vt="items">유류물 목록</button><button type="button" data-vt="kakao">간이 보고서</button><button type="button" data-vt="autopsy">검시결과 보고서</button></div>
+<div id="vtabs" class="vtabs hide"><button type="button" data-vt="check">점검 목록표</button><button type="button" data-vt="items">유류물 목록</button><button type="button" data-vt="kakao">간이 보고서</button><button type="button" data-vt="autopsy">검시결과 보고서</button><button type="button" id="vtFp">지문 채취</button></div>
 <main id="view"></main>
 
 <footer class="dock"><div class="in">
@@ -509,6 +509,7 @@ function go(r, fromBack) {
   route = r; $("back").classList.toggle("hide", r === "home"); window.scrollTo(0, 0); render();
 }
 document.querySelectorAll("[data-vt]").forEach((b) => b.addEventListener("click", () => { if (b.dataset.vt !== route) go(b.dataset.vt); }));
+$("vtFp").addEventListener("click", async () => { if (saveTimer) await saveNow(); location.href = "./fingerprint.html"; });
 $("back").addEventListener("click", () => { if (history.state && history.state.kcsi) history.back(); else go("home", true); });
 window.addEventListener("popstate", () => {
   const evCamOn = document.querySelector(".evcam.on"), evOpen = document.querySelector(".evsheet:not(.hide)");
@@ -581,8 +582,6 @@ function renderHome(v) {
     ${menu("hand", 3, "의뢰증거물 인수인계서", c.hand ? `증거물 ${c.hand}개 입력됨` : "입력 안 함")}
     ${menu("photos", 4, "현장 사진", c.photos ? `사진 ${c.photos}장` : "입력 안 함")}
     ${menu("docs", 5, "문서 사진", c.docs ? `${c.docs}장` : "입력 안 함")}
-    <button class="menu" id="goFingerprint" type="button"><span class="n">6</span>
-      <span><b>지문 채취</b><small>신원확인 · 수사자료표</small></span><span aria-hidden="true">›</span></button>
     <section class="panel" aria-label="출력할 문서">
       <h2>출력할 문서</h2>
       <label class="inc"><input type="checkbox" id="inc_check"> 변사 현장 점검 목록표</label>
@@ -626,7 +625,6 @@ function renderHome(v) {
     box.addEventListener("change", () => { state.include[k] = box.checked; saveSoon(); });
   }
   v.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
-  $("goFingerprint").addEventListener("click", () => { location.href = "./fingerprint.html"; });
   $("saveKcsi").addEventListener("click", saveKcsi);
   $("reset").addEventListener("click", () => showSheet("모두 지울까요?", "점검 목록표, 유류물 목록, 인수인계서, 채증물, 사진, 문서 사진, 사건명이 모두 지워집니다. 되돌릴 수 없습니다.", "confirm"));
 }
