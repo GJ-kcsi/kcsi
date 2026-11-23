@@ -157,6 +157,7 @@ header button.back{padding:7px 12px}
     <button id="pResume" class="card" style="display:none"><span id="pResumeTxt"></span><span class="chev">›</span></button>
     <button class="big fill" id="pTen"><svg viewBox="0 0 50 24" width="130" height="62" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(24,0) scale(-1,1)"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></g><g transform="translate(26,0)"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></g></svg><span>십지지문</span></button>
     <button class="big fill" id="pOne"><svg viewBox="0 0 24 24" width="62" height="62" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 14a8 8 0 0 1-8 8"/><path d="M18 11v-1a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V9a2 2 0 0 0-2-2a2 2 0 0 0-2 2v1"/><path d="M10 9.5V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v10"/><path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg><span>일지 지문</span></button>
+    <div class="seg" id="modeSeg" style="flex:none"><button data-sm="app" style="flex:1;padding:14px">카메라 앱</button><button data-sm="guide" style="flex:1;padding:14px">가이드 촬영</button></div>
     <div id="onePick" style="display:none;flex:1;flex-direction:column">
       <div class="hand">왼손</div><div class="row" id="pickL"></div>
       <div class="hand">오른손</div><div class="row" id="pickR"></div>
@@ -238,6 +239,7 @@ header button.back{padding:7px 12px}
   <div id="rvStage"><canvas id="rvImg"></canvas></div>
   <div class="bar">
     <button id="rvRetake" style="flex:1">다시 촬영</button>
+    <button id="rvAdj" style="flex:1">위치 조정</button>
     <button id="rvKeep" class="pri" style="flex:1.4">저장</button>
   </div>
 </section>
@@ -576,7 +578,7 @@ function slotBtn(n){
   const f=S.f[n],b=document.createElement('button');
   b.className='slot'+(f&&f.thumb?' done':'');
   b.innerHTML=(f&&f.thumb?`<img src="${f.thumb}" alt="">`:'<span class="plus">+</span>')+`<span class="no">${n}</span><span class="lb">${S.kind==='one'?FN[n]:SN[n]}</span>`+(f&&f.extras&&f.extras.length?`<span class="ex">+${f.extras.length}</span>`:'');
-  b.onclick=()=>f?openAct(n):openCam(n);return b;
+  b.onclick=()=>f?openAct(n):shoot(n);return b;
 }
 function fillInfo(){document.querySelectorAll('.info [data-k]').forEach(i=>{i.value=S.info[i.dataset.k]||''})}
 function renderHome(){
@@ -658,22 +660,24 @@ $('infoDone').onclick=()=>{
 };
 function startNew(kind,one){
   if(Object.keys(S.f).length&&!confirm('이전에 찍은 지문을 지우고 새로 채취할까요?'))return;
-  S={mode:'id',kind,one:one||null,tipDown:S.tipDown,camId:S.camId,camSig:S.camSig,zipEnh:S.zipEnh,autoShot:S.autoShot,lastMm:S.lastMm,flash:S.flash,outPpi:S.outPpi,info:{},f:{}};save();renderHome();openCam(req()[0]);
+  S={mode:'id',kind,one:one||null,shootMode:S.shootMode,tipDown:S.tipDown,camId:S.camId,camSig:S.camSig,zipEnh:S.zipEnh,autoShot:S.autoShot,lastMm:S.lastMm,flash:S.flash,outPpi:S.outPpi,info:{},f:{}};save();renderHome();shoot(req()[0]);
 }
 function openPick(){
   $('pickTitle').textContent='지문 채취';$('onePick').style.display='none';$('pTen').style.display='';$('pOne').style.display='';
   const has=S.kind&&Object.keys(S.f).length;$('pResume').style.display=has?'':'none';
   if(has){const r=req();$('pResumeTxt').innerHTML=`이어서 · ${S.kind==='one'?'일지 '+FN[S.one]:'십지지문'} ${r.filter(n=>S.f[n]).length}/${r.length}`}
   for(const [row,from] of [['pickL',1],['pickR',6]]){const el=$(row);el.innerHTML='';for(let n=from;n<from+5;n++){const b=document.createElement('button');b.textContent=SN[n];b.onclick=()=>startNew('one',n);el.appendChild(b)}}
-  show('pick');
+  syncMode();show('pick');
 }
 $('pResume').onclick=()=>goHome();
+const syncMode=()=>document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.sm===(S.shootMode||'app')));
+document.querySelectorAll('#modeSeg button').forEach(b=>b.onclick=()=>{S.shootMode=b.dataset.sm;save();syncMode()});
 function toDocs(){let same=false;try{same=document.referrer&&new URL(document.referrer).origin===location.origin}catch(e){}if(same&&history.length>1)history.back();else location.href='./index.html#check'}
 $('pickBack').onclick=()=>{if($('onePick').style.display!=='none'){openPick();return}toDocs()};
 $('homeBack').onclick=()=>openPick();
 $('pTen').onclick=()=>startNew('ten');
 $('pOne').onclick=()=>{$('pTen').style.display='none';$('pOne').style.display='none';$('pResume').style.display='none';$('onePick').style.display='flex'};
-$('btnStart').onclick=()=>{const n=nextEmpty(req()[0]);if(n)openCam(n);else toast('촬영 완료')};
+$('btnStart').onclick=()=>{const n=nextEmpty(req()[0]);if(n)shoot(n);else toast('촬영 완료')};
 const syncPpi=()=>{document.querySelectorAll('#ppiSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.p===(S.outPpi||1000)));$('zipEnh').classList.toggle('on',S.zipEnh!==false);$('zipEnh').textContent=S.zipEnh!==false?'융선 강조 사진 포함 ✓':'융선 강조 사진 포함';};
 $('zipEnh').onclick=()=>{S.zipEnh=S.zipEnh===false;save();syncPpi()};
 document.querySelectorAll('#ppiSeg button').forEach(b=>b.onclick=()=>{S.outPpi=+b.dataset.p;save();syncPpi()});
@@ -693,7 +697,7 @@ function openAct(n){
 const closeAct=()=>$('act').classList.remove('act');
 $('aClose').onclick=closeAct;
 $('act').onclick=e=>{if(e.target.id==='act')closeAct()};
-$('aCam').onclick=()=>{pick='main';closeAct();openCam(cur)};
+$('aCam').onclick=()=>{closeAct();shoot(cur)};
 $('aGal').onclick=()=>{pick='main';closeAct();$('fGal').click()};
 $('aExtra').onclick=()=>{pick='extra';closeAct();$('fCam').click()};
 $('aEdit').onclick=()=>{closeAct();openEditor(cur)};
@@ -701,6 +705,7 @@ $('aDel').onclick=()=>{closeAct();if(!confirm(cur+'. '+FN[cur]+' 사진을 지�
 for(const id of ['fCam','fGal'])$(id).onchange=async e=>{
   const file=e.target.files[0];e.target.value='';if(!file)return;
   if(pick==='extra'){S.f[cur].extras=S.f[cur].extras||[];S.f[cur].extras.push(file);save();renderHome();toast('추가 사진 저장됨');return}
+  if(pick==='native'){handleNative(file);return}
   const old=S.f[cur];
   S.f[cur]={orig:file,name:file.name||'',taken:new Date().toISOString(),extras:old&&old.extras||[],p:null,o:{...DEFO},cal:null,thumb:null};
   save();openEditor(cur);
@@ -848,7 +853,7 @@ function commit(){
   save();
 }
 function closeEditor(){E=null;W=null;goHome()}
-$('edDone').onclick=()=>{commit();closeEditor()};
+$('edDone').onclick=()=>{if(edFromReview){edFromReview=false;const n=E.n,Wk=W;commit();busy(true);try{makeReview(n,Wk)}finally{busy(false)}E=null;W=null;show('review');return}commit();closeEditor()};
 const nextReq=n=>{const r=req(),i=r.indexOf(n);return i>=0&&i<r.length-1?r[i+1]:0};
 $('edNext').onclick=()=>{const n=E.n;commit();const nx=nextReq(n);if(!nx){closeEditor();return}cur=nx;if(S.f[cur])openEditor(cur);else{E=null;W=null;openCam(cur)}};
 $('tMore').onclick=()=>{const r=$('moreRow'),on=r.style.display==='none';r.style.display=on?'flex':'none';$('tMore').classList.toggle('on',on);requestAnimationFrame(draw)};
@@ -1090,11 +1095,54 @@ async function grab(){
   S.f[n]={orig:file,name:file.name,taken:new Date().toISOString(),extras:old&&old.extras||[],p:null,hint,o:{...DEFO},cal:null,thumb:null,res:[pw,ph],blurry};
   cur=n;save();
   try{const Wk=await loadWork(file),h=hint,pp=Math.abs(Wk.w/Wk.h-h.asp)<0.03?{cx:h.cx*Wk.w,cy:h.cy*Wk.h,a:h.a*Wk.w,b:h.b*Wk.h,ang:h.ang||0}:defParams(Wk);
-    S.f[n].p=pp;const RR=processFinger(Wk,pp,S.f[n].o,null,1000),rc=toCanvas(RR,$('rvImg'));rvBase=toCanvas(RR);rvPpi=RR.ppi;rvEnhC=null;$('rvEnh').classList.remove('on');
-    const tc=document.createElement('canvas'),k=Math.min(1,640/Math.max(rc.width,rc.height));tc.width=Math.round(rc.width*k);tc.height=Math.round(rc.height*k);tc.getContext('2d').drawImage(rc,0,0,tc.width,tc.height);
-    S.f[n].thumb=tc.toDataURL('image/jpeg',0.92)}catch(e){}
+    S.f[n].p=pp;makeReview(n,Wk)}catch(e){}
   busy(false);
   rvPrev=old||null;rvN=n;$('rvTitle').textContent=n+'. '+FN[n];show('review');
+}
+function makeReview(n,Wk){const RR=processFinger(Wk,S.f[n].p,S.f[n].o,null,1000),rc=toCanvas(RR,$('rvImg'));rvBase=toCanvas(RR);rvPpi=RR.ppi;rvEnhC=null;$('rvEnh').classList.remove('on');
+  const tc=document.createElement('canvas'),k=Math.min(1,640/Math.max(rc.width,rc.height));tc.width=Math.round(rc.width*k);tc.height=Math.round(rc.height*k);tc.getContext('2d').drawImage(rc,0,0,tc.width,tc.height);
+  S.f[n].thumb=tc.toDataURL('image/jpeg',0.92);save()}
+/* 폰 기본 카메라 앱으로 촬영 → 지두 위치 자동 찾기 */
+function detectFinger(W){
+  // 지문 무늬(가는 줄무늬가 한 방향으로 고르게 있는 곳)가 가장 뚜렷한 피부 영역을 찾고, 피부 폭으로 원 크기를 정함
+  const SW=800,k=SW/W.w,SH=Math.max(16,Math.round(W.h*k)),c=document.createElement('canvas');c.width=SW;c.height=SH;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(W.c,0,0,SW,SH);
+  const d=x.getImageData(0,0,SW,SH).data,n=SW*SH,g=new Float32Array(n),sk=new Float32Array(n);
+  for(let i=0;i<n;i++){const r=d[i*4],gg=d[i*4+1],b=d[i*4+2],mx=Math.max(r,gg,b),mn=Math.min(r,gg,b);g[i]=.3*r+.59*gg+.11*b;
+    sk[i]=(r>95&&gg>40&&b>20&&mx-mn>15&&Math.abs(r-gg)>12&&r>gg&&r>b&&gg>0.45*r)?1:0}
+  const b1=blurArr(g,SW,SH,1),b4=blurArr(g,SW,SH,4),dog=new Float32Array(n);for(let i=0;i<n;i++)dog[i]=b1[i]-b4[i];
+  const jxx=new Float32Array(n),jyy=new Float32Array(n),jxy=new Float32Array(n),e2=new Float32Array(n);
+  for(let y=1;y<SH-1;y++)for(let xx=1;xx<SW-1;xx++){const i=y*SW+xx,gx=dog[i+1]-dog[i-1],gy=dog[i+SW]-dog[i-SW];jxx[i]=gx*gx;jyy[i]=gy*gy;jxy[i]=gx*gy;e2[i]=dog[i]*dog[i]}
+  const Jxx=blurArr(jxx,SW,SH,7),Jyy=blurArr(jyy,SW,SH,7),Jxy=blurArr(jxy,SW,SH,7),E=blurArr(e2,SW,SH,7),M=blurArr(g,SW,SH,7),Sk=blurArr(sk,SW,SH,15),sc=new Float32Array(n);
+  for(let i=0;i<n;i++){const t=Jxx[i]+Jyy[i],coh=t>1e-6?Math.hypot(Jxx[i]-Jyy[i],2*Jxy[i])/t:0;sc[i]=Sk[i]>0.85?E[i]/(M[i]*M[i]+100)*coh*coh:0}
+  const SS=blurArr(sc,SW,SH,30);let bi=0,bv=-1;
+  for(let y=0;y<SH;y++)for(let xx=0;xx<SW;xx++){const i=y*SW+xx,dx=xx/SW-.5,dy=y/SH-.45,v=SS[i]*Math.exp(-(dx*dx+dy*dy)/(2*.3*.3));if(v>bv){bv=v;bi=i}}
+  let cx=bi%SW,cy=(bi/SW)|0;
+  // 손가락 축과 폭 (피부 영역 기준)
+  const SM=blurArr(sk,SW,SH,6),isS=(X,Y)=>X>=0&&Y>=0&&X<SW&&Y<SH&&SM[(Y|0)*SW+(X|0)]>0.3;
+  const R0=SW*0.28;let mx=0,my=0,cn=0;
+  for(let y=Math.max(0,cy-R0|0);y<Math.min(SH,cy+R0);y++)for(let xx=Math.max(0,cx-R0|0);xx<Math.min(SW,cx+R0);xx++)if(SM[y*SW+xx]>0.5){mx+=xx;my+=y;cn++}
+  let ang=0,a=SW*0.12;
+  if(cn>200){mx/=cn;my/=cn;let sxx=0,syy=0,sxy=0;
+    for(let y=Math.max(0,cy-R0|0);y<Math.min(SH,cy+R0);y++)for(let xx=Math.max(0,cx-R0|0);xx<Math.min(SW,cx+R0);xx++)if(SM[y*SW+xx]>0.5){const u=xx-mx,v=y-my;sxx+=u*u;syy+=v*v;sxy+=u*v}
+    const th=0.5*Math.atan2(2*sxy,sxx-syy);
+    let tilt=Math.atan2(Math.cos(th),-Math.sin(th));   // 긴 축의 세로 기준 기울기
+    while(tilt>Math.PI/2)tilt-=Math.PI;while(tilt<-Math.PI/2)tilt+=Math.PI;
+    if(Math.abs(tilt)>0.6)tilt=0;   // 손가락은 대개 세로로 찍으므로 크게 기울면 무시
+    ang=tilt+(S.tipDown?Math.PI:0);
+    const ux=Math.sin(ang),uy=-Math.cos(ang);   // 손끝 방향
+    const run=(dx,dy)=>{let t=0;while(t<SW*1.5&&isS(cx+dx*t,cy+dy*t))t++;return t};
+    const wl=run(-uy,ux),wr=run(uy,-ux);
+    if(wl+wr>20){a=(wl+wr)/2*0.92;const off=(wl-wr)/2;cx+=-uy*off;cy+=ux*off}   // 피부 폭의 가운데로
+  }
+  {const ux=Math.sin(ang),uy=-Math.cos(ang);cx+=ux*a*0.15;cy+=uy*a*0.15}   // 지두 중심은 손끝 쪽으로 약간
+  return {cx:cx/k,cy:cy/k,a:a/k,b:a*1.35/k,ang};
+}
+function shoot(n){camN=n;cur=n;if(S.shootMode==='guide'){openCam(n);return}pick='native';$('fCam').click()}
+async function handleNative(file){
+  const n=camN,old=S.f[n];busy(true,'불러오는 중…');
+  S.f[n]={orig:file,name:file.name||'',taken:new Date().toISOString(),extras:old&&old.extras||[],p:null,o:{...DEFO},cal:null,thumb:null};
+  try{const Wk=await loadWork(file);S.f[n].p=detectFinger(Wk);S.f[n].res=[Wk.srcW,Wk.srcH];makeReview(n,Wk)}catch(e){busy(false);toast('사진을 열 수 없습니다');if(old)S.f[n]=old;else delete S.f[n];return}
+  busy(false);rvPrev=old||null;rvN=n;$('rvTitle').textContent=n+'. '+FN[n];show('review');
 }
 let rvPrev=null,rvN=0,rvBase=null,rvEnhC=null,rvPpi=500;
 function enhanceCanvas(src,ppi){const w=src.width,h=src.height,d=src.getContext('2d').getImageData(0,0,w,h).data,g=new Float32Array(w*h);
@@ -1104,8 +1152,10 @@ function enhanceCanvas(src,ppi){const w=src.width,h=src.height,d=src.getContext(
 $('rvEnh').onclick=async()=>{if(!rvBase)return;const on=!$('rvEnh').classList.contains('on');
   if(on&&!rvEnhC){busy(true,'융선 강조 중…');await new Promise(r=>setTimeout(r,30));try{rvEnhC=enhanceCanvas(rvBase,rvPpi)}finally{busy(false)}}
   const src=on?rvEnhC:rvBase,c=$('rvImg');c.width=src.width;c.height=src.height;c.getContext('2d').drawImage(src,0,0);$('rvEnh').classList.toggle('on',on)};
-$('rvRetake').onclick=()=>{if(rvPrev)S.f[rvN]=rvPrev;else delete S.f[rvN];save();openCam(rvN)};
-$('rvKeep').onclick=()=>{save();const nx2=nextEmpty(rvN%10+1);if(nx2)openCam(nx2);else{goHome();toast('촬영 완료')}};
+$('rvRetake').onclick=()=>{if(rvPrev)S.f[rvN]=rvPrev;else delete S.f[rvN];save();shoot(rvN)};
+$('rvKeep').onclick=()=>{save();const nx2=nextEmpty(rvN%10+1);if(nx2)shoot(nx2);else{goHome();toast('촬영 완료')}};
+let edFromReview=false;
+$('rvAdj').onclick=async()=>{edFromReview=true;await openEditor(rvN);$('edNext').style.display='none'};
 $('camSkip').onclick=()=>{const from=camN,nx=nextEmpty(from%10+1);stopCam();if(nx&&nx!==from)openCam(nx);else goHome()};
 $('shutter').onclick=()=>grab();
 $('camLens').onclick=async e=>{e.stopPropagation();if(camList.length<2)return;const cur=(track&&track.getSettings&&track.getSettings().deviceId)||S.camId;S.camId=camList[(Math.max(0,camList.indexOf(cur))+1)%camList.length];save();const n=camN;stopCam();await openCam(n)};
