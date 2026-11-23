@@ -1517,7 +1517,7 @@ $("yes").addEventListener("click", () => {
     const r = indexedDB.open("kcsi-fingerprint", 1);
     r.onupgradeneeded = () => r.result.createObjectStore("kv");
     r.onsuccess = () => { try { const db = r.result, t = db.transaction("kv", "readwrite"), st = t.objectStore("kv"), q = st.get("case3");
-      q.onsuccess = () => { const o = q.result; if (o) st.put({ mode: "id", kind: null, one: null, autoShot: o.autoShot, lastMm: o.lastMm, flash: o.flash, outPpi: o.outPpi, info: {}, f: {} }, "case3"); };
+      q.onsuccess = () => { const o = q.result; if (o) st.put({ mode: "id", kind: null, one: null, autoShot: o.autoShot, lastMm: o.lastMm, flash: o.flash, outPpi: o.outPpi, camId: o.camId, camSig: o.camSig, tipDown: o.tipDown, zipEnh: o.zipEnh, info: {}, f: {} }, "case3"); };
       t.oncomplete = () => db.close(); } catch (e) {} };
   } catch (e) {}
 });
