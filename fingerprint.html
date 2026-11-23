@@ -289,7 +289,7 @@ header button.back{padding:7px 12px}
   <div class="seg" id="ppiSeg" style="width:100%"><button data-p="500" style="flex:1">500 ppi</button><button data-p="1000" style="flex:1">1000 ppi</button></div>
   <button id="btnPrint" class="pri" style="display:none">인쇄 / PDF</button>
   <button id="btnPng" style="display:none">문서 이미지 저장</button>
-  <button id="zipEnh">융선 강조 사진 포함</button>
+  <button id="zipEnh" style="display:none"></button>
   <button id="btnZip" class="pri">사진 저장 (ZIP)</button>
   <button id="btnRe" class="danger">새로 채취</button>
   <button id="oClose">닫기</button>
@@ -306,7 +306,7 @@ header button.back{padding:7px 12px}
 'use strict';
 const FN=['','왼손 시지','왼손 중지','왼손 환지','왼손 소지','왼손 무지','오른손 시지','오른손 중지','오른손 환지','오른손 소지','오른손 무지'];
 const SN=['','시지','중지','환지','소지','무지','시지','중지','환지','소지','무지'];
-const OUT_PPMM=500/25.4, TMAX=70*Math.PI/180, DEF_FW=16, MAXW=4096;
+const OUT_PPMM=500/25.4, TMAX=78*Math.PI/180, DEF_FW=16, MAXW=4096;
 const DEFO={flip:true,inv:false,curve:true,mode:'raw'};
 const TONEN={raw:'원본',gray:'대비',enh:'강조',bin:'흑백'};
 const procTxt=o=>[o.flip?'좌우반전':'',o.inv?'명암반전':'',o.curve?'곡면보정':'',o.mode&&o.mode!=='raw'?TONEN[o.mode]:''].filter(Boolean).join('·')||'보정 없음';
@@ -342,6 +342,11 @@ function INFO(){const C=DOCS.check||{},U=DOCS.user||{},X=S.info||{};
     caseNo:DOCS.caseName||'',addr:X.addr||'',reg:X.reg||'',job:X.job||'',reason:X.reason==null?'변사자 신원확인':X.reason};}
 function baseName(){const I=INFO();return (I.caseNo||I.name||'지문').replace(/[\\/:*?"<>|]/g,'_')}
 
+async function jpgWithDpi(canvas,ppi){   // JPEG(최고 품질) + 해상도(dpi) 정보
+  const blob=await new Promise(r=>canvas.toBlob(r,'image/jpeg',1.0)),b=new Uint8Array(await blob.arrayBuffer()),v=Math.max(1,Math.min(65535,Math.round(ppi)));
+  if(b[2]===0xFF&&b[3]===0xE0&&b[6]===0x4A&&b[7]===0x46&&b[8]===0x49&&b[9]===0x46){b[13]=1;b[14]=v>>8;b[15]=v&255;b[16]=v>>8;b[17]=v&255}
+  return new Blob([b],{type:'image/jpeg'});
+}
 async function pngWithDpi(canvas,ppi){
   const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
   const b=new Uint8Array(await blob.arrayBuffer());
@@ -543,16 +548,17 @@ function toCanvas(R,c){
   x.putImageData(im,0,0);return c;
 }
 function scaledPhoto(bm,flip,ppmm,mode){
-  const w=bm.width||bm.naturalWidth,h=bm.height||bm.naturalHeight,bar=Math.max(90,Math.round(Math.min(w,h)*0.07)),c=document.createElement('canvas');
-  c.width=w;c.height=h+bar;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h+bar);
-  x.save();if(flip){x.translate(w,0);x.scale(-1,1)}x.drawImage(bm,0,0,w,h);x.restore();
-  let mm=10;while(mm*ppmm>w*0.45&&mm>1)mm=mm>5?5:1;while(mm*ppmm<w*0.12&&mm<50)mm*=2;
-  const x0=Math.round(bar*0.4),y0=h+Math.round(bar*0.72),L=mm*ppmm,lw=Math.max(2,Math.round(bar/30));
+  const w=bm.width||bm.naturalWidth,h=bm.height||bm.naturalHeight,bar=Math.max(90,Math.round(Math.min(w,h)*0.07)),mm=10,L=mm*ppmm;
+  const x0=Math.round(bar*0.4),need=Math.ceil(x0+L+bar*1.6),W2=Math.max(w,need),c=document.createElement('canvas');   // 10mm 막대가 다 들어가도록 필요하면 폭을 넓힘
+  c.width=W2;c.height=h+bar;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W2,h+bar);
+  const ox=Math.round((W2-w)/2);x.save();x.translate(ox,0);if(flip){x.translate(w,0);x.scale(-1,1)}x.drawImage(bm,0,0,w,h);x.restore();
+  const y0=h+Math.round(bar*0.72),lw=Math.max(2,Math.round(bar/30));
   x.strokeStyle='#000';x.fillStyle='#000';x.lineWidth=lw;x.beginPath();x.moveTo(x0,y0);x.lineTo(x0+L,y0);
-  const step=mm<=10?1:mm<=20?2:5;for(let i=0;i<=mm;i+=step){const t=i%(step*5)===0||i===mm?bar*0.38:bar*0.2,xx=x0+i*ppmm;x.moveTo(xx,y0);x.lineTo(xx,y0-t)}
-  x.stroke();x.font=`bold ${Math.round(bar*0.32)}px sans-serif`;x.textBaseline='alphabetic';x.textAlign='left';x.fillText(`${mm} mm`,x0+L+bar*0.25,y0);
-  x.font=`${Math.round(bar*0.24)}px sans-serif`;x.textAlign='right';x.fillStyle='#555';
-  x.fillText(`${({ruler:'자 보정',ridge:'융선 자동',width:'추정'})[mode]} · ${(ppmm*25.4).toFixed(0)} ppi${flip?' · 좌우반전':''}`,w-bar*0.4,y0);
+  for(let i=0;i<=mm;i++){const t=i%5===0?bar*0.38:bar*0.2,xx=x0+i*ppmm;x.moveTo(xx,y0);x.lineTo(xx,y0-t)}
+  x.stroke();x.font=`bold ${Math.round(bar*0.32)}px sans-serif`;x.textBaseline='alphabetic';x.textAlign='left';x.fillText('1 cm',x0+L+bar*0.25,y0);
+  const info=`${({ruler:'자 보정',ridge:'융선 자동',width:'추정'})[mode]} · ${(ppmm*25.4).toFixed(0)} ppi${flip?' · 좌우반전':''}`;
+  x.font=`${Math.round(bar*0.24)}px sans-serif`;x.fillStyle='#555';
+  if(W2-(x0+L+bar*1.6)>x.measureText(info).width+bar*0.4){x.textAlign='right';x.fillText(info,W2-bar*0.4,y0)}else{x.textAlign='left';x.fillText(info,x0,h+Math.round(bar*0.22))}
   return c;
 }
 function afisCanvas(src,R){
@@ -859,7 +865,7 @@ $('edNext').onclick=()=>{const n=E.n;commit();const nx=nextReq(n);if(!nx){closeE
 $('tMore').onclick=()=>{const r=$('moreRow'),on=r.style.display==='none';r.style.display=on?'flex':'none';$('tMore').classList.toggle('on',on);requestAnimationFrame(draw)};
 $('tSave').onclick=async()=>{
   busy(true);
-  try{const R=processFinger(W,E.p,E.o,E.cal,4000,S.outPpi||1000);const blob=await pngWithDpi(toCanvas(R),R.ppi);download(blob,`${baseName()}_${pad(E.n)}_${FN[E.n]}_${Math.round(R.ppi)}ppi.png`)}
+  try{const R=processFinger(W,E.p,E.o,E.cal,4000,S.outPpi||1000);const blob=await jpgWithDpi(scaledPhoto(toCanvas(R),false,R.ppi/25.4,R.mode),R.ppi);download(blob,`${baseName()}_${pad(E.n)}_${FN[E.n]}_${Math.round(R.ppi)}ppi.jpg`)}
   finally{busy(false)}
 };
 
@@ -1132,10 +1138,10 @@ function detectFinger(W){
     const ux=Math.sin(ang),uy=-Math.cos(ang);   // 손끝 방향
     const run=(dx,dy)=>{let t=0;while(t<SW*1.5&&isS(cx+dx*t,cy+dy*t))t++;return t};
     const wl=run(-uy,ux),wr=run(uy,-ux);
-    if(wl+wr>20){a=(wl+wr)/2*0.92;const off=(wl-wr)/2;cx+=-uy*off;cy+=ux*off}   // 피부 폭의 가운데로
+    if(wl+wr>20){a=(wl+wr)/2;const off=(wl-wr)/2;cx+=-uy*off;cy+=ux*off}   // 피부 폭의 가운데로
   }
-  {const ux=Math.sin(ang),uy=-Math.cos(ang);cx+=ux*a*0.15;cy+=uy*a*0.15}   // 지두 중심은 손끝 쪽으로 약간
-  return {cx:cx/k,cy:cy/k,a:a/k,b:a*1.35/k,ang};
+  {const ux=Math.sin(ang),uy=-Math.cos(ang);cx+=ux*a*0.2;cy+=uy*a*0.2}   // 지두 중심은 손끝 쪽으로 약간
+  return {cx:cx/k,cy:cy/k,a:a/k,b:a*1.65/k,ang};   // 손끝부터 첫마디 주름까지 여유 있게
 }
 function shoot(n){camN=n;cur=n;if(S.shootMode==='guide'){openCam(n);return}pick='native';$('fCam').click()}
 async function handleNative(file){
@@ -1330,30 +1336,19 @@ $('btnPrint').onclick=async()=>{closeOut();
 };
 $('btnZip').onclick=async()=>{closeOut();
   try{
-    const P0=await processAll();if(!Object.keys(P0).length){toast('채취한 지문이 없습니다');return}const r={P:P0};
-    busy(true,'묶는 중…');
-    const files=[],log=[],I=INFO(),u8=async b=>new Uint8Array(await b.arrayBuffer());
-    log.push(`${S.kind==='one'?'일지':'십지'}지문 채취 처리기록`,'',`사건번호: ${(S.mode==='crim'?I.c_case:I.caseNo)||''}`,`성명: ${I.name||''}`,`채취일시: ${(I.date||'').replace('T',' ')}`,`채취장소: ${I.place||''}`,`채취자: ${I.taker||''} / ${I.org||''}`,`기록 생성: ${new Date().toLocaleString('ko-KR')}`,'');
+    const P=await processAll();if(!Object.keys(P).length){toast('채취한 지문이 없습니다');return}
+    const files=[],u8=async b=>new Uint8Array(await b.arrayBuffer());
     for(const n of req()){
-      const f=S.f[n];if(!f)continue;const q=r.P[n],pre=`${pad(n)}_${FN[n]}`;
-      const ob=await u8(f.orig),on=`원본/${pre}_원본.${extOf(f.orig)}`;files.push({name:on,data:ob});
-      log.push(`[${n}] ${FN[n]}`,`  원본: ${on} (${f.name||'촬영'}, ${q.src[0]}×${q.src[1]}px)`,`  원본 SHA-256: ${await sha256(f.orig)}`);
-      (f.extras||[]).forEach((x,i)=>files.push({name:`추가사진/${pre}_추가${i+1}.${extOf(x)}`,data:null,blob:x}));
-      {const bm=await decode(f.orig);
-        for(const fl of [false,true]){const c=scaledPhoto(bm,fl,q.ppmmO,q.R.mode);
-          files.push({name:fl?`좌우반전/${pre}_좌우반전_스케일.jpg`:`원본/${pre}_원본_스케일.jpg`,data:await u8(await new Promise(rs=>c.toBlob(rs,'image/jpeg',0.95)))})}
-        if(bm.close)bm.close()}
-      const pb=await pngWithDpi(q.c,q.R.ppi);files.push({name:`지문/${pre}_${Math.round(q.R.ppi)}ppi.png`,data:await u8(pb)});
-      if(S.zipEnh!==false){busy(true,`융선 강조 중… ${n}`);await new Promise(r=>setTimeout(r,10));files.push({name:`융선강조/${pre}_융선강조_${Math.round(q.R.ppi)}ppi.png`,data:await u8(await pngWithDpi(enhanceCanvas(q.c,q.R.ppi),q.R.ppi))});busy(true,'묶는 중…')}
-      files.push({name:`AFIS/${pre}_500ppi_600x600.png`,data:await u8(await pngWithDpi(afisCanvas(q.c5||q.c,q.R5),500))});
-      log.push(`  처리: ${[q.o.flip?'좌우반전':'',q.o.inv?'명암반전':'',q.o.curve?'곡면보정(원통 ±70°)':''].filter(Boolean).join(', ')||'없음'} / 톤: ${TONEN[q.o.mode||'raw']}`,
-        `  배율: ${({ruler:'자 보정',ridge:`융선 간격 자동 (평균 ${RIDGE_MM}mm 가정, 오차 약 ±15%)`,width:'추정 (손가락 폭 16mm 가정)'})[q.R.mode]} — ${q.R.ppmm.toFixed(2)} px/mm (작업 영상 기준)`,
-        `  출력: ${q.R.ow}×${q.R.oh}px, ${q.R.wmm.toFixed(1)}×${q.R.hmm.toFixed(1)}mm, ${Math.round(q.R.ppi)}ppi`,
-        `  추가 사진: ${(f.extras||[]).length}장`,'');
+      const f=S.f[n],q=P[n];if(!f||!q)continue;const pre=`${pad(n)}_${FN[n].replace(/\s/g,'')}`;
+      busy(true,`저장 중… ${n}`);await new Promise(r=>setTimeout(r,10));
+      files.push({name:`${pre}_0_촬영원본.${extOf(f.orig)}`,data:await u8(f.orig)});   // 폰이 찍은 파일 그대로(손대지 않음)
+      {const bm=await decode(f.orig),c=scaledPhoto(bm,false,q.ppmmO,q.R.mode);if(bm.close)bm.close();
+        files.push({name:`${pre}_1_원본.jpg`,data:await u8(await jpgWithDpi(c,q.ppmmO*25.4))})}
+      const pm=q.R.ppi/25.4;
+      files.push({name:`${pre}_2_${[q.o.flip?'좌우반전':'',q.o.curve?'곡면보정':''].filter(Boolean).join('_')||'보정없음'}.jpg`,data:await u8(await jpgWithDpi(scaledPhoto(q.c,false,pm,q.R.mode),q.R.ppi))});
+      files.push({name:`${pre}_3_융선강조.jpg`,data:await u8(await jpgWithDpi(scaledPhoto(enhanceCanvas(q.c,q.R.ppi),false,pm,q.R.mode),q.R.ppi))});
     }
-    for(const f of files)if(!f.data&&f.blob)f.data=await u8(f.blob);
-    if(S.mode==='crim'){log.push(`채취 동의 서명: ${S.sign?'있음 ('+new Date(S.signAt).toLocaleString('ko-KR')+')':'없음'}`);if(S.sign)files.push({name:'채취동의서명.png',data:await u8(await (await fetch(S.sign)).blob())})}
-    files.push({name:'처리기록.txt',data:new TextEncoder().encode('﻿'+log.join('\r\n'))});
+    busy(true,'묶는 중…');
     download(makeZip(files),`${baseName()}_${S.kind==='one'?'일지':'십지'}지문.zip`);
   }catch(e){toast('저장 실패')}finally{busy(false)}
 };
