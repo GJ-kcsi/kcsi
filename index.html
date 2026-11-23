@@ -162,13 +162,14 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 .evgrp{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-top:4px}
 .evit{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer}
 .evit.in{border-color:#1f9d55;box-shadow:inset 3px 0 #1f9d55}
+.evpick{border-color:#2563eb}.evlist-pick .evit{border-style:dashed}.evit.nfs-on{background:#eef4ff;border-color:#2563eb;border-style:solid}
 .evno{min-width:28px;height:28px;border-radius:7px;background:var(--navy);color:var(--navy-ink);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
 .evb{flex:1;min-width:0}.evb small{display:block;color:var(--muted);font-size:12.5px;word-break:break-all}
 .evit img{width:44px;height:44px;object-fit:cover;border-radius:6px;flex:none}
 .evtag{font-style:normal;font-size:11px;border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:1px;white-space:nowrap}
 .evtag.nfs{background:#e3ecfe;color:#2563eb}.evtag.lb{background:#fff4dc;color:#8a5a00}.evtag.no{background:#fde8e8;color:#b23a3a}.evtag.ok{background:#dcf5e6;color:#1f7a45}
 .evsheet{z-index:30}.evsheet .box{max-height:92vh;overflow:auto}
-.evcats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.evcats .chip{border-radius:10px;padding:11px 2px;text-align:center}
+.evcg{font-size:13px;font-weight:700;color:var(--navy);margin:6px 0 -2px}.evcats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.evcats .chip{border-radius:10px;padding:11px 2px;text-align:center}
 .evrow3{display:flex;gap:8px}.evrow3 .btn{flex:1}
 .evph{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
 .evqr{display:grid;justify-items:center;gap:8px}.evqr canvas{width:min(92vw,460px);height:auto;image-rendering:pixelated;background:#fff;border:10px solid #fff;border-radius:6px}.evqr .evrow3{width:100%;max-width:380px}
@@ -176,7 +177,7 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 .evcam video{width:100%;height:100%;object-fit:cover}
 .evframe{position:absolute;left:50%;top:44%;width:62vw;height:62vw;max-width:320px;max-height:320px;transform:translate(-50%,-50%);border:3px solid #ffb000;border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.35)}
 .evstat{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;border-radius:999px;padding:6px 16px;font-size:18px}
-.evstat:empty{display:none}.evstat b{color:#5be38c;font-size:24px}.evstat .bad{color:#ff8a8a;font-size:14px;margin-left:6px}
+.evstat:empty{display:none}.evlast{font-size:15px;color:#5be38c;margin-top:2px;text-align:center}.evstat b{color:#5be38c;font-size:24px}.evstat .bad{color:#ff8a8a;font-size:14px;margin-left:6px}
 .evfound{position:absolute;left:10px;right:10px;bottom:calc(80px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
 .evfound span{background:rgba(178,58,58,.85);color:#fff;border-radius:6px;padding:3px 8px;font-size:12.5px}.evfound .ok{background:rgba(31,157,85,.9);font-size:15px}
 .evdone{position:absolute;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);font:inherit;font-weight:700;font-size:16px;border:0;border-radius:999px;padding:12px 30px;background:#ffb000;color:#1b1b1b}
@@ -1834,7 +1835,8 @@ $("save").addEventListener("click", () => { $("sheet").classList.add("hide"); sa
 // PC 크롬·엣지: 저장 창에서 위치와 이름을 고름 / 폰: 이름만 고치고 다운로드 폴더에 저장
 const baseName = () => (state.caseName.trim() || "현장사진").replace(/[\\/:*?"<>|]/g, "_");
 const TYPES = { pdf: { description: "PDF", accept: { "application/pdf": [".pdf"] } }, kcsi: { description: "KCSI 작업 파일", accept: { "application/octet-stream": [".kcsi"] } },
-  hwpx: { description: "한글 문서", accept: { "application/hwp+zip": [".hwpx"] } } };
+  hwpx: { description: "한글 문서", accept: { "application/hwp+zip": [".hwpx"] } },
+  xlsx: { description: "엑셀 문서", accept: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] } } };
 async function pickTarget(ext, stem) {   // → {handle} | {name} | null(취소)
   const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.userAgentData && navigator.userAgentData.mobile);
   if (window.showSaveFilePicker && !mobile) {   // PC에서만(폰 브라우저는 저장 창이 있어도 쓰기가 막힘)
@@ -2890,18 +2892,23 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
 // ================= 증거물 수거 (QR 라벨) =================
 // 미리 인쇄한 QR 라벨을 붙이고 찍어 증거물 목록을 만들고, 사무실에서 입고 확인 · PC(증거물 관리)로 전송
 const EV_TYPES = ["변사", "강력", "절도", "화재", "성범죄", "교통", "기타"];
-const EV_CATS = [
-  ["혈흔", ["면봉", "거즈", "원물", "사진"]], ["DNA(접촉)", ["면봉", "원물"]], ["모발", ["봉투", "테이프"]], ["체액", ["면봉", "거즈", "원물"]],
-  ["담배꽁초", []], ["음료용기", ["캔", "병", "컵"]], ["지문", ["전사지", "사진", "원물"]], ["족적", ["전사지", "사진", "석고"]],
-  ["공구흔", ["실리콘", "사진", "원물"]], ["섬유", ["테이프", "원물"]], ["유리", []], ["흉기", ["칼", "둔기", "기타"]],
-  ["탄피·탄두", ["탄피", "탄두"]], ["휴대전화", []], ["의류", ["상의", "하의", "신발", "장갑"]], ["문서", ["유서", "메모", "기타"]],
-  ["약물·용기", ["약병", "포장지", "주사기"]], ["기타", []],
+// 과학수사기본규칙의 증거물 분류에 따른 품목
+const EV_GROUPS = [
+  ["생물학적 증거물", [["지문", ["전사지", "사진", "원물", "젤라틴"]], ["혈흔", ["면봉", "거즈", "원물", "사진"]], ["타액", ["면봉", "원물"]], ["정액", ["면봉", "거즈", "원물"]],
+    ["모발", ["봉투", "테이프"]], ["손발톱", []], ["DNA(접촉)", ["면봉", "원물"]], ["담배꽁초", []], ["음료용기", ["캔", "병", "컵"]], ["기타(생물학적)", []]]],
+  ["미세증거물", [["유리", []], ["페인트 조각", []], ["토양", []], ["고무", []], ["섬유", ["테이프", "원물"]], ["기타(미세)", []]]],
+  ["물리학적 증거물", [["족적", ["전사지", "사진", "석고", "젤라틴"]], ["윤적", ["사진", "석고"]], ["공구흔", ["실리콘", "사진", "원물"]], ["탄피·탄두", ["탄피", "탄두"]], ["기타(물리학적)", []]]],
+  ["그 밖의 증거물", [["흉기", ["칼", "둔기", "기타"]], ["휴대전화", []], ["의류", ["상의", "하의", "신발", "장갑"]], ["문서", ["유서", "메모", "기타"]], ["약물·용기", ["약병", "포장지", "주사기"]], ["기타", []]]],
 ];
+const EV_CATS = EV_GROUPS.flatMap(([, cs]) => cs);
+const EV_GROUP_OF = Object.fromEntries(EV_GROUPS.flatMap(([g, cs], gi) => cs.map(([k]) => [k, gi])));
+const evGroup = (cat) => EV_GROUP_OF[cat] ?? EV_GROUPS.length - 1;   // 목록에 없는 옛 품목은 '그 밖의 증거물'
 const EV_ORDER = Object.fromEntries(EV_CATS.map(([k], i) => [k, i]));
+const evOrd = (cat) => evGroup(cat) * 1000 + (EV_ORDER[cat] ?? 999);
 const evUid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const evDefault = () => ({ id: evUid(), no: "", type: "변사", place: "", by: "", team: "", date: "", sort: "cat", items: [] });
 const evHM = (t) => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
-function fixEvid(x) { const d = evDefault(), e = { ...d, ...(x || {}) }; e.items = Array.isArray(e.items) ? e.items : []; if (!e.id) e.id = d.id; return e; }
+function fixEvid(x) { const d = evDefault(), e = { ...d, ...(x || {}) }; e.items = Array.isArray(e.items) ? e.items : []; e.items.forEach((i) => { if (i.dest === undefined) i.dest = i.nfs ? "hand" : ""; }); if (!e.id) e.id = d.id; return e; }
 // 라벨 QR 내용: "K1:<라벨 번호>:<발급자 정보>" — 발급자 정보는 '소속 계급 성명'을 비틀어 base32로 바꾼 것 (라벨에 찍힌 글자는 번호만)
 const EV_B32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ", EV_KEY = [0x4b, 0x43, 0x53, 0x49, 0x2d, 0x47, 0x4a, 0x31];
 function evIssuerDecode(p) {
@@ -2917,7 +2924,7 @@ function evNorm(s) {
   if (/^\d+$/.test(s)) s = "KCSI-" + s.padStart(6, "0");
   return s;
 }
-function evSeq() { const it = [...state.evid.items].sort((a, b) => (EV_ORDER[a.cat] ?? 99) - (EV_ORDER[b.cat] ?? 99) || a.t - b.t); const m = {}; it.forEach((x, i) => (m[x.id] = i + 1)); return m; }
+function evSeq() { const it = [...state.evid.items].sort((a, b) => evOrd(a.cat) - evOrd(b.cat) || a.t - b.t); const m = {}; it.forEach((x, i) => (m[x.id] = i + 1)); return m; }
 const evTitle = (x) => `${x.cat}${x.sub ? " " + x.sub : ""} ${x.qty || 1}점`;
 function evToast(m) {
   let t = $("evToast");
@@ -2925,54 +2932,62 @@ function evToast(m) {
   t.textContent = m; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), 1800);
 }
 
+let evPickNfs = false, evOnlyMiss = false;   // 감정의뢰 대상 고르기 모드: 목록을 누르면 대상 지정/해제
 function renderEvid(v) {
   const e = state.evid, seq = evSeq();
   const list = [...e.items].sort(e.sort === "cat" ? (a, b) => seq[a.id] - seq[b.id] : (a, b) => a.t - b.t);
   const by = {}; e.items.forEach((x) => (by[x.cat] = (by[x.cat] || 0) + (+x.qty || 1)));
   const tot = e.items.reduce((s, x) => s + (+x.qty || 1), 0), nfs = e.items.filter((x) => x.nfs).length, inN = e.items.filter((x) => x.inAt).length;
+  const nItm = e.items.filter((x) => x.dest === "items").length, nHand = e.items.filter((x) => x.dest === "hand").length;
   let g = null, rows = "";
+  if (!inN || inN === e.items.length) evOnlyMiss = false;
   for (const x of list) {
-    if (e.sort === "cat" && g !== x.cat) { g = x.cat; rows += `<div class="evgrp"><span>${esc(g)}</span><span>${e.items.filter((y) => y.cat === g).length}건</span></div>`; }
-    rows += `<button type="button" class="evit${x.inAt ? " in" : ""}" data-ev="${x.id}"><span class="evno">${seq[x.id]}</span>
-      <span class="evb"><b>${esc(evTitle(x))}</b>${x.nfs ? '<i class="evtag nfs">국과수</i>' : ""}${x.label ? `<i class="evtag lb">${esc(x.label)}</i>` : '<i class="evtag no">라벨 없음</i>'}${x.inAt ? '<i class="evtag ok">입고</i>' : ""}
+    if (evOnlyMiss && x.inAt) continue;
+    if (e.sort === "cat" && g !== evGroup(x.cat)) { g = evGroup(x.cat); rows += `<div class="evgrp"><span>${g + 1}. ${EV_GROUPS[g][0]}</span><span>${e.items.filter((y) => evGroup(y.cat) === g).length}건</span></div>`; }
+    rows += `<button type="button" class="evit${x.inAt ? " in" : ""}${evPickNfs && x.dest ? " nfs-on" : ""}" data-ev="${x.id}"><span class="evno">${seq[x.id]}</span>
+      <span class="evb"><b>${esc(evTitle(x))}</b>${x.dest === "hand" ? '<i class="evtag nfs">인수인계</i>' : x.dest === "items" ? '<i class="evtag ok">유류물</i>' : ""}${x.label ? `<i class="evtag lb">${esc(x.label)}</i>` : '<i class="evtag no">라벨 없음</i>'}${x.inAt ? '<i class="evtag ok">확인</i>' : ""}
       <small>${x.mark ? "#" + esc(x.mark) + " · " : ""}${esc(x.loc || "")}${x.memo ? " · " + esc(x.memo) : ""}</small><small>${x.issuer && x.issuer !== x.by ? "발급 " + esc(x.issuer) + " · " : ""}${x.by ? "수거 " + esc(x.by) : ""}${x.inAt ? `${x.by ? " · " : ""}확인 ${esc(x.inBy || "")} ${evHM(x.inAt)}` : ""}</small></span>
       ${x.photo ? `<img src="${x.photo}" alt="">` : ""}</button>`;
   }
   v.innerHTML = `
-    <section class="panel">
-      <div class="chips">${EV_TYPES.map((t) => `<button type="button" class="chip" data-evtype="${t}" aria-pressed="${e.type === t}">${t}</button>`).join("")}</div>
-      <label class="f">장소<input id="evPlace" type="text" value="${esc(e.place || state.check.v_addr || "")}" autocomplete="off"></label>
-    </section>
     <div class="evacts">
       <button id="evScan" class="btn primary evbig" type="button">라벨 찍기</button>
       <button id="evAdd" class="btn" type="button">직접 입력</button>
       <button id="evCheck" class="btn" type="button" ${e.items.length ? "" : "disabled"}>입고 확인</button>
-      <button id="evSend" class="btn" type="button" ${e.items.length ? "" : "disabled"}>보내기</button>
-      <button id="evOpen" class="btn" type="button">불러오기</button>
+      <button id="evSend" class="btn" type="button" ${e.items.length ? "" : "disabled"}>목록 보내기</button>
+      <button id="evOpen" class="btn" type="button">목록 불러오기</button>
     </div>
-    <section class="panel">
-      <div class="evsum"><span class="tot">${e.items.length}건 · ${tot}점</span>${Object.entries(by).sort((a, b) => (EV_ORDER[a[0]] ?? 99) - (EV_ORDER[b[0]] ?? 99)).map(([k, n]) => `<span>${esc(k)} ${n}</span>`).join("")}${nfs ? `<span class="nfs">국과수 ${nfs}</span>` : ""}${e.items.length ? `<span class="${inN === e.items.length ? "ok" : "miss"}">입고 ${inN}/${e.items.length}</span>` : ""}</div>
-      <div class="seg"><button type="button" data-evsort="cat" aria-pressed="${e.sort === "cat"}">품목별</button><button type="button" data-evsort="time" aria-pressed="${e.sort !== "cat"}">수거순</button></div>
+    <section class="panel${evPickNfs ? " evlist-pick" : ""}">
+      <div class="evsum"><span class="tot">${e.items.length}건 · ${tot}점</span>${Object.entries(by).sort((a, b) => evOrd(a[0]) - evOrd(b[0])).map(([k, n]) => `<span>${esc(k)} ${n}</span>`).join("")}${nfs ? `<span class="nfs">인수인계 ${nfs}</span>` : ""}${e.items.length ? `<span class="${inN === e.items.length ? "ok" : "miss"}">확인 ${inN}/${e.items.length}</span>` : ""}</div>
+      <div class="seg"><button type="button" data-evsort="cat" aria-pressed="${e.sort === "cat"}">품목별</button><button type="button" data-evsort="time" aria-pressed="${e.sort !== "cat"}">수거순</button>${inN && inN < e.items.length ? `<button type="button" id="evMiss" aria-pressed="${evOnlyMiss}">미확인 ${e.items.length - inN}</button>` : ""}</div>
       ${rows || '<div class="empty">—</div>'}
     </section>
-    <section class="panel"><h2>문서로 옮기기</h2>
-      <div class="two"><button id="evToItems" class="btn" type="button" ${e.items.length ? "" : "disabled"}>유류물 목록</button>
-        <button id="evToHand" class="btn" type="button" ${nfs ? "" : "disabled"}>인수인계서 (국과수)</button></div>
+    <section class="panel${evPickNfs ? " evpick" : ""}"><h2>정리</h2>
+      <button id="evNfsPick" class="btn${evPickNfs ? " primary" : ""}" type="button" ${e.items.length ? "" : "disabled"}>${evPickNfs ? "보낼 곳 정하기 완료" : "보낼 곳 정하기"}</button>
+      <button id="evToDocs" class="btn" type="button" ${nItm + nHand && !evPickNfs ? "" : "disabled"}>문서에 넣기 · 유류물 ${nItm} · 인수인계 ${nHand}</button>
+      <div class="two"><button id="evXlsx" class="btn" type="button" ${e.items.length ? "" : "disabled"}>목록 엑셀</button>
+        <button id="evHwpx" class="btn" type="button" ${e.items.length ? "" : "disabled"}>목록 한글</button></div>
+    </section>
+    <section class="panel">
       <div class="two"><button id="evText" class="btn" type="button" ${e.items.length ? "" : "disabled"}>목록 문장 복사</button>
         <button id="evClearIn" class="btn" type="button" ${inN ? "" : "disabled"}>입고 표시 지우기</button></div>
     </section>`;
-  v.querySelectorAll("[data-evtype]").forEach((b) => b.addEventListener("click", () => { e.type = b.dataset.evtype; v.querySelectorAll("[data-evtype]").forEach((x) => x.setAttribute("aria-pressed", x === b)); saveSoon(); }));
-  $("evPlace").addEventListener("input", (ev) => { e.place = ev.target.value; saveSoon(); });
-  v.querySelectorAll("[data-evsort]").forEach((b) => b.addEventListener("click", () => { e.sort = b.dataset.evsort; saveSoon(); render(); }));
-  v.querySelectorAll("[data-ev]").forEach((b) => b.addEventListener("click", () => evOpenItem(b.dataset.ev)));
+  v.querySelectorAll("[data-evsort]").forEach((b) => b.addEventListener("click", () => { e.sort = b.dataset.evsort; evOnlyMiss = false; saveSoon(); render(); }));
+  if ($("evMiss")) $("evMiss").addEventListener("click", () => { evOnlyMiss = !evOnlyMiss; render(); });
+  v.querySelectorAll("[data-ev]").forEach((b) => b.addEventListener("click", () => {
+    if (!evPickNfs) return evOpenItem(b.dataset.ev);
+    const x = e.items.find((i) => i.id === b.dataset.ev); x.dest = x.dest === "" || !x.dest ? "items" : x.dest === "items" ? "hand" : ""; x.nfs = x.dest === "hand"; x.u = Date.now(); saveSoon(); render();
+  }));
+  $("evNfsPick").addEventListener("click", () => { evPickNfs = !evPickNfs; render(); if (evPickNfs) document.querySelector(".evit")?.scrollIntoView({ block: "center" }); });
   $("evScan").addEventListener("click", () => evScanAdd(false));
   $("evAdd").addEventListener("click", () => evPickCat(""));
   $("evCheck").addEventListener("click", evCheckIn);
   $("evSend").addEventListener("click", evSendSheet);
-  $("evOpen").addEventListener("click", () => { let f = $("evOpenF"); if (!f) { f = document.createElement("input"); f.type = "file"; f.id = "evOpenF"; f.accept = ".json,application/json"; f.hidden = true; document.body.appendChild(f);
-    f.addEventListener("change", async (ev) => { const fl = ev.target.files[0]; ev.target.value = ""; if (fl) evImport(await fl.text()); }); } f.click(); });
-  $("evToItems").addEventListener("click", evToItems);
-  $("evToHand").addEventListener("click", evToHand);
+  $("evOpen").addEventListener("click", () => { let f = $("evOpenF"); if (!f) { f = document.createElement("input"); f.type = "file"; f.id = "evOpenF"; f.accept = ".json,application/json"; f.multiple = true; f.hidden = true; document.body.appendChild(f);
+    f.addEventListener("change", async (ev) => { const fs = [...ev.target.files]; ev.target.value = ""; if (fs.length) evImportMany(await Promise.all(fs.map((x) => x.text()))); }); } f.click(); });
+  $("evToDocs").addEventListener("click", evToDocs);
+  $("evXlsx").addEventListener("click", evXlsx);
+  $("evHwpx").addEventListener("click", evHwpx);
   $("evText").addEventListener("click", evCopyText);
   $("evClearIn").addEventListener("click", () => { e.items.forEach((x) => { x.inAt = null; x.inBy = ""; }); saveSoon(); render(); });
 }
@@ -2998,7 +3013,7 @@ async function evScanAdd(again) {
 }
 function evPickCat(label) {
   const el = evLayer("evCat", `<div class="pickhead"><b>${label ? esc(label) : "품목"}</b><button class="icon" data-evx type="button" aria-label="닫기">✕</button></div>
-    <div class="evcats">${EV_CATS.map(([k]) => `<button type="button" class="chip" data-evcat="${esc(k)}">${esc(k)}</button>`).join("")}</div>`);
+    ${EV_GROUPS.map(([g, cs], gi) => `<div class="evcg">${gi + 1}. ${g}</div><div class="evcats">${cs.map(([k]) => `<button type="button" class="chip" data-evcat="${esc(k)}">${esc(k.replace(/^기타\(.*\)$/, "기타"))}</button>`).join("")}</div>`).join("")}`);
   el.querySelectorAll("[data-evcat]").forEach((b) => b.addEventListener("click", () => { evClose("evCat"); evOpenItem(null, b.dataset.evcat, label); }));
 }
 let evPhoto = null;
@@ -3015,7 +3030,6 @@ function evOpenItem(id, cat, label) {
     <div class="row"><label class="f">번호표<input id="eiMark" type="text" inputmode="numeric" value="${esc(x.mark || "")}"></label>
       <label class="f">수거 위치<input id="eiLoc" type="text" value="${esc(x.loc || "")}" autocomplete="off"></label></div>
     <div class="q"><span>라벨 번호</span><div style="display:flex;gap:6px"><input id="eiLabel" type="text" value="${esc(x.label || "")}" autocapitalize="characters" autocomplete="off"><button id="eiScan" class="btn small" type="button">QR</button></div></div>
-    <label class="inc" style="font-size:15px;color:var(--ink)"><input type="checkbox" id="eiNfs" ${x.nfs ? "checked" : ""}> 국과수 감정의뢰</label>
     <div class="q"><span>사진</span><div style="display:flex;gap:6px;align-items:center"><img id="eiPh" class="evph${evPhoto ? "" : " hide"}" alt="" src="${evPhoto || ""}">
       <button id="eiPhB" class="btn small" type="button">촬영</button><button id="eiPhX" class="btn small${evPhoto ? "" : " hide"}" type="button">삭제</button>
       <input id="eiPhF" type="file" accept="image/*" capture="environment" hidden></div></div>
@@ -3039,11 +3053,11 @@ function evOpenItem(id, cat, label) {
     img.src = URL.createObjectURL(f); });
   const save = () => {
     const val = { cat: $("eiCat").value, sub: $("eiSub").value.trim(), qty: Math.max(1, parseInt($("eiQty").value) || 1), mark: $("eiMark").value.trim(), loc: $("eiLoc").value.trim(),
-      label: evNorm($("eiLabel").value), nfs: $("eiNfs").checked, memo: $("eiMemo").value.trim(), photo: evPhoto };
+      label: evNorm($("eiLabel").value), nfs: !!x.nfs, memo: $("eiMemo").value.trim(), photo: evPhoto };
     val.issuer = evLblIss[val.label] || (x.label === val.label ? x.issuer || "" : "");
     if (val.label) { const d = e.items.find((i) => i.label === val.label && i.id !== id); if (d && !confirm(`${val.label}은(는) 이미 ${evTitle(d)}에 등록돼 있습니다. 그래도 저장할까요?`)) return false; }
     e.lastLoc = val.loc;
-    if (id) Object.assign(x, val, { u: Date.now() }); else { e.items.push({ id: evUid(), t: Date.now(), inAt: null, by: rankName(state.user), ...val }); if (!e.by) { e.by = rankName(state.user); e.team = (state.user.org || "").trim(); } }
+    if (id) Object.assign(x, val, { u: Date.now() }); else { e.items.push({ id: evUid(), t: Date.now(), inAt: null, dest: "", by: rankName(state.user), ...val }); if (!e.by) { e.by = rankName(state.user); e.team = (state.user.org || "").trim(); } }
     saveSoon(); return true;
   };
   $("eiSave").addEventListener("click", () => { if (save()) { evClose("evItem"); evScanMode = false; render(); } });
@@ -3088,26 +3102,30 @@ async function evCamera(mode, onCodes) {
 }
 
 // ---------- 입고 확인: 봉투를 펼쳐 놓고 카메라로 훑기 ----------
+function evBeep() { try { const a = evBeep.ctx || (evBeep.ctx = new (window.AudioContext || window.webkitAudioContext)()), o = a.createOscillator(), g = a.createGain(); o.frequency.value = 1320; g.gain.value = 0.08; o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + 0.07); } catch (err) {} }
 async function evCheckIn() {
-  const e = state.evid, seen = new Set(), other = new Set();
+  const e = state.evid, seen = new Set(), other = new Set(), seq = evSeq();
+  const nm = (x) => `${x.mark ? "#" + x.mark + " " : ""}${evTitle(x).replace(/ \d+점$/, "")}${x.loc ? " · " + x.loc : ""}`;
+  let last = "", lastT = 0;
   const draw = (stat, found) => {
     const n = e.items.length, k = e.items.filter((x) => x.inAt).length;
-    stat.innerHTML = `<b>${k}</b> / ${n}${other.size ? ` <span class="bad">목록 밖 ${other.size}</span>` : ""}`;
-    const miss = e.items.filter((x) => !x.inAt);
-    found.innerHTML = miss.length ? miss.slice(0, 8).map((x) => `<span>${esc(x.label || "라벨 없음")} ${esc(x.cat)}</span>`).join("") + (miss.length > 8 ? `<span>+${miss.length - 8}</span>` : "") : '<span class="ok">모두 확인</span>';
+    stat.innerHTML = `<b>${k}</b> / ${n}${other.size ? ` <span class="bad">목록 밖 ${other.size}</span>` : ""}${last && Date.now() - lastT < 1500 ? `<div class="evlast">✓ ${esc(last)}</div>` : ""}`;
+    const miss = e.items.filter((x) => !x.inAt).sort((a, b) => seq[a.id] - seq[b.id]);
+    found.innerHTML = miss.length ? miss.slice(0, 10).map((x) => `<span>${esc(nm(x))}</span>`).join("") + (miss.length > 10 ? `<span>+${miss.length - 10}</span>` : "") : '<span class="ok">모두 확인</span>';
   };
   await evCamera("check", (codes, stat, found) => {
     let hit = false;
     for (const c of codes) {
       const lb = evNorm(c); if (seen.has(lb)) continue; seen.add(lb);
       const x = e.items.find((i) => i.label === lb);
-      if (x) { if (!x.inAt) { x.inAt = Date.now(); x.inBy = rankName(state.user); hit = true; } } else other.add(lb);
+      if (x) { if (!x.inAt) { x.inAt = Date.now(); x.inBy = rankName(state.user); hit = true; last = nm(x); lastT = Date.now(); } } else other.add(lb);
     }
-    if (hit) { saveSoon(); if (navigator.vibrate) navigator.vibrate(40); }
+    if (hit) { saveSoon(); evBeep(); if (navigator.vibrate) navigator.vibrate(40); }
     draw(stat, found);
   });
   render();
   const miss = e.items.filter((x) => !x.inAt).length;
+  if (miss) { evOnlyMiss = true; render(); }
   evToast(miss ? `미확인 ${miss}건` : "모두 입고 확인");
 }
 
@@ -3120,36 +3138,60 @@ function evPayload(withPhoto) {
     date: e.date || `${d}T${String(tt.getHours()).padStart(2, "0")}:${String(tt.getMinutes()).padStart(2, "0")}`,
     place: e.place || state.check.v_addr || "", by: e.by || rankName(state.user), team: e.team || (state.user.org || "").trim(), memo: "", created: firstT, items } };
 }
-function evImport(text) {
-  let j; try { j = JSON.parse(text); } catch (err) { showSheet("열 수 없는 파일입니다", "", "alert"); return; }
-  if (j.kind === "KCSI-EVIDENCE-BACKUP" && Array.isArray(j.cases) && j.cases.length === 1) j = { kind: "KCSI-EVIDENCE", case: j.cases[0] };
-  if (j.kind !== "KCSI-EVIDENCE" || !j.case || !Array.isArray(j.case.items)) { showSheet("채증물 목록 파일이 아닙니다", "", "alert"); return; }
-  const c = j.case, e = state.evid;
-  if (e.id !== c.id) {
-    if (e.items.length && !confirm(`지금 목록(${e.items.length}건)을 '${c.no || "번호 없음"}' 사건 목록(${c.items.length}건)으로 바꿀까요?`)) return;
-    state.evid = fixEvid({ id: c.id, no: c.no || "", type: c.type || "변사", place: c.place || "", by: c.by || "", team: c.team || "", date: c.date || "", items: [] });
-    if (!String(state.caseName || "").trim() && c.no) state.caseName = c.no;
-  }
+function evAsk(title, msg, buttons) {   // buttons: [[값, 글자, primary?]] → 누른 값 | null
+  return new Promise((ok) => {
+    const el = evLayer("evAskBox", `<div class="pickhead"><b>${esc(title)}</b><button class="icon" data-evx type="button" aria-label="닫기">✕</button></div>
+      <p style="margin:0;color:var(--muted)">${esc(msg)}</p>${buttons.map(([v, t, pri]) => `<button class="btn${pri ? " primary" : ""}" type="button" data-ask="${v}">${esc(t)}</button>`).join("")}`);
+    let done = false; const fin = (v) => { if (done) return; done = true; evClose("evAskBox"); ok(v); };
+    el.querySelectorAll("[data-ask]").forEach((b) => b.addEventListener("click", () => fin(b.dataset.ask)));
+    el.querySelectorAll("[data-evx]").forEach((b) => b.addEventListener("click", () => fin(null)));
+    el.addEventListener("click", (ev) => { if (ev.target === el) fin(null); });
+  });
+}
+function evParseFile(text) {
+  let j; try { j = JSON.parse(text); } catch (err) { return null; }
+  if (j.kind === "KCSI-EVIDENCE-BACKUP" && Array.isArray(j.cases) && j.cases.length === 1) j = { kind: "KCSI-EVIDENCE", case: j.cases[0], exportedBy: j.exportedBy };
+  return j.kind === "KCSI-EVIDENCE" && j.case && Array.isArray(j.case.items) ? j : null;
+}
+// 여러 직원이 각자 기록한 목록을 하나로: 같은 채증물(같은 id 또는 같은 라벨 번호)은 하나로 합치고, 나머지는 덧붙임
+function evMergeInto(c) {
   const ev = state.evid; let add = 0, upd = 0, chk = 0;
   ev.no = ev.no || c.no || ""; ev.by = ev.by || c.by || ""; ev.team = ev.team || c.team || ""; ev.date = ev.date || c.date || ""; if (!ev.place && c.place) ev.place = c.place;
-  const F = ["cat", "sub", "qty", "mark", "loc", "label", "nfs", "memo", "by", "t", "issuer"];
+  const F = ["cat", "sub", "qty", "mark", "loc", "label", "nfs", "memo", "by", "t", "issuer", "dest"];
   for (const ni of c.items) {
-    const x = ev.items.find((i) => i.id === ni.id);
-    if (!x) { const o = { inAt: null, inBy: "" }; F.forEach((k) => ni[k] !== undefined && (o[k] = ni[k])); o.id = ni.id; o.u = ni.u || 0; if (ni.photo) o.photo = ni.photo;
+    const x = ev.items.find((i) => i.id === ni.id) || (ni.label ? ev.items.find((i) => i.label && i.label === ni.label) : null);
+    if (!x) { const o = { inAt: null, inBy: "", dest: ni.nfs ? "hand" : "" }; F.forEach((k) => ni[k] !== undefined && (o[k] = ni[k])); o.id = ni.id; o.u = ni.u || 0; if (ni.photo) o.photo = ni.photo;
       if (ni.inAt) { o.inAt = ni.inAt; o.inBy = ni.inBy || ""; } ev.items.push(o); add++; continue; }
     if ((ni.u || 0) > (x.u || 0)) { F.forEach((k) => ni[k] !== undefined && (x[k] = ni[k])); x.u = ni.u; upd++; }
     if (ni.photo && !x.photo) x.photo = ni.photo;
     if (ni.inAt && (!x.inAt || ni.inAt < x.inAt)) { x.inAt = ni.inAt; x.inBy = ni.inBy || ""; chk++; }
   }
-  saveSoon(); render();
-  showSheet("불러왔습니다", `${c.no || ""} · 새 ${add}건${upd ? ` · 수정 ${upd}건` : ""}${chk ? ` · 입고 ${chk}건` : ""}${j.exportedBy ? ` · 보낸 사람 ${j.exportedBy}` : ""}`, "alert");
+  return { add, upd, chk };
 }
+async function evImportMany(texts) {
+  const files = texts.map(evParseFile).filter(Boolean);
+  if (!files.length) { showSheet("채증물 목록 파일이 아닙니다", "", "alert"); return; }
+  const e = state.evid, foreign = files.filter((j) => j.case.id !== e.id);
+  if (foreign.length && e.items.length) {
+    const nos = [...new Set(foreign.map((j) => j.case.no || "번호 없음"))].join(", ");
+    const pick = await evAsk("목록 불러오기", `${nos} · ${foreign.reduce((a, j) => a + j.case.items.length, 0)}건`, [["merge", "지금 목록에 합치기", true], ["replace", "이 목록으로 바꾸기"]]);
+    if (!pick) return;
+    if (pick === "replace") { const c = files[0].case; state.evid = fixEvid({ id: c.id, no: c.no || "", type: c.type || "변사", place: c.place || "", by: c.by || "", team: c.team || "", date: c.date || "", items: [] }); }
+  } else if (foreign.length && !e.items.length) {
+    const c = files[0].case; state.evid = fixEvid({ id: c.id, no: c.no || "", type: c.type || "변사", place: c.place || "", by: c.by || "", team: c.team || "", date: c.date || "", items: [] });
+  }
+  const c0 = files[0].case; if (!String(state.caseName || "").trim() && c0.no) state.caseName = c0.no;
+  let add = 0, upd = 0, chk = 0; const who = new Set();
+  for (const j of files) { const r = evMergeInto(j.case); add += r.add; upd += r.upd; chk += r.chk; if (j.exportedBy) who.add(j.exportedBy); }
+  saveSoon(); render();
+  showSheet("불러왔습니다", `파일 ${files.length}개 · 새 ${add}건${upd ? ` · 수정 ${upd}건` : ""}${chk ? ` · 입고 ${chk}건` : ""}${who.size ? ` · ${[...who].join(", ")}` : ""}`, "alert");
+}
+function evImport(text) { return evImportMany([text]); }
 function evSendSheet() {
-  const el = evLayer("evSendBox", `<div class="pickhead"><b>보내기</b><button class="icon" data-evx type="button" aria-label="닫기">✕</button></div>
+  const el = evLayer("evSendBox", `<div class="pickhead"><b>목록 보내기</b><button class="icon" data-evx type="button" aria-label="닫기">✕</button></div>
     <button id="esFile" class="btn primary" type="button">파일 (사진 포함)</button>
     <button id="esFile2" class="btn" type="button">파일 (사진 제외)</button>
-    <button id="esQR" class="btn" type="button">QR 화면</button>`);
-  $("esQR").addEventListener("click", () => { evClose("evSendBox"); evShowQR(); });
+`);
   const file = async (ph) => {
     const name = `${(state.caseName || "사건").replace(/[\\/:*?"<>|\s]/g, "_")}_채증물목록.json`, blob = new Blob([JSON.stringify(evPayload(ph))], { type: "application/json" });
     evClose("evSendBox");
@@ -3198,32 +3240,91 @@ async function evShowQR() {
 // ---------- 다른 문서로 옮기기 ----------
 function evRowsSorted() { const s = evSeq(); return [...state.evid.items].sort((a, b) => s[a.id] - s[b.id]); }
 function evTime(t) { const d = new Date(t); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return dotDateTime(d.toISOString().slice(0, 16)); }
-function evToItems() {
-  const have = new Set(state.items.map((r) => r.evid).filter(Boolean));
-  state.items = state.items.filter((r) => r.evid || Object.values(r).some((x) => String(x).trim()));
-  let n = 0;
-  for (const x of evRowsSorted()) {
-    const row = { name: `${x.cat}${x.sub ? "(" + x.sub + ")" : ""}`, qty: String(x.qty || 1), place: x.loc || "", time: evTime(x.t), lab: x.nfs ? "국과수" : "", evid: x.id };
+function evDocName(x) { return `${x.cat}${x.sub ? "(" + x.sub + ")" : ""}`; }
+function evToDocs() {   // 보낼 곳이 정해진 채증물을 유류물 목록 · 인수인계서에 넣기(다시 누르면 갱신, 보낼 곳을 바꾸면 옮겨짐)
+  const list = evRowsSorted(), seq = evSeq();
+  const want = (d) => new Set(list.filter((x) => x.dest === d).map((x) => x.id));
+  const wi = want("items"), wh = want("hand");
+  state.items = state.items.filter((r) => (r.evid ? wi.has(r.evid) : Object.values(r).some((v) => String(v).trim())));
+  for (const x of list.filter((y) => y.dest === "items")) {
+    const row = { name: evDocName(x), qty: String(x.qty || 1), place: x.loc || "", time: evTime(x.t), lab: "", evid: x.id };
     const i = state.items.findIndex((r) => r.evid === x.id);
-    if (i >= 0) state.items[i] = { ...state.items[i], ...row }; else { state.items.push(row); n++; }
+    if (i >= 0) state.items[i] = { ...state.items[i], ...row }; else state.items.push(row);
   }
-  state.include.items = true; saveSoon(); evToast(`유류물 목록: 새 ${n}건${have.size ? ", 갱신" : ""}`); go("items");
-}
-function evToHand() {
   const h = state.hand;
-  h.items = h.items.filter((r) => r.evid || Object.values(r).some((x) => String(x).trim()));
-  let n = 0;
-  for (const x of evRowsSorted().filter((y) => y.nfs)) {
-    const row = { no: x.label || String(evSeq()[x.id]), name: `${x.cat}${x.sub ? "(" + x.sub + ")" : ""}${x.loc ? " - " + x.loc : ""}`, qty: String(x.qty || 1), evid: x.id };
+  h.items = h.items.filter((r) => (r.evid ? wh.has(r.evid) : Object.values(r).some((v) => String(v).trim())));
+  for (const x of list.filter((y) => y.dest === "hand")) {
+    const row = { no: x.label || String(seq[x.id]), name: `${evDocName(x)}${x.loc ? " - " + x.loc : ""}`, qty: String(x.qty || 1), evid: x.id };
     const i = h.items.findIndex((r) => r.evid === x.id);
-    if (i >= 0) h.items[i] = { ...h.items[i], ...row }; else { h.items.push({ ...handRow(), ...row }); n++; }
+    if (i >= 0) h.items[i] = { ...h.items[i], ...row }; else h.items.push({ ...handRow(), ...row });
   }
   if (!h.items.length) h.items.push(handRow());
-  state.include.hand = true; saveSoon(); evToast(`인수인계서: 새 ${n}건`); go("hand");
+  if (wi.size) state.include.items = true;
+  if (wh.size) state.include.hand = true;
+  saveSoon(); render();
+  showSheet("문서에 넣었습니다", `유류물 목록 ${wi.size}건 · 인수인계서 ${wh.size}건`, "alert");
+}
+// ---------- SCAS 입력용 목록: 엑셀(xlsx) · 한글(hwpx) ----------
+const EV_HEAD = ["순번", "분류", "품목", "세부", "수량", "수거 위치", "번호표", "라벨 번호", "보낼 곳", "수거자", "사무실 확인", "메모"];
+function evRowsFor() {
+  const seq = evSeq();
+  return evRowsSorted().map((x) => [seq[x.id], EV_GROUPS[evGroup(x.cat)][0], x.cat, x.sub || "", x.qty || 1, x.loc || "", x.mark || "", x.label || "",
+    x.dest === "items" ? "유류물" : x.dest === "hand" ? "인수인계(국과수)" : "", x.by || "", x.inAt ? `✓ ${evHM(x.inAt)} ${x.inBy || ""}`.trim() : "미확인", x.memo || ""]);
+}
+function evCheckLine() {   // 사무실 확인 요약: "6건 중 5건 확인 · 미확인 #3 담배꽁초"
+  const it = evRowsSorted(), k = it.filter((x) => x.inAt).length, miss = it.filter((x) => !x.inAt);
+  return `${it.length}건 중 ${k}건 확인${miss.length ? " · 미확인 " + miss.map((x) => `${x.mark ? "#" + x.mark + " " : ""}${x.cat}`).join(", ") : ""}`;
+}
+function evStem() { return `${(state.caseName || "사건").replace(/[\\/:*?"<>|\s]/g, "_")}_채증물목록`; }
+async function evSaveBlob(ext, blob) {
+  const t = await pickTarget(ext, evStem()); if (!t) return;
+  const n = await writeTarget(t, blob); if (n) showSheet("저장했습니다", n, "alert");
+}
+async function evXlsx() {
+  const x = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const col = (i) => String.fromCharCode(65 + i);
+  const e = state.evid, info = [["사건명", state.caseName || ""], ["작성일", dotDate(state.date)], ["작성자", rankName(state.user)], ["사무실 확인", evCheckLine()]];
+  let r = 0, rows = "";
+  const row = (cells, st) => { r++; rows += `<row r="${r}">${cells.map((v, i) => typeof v === "number" ? `<c r="${col(i)}${r}"${st ? ` s="${st}"` : ""}><v>${v}</v></c>`
+    : `<c r="${col(i)}${r}" t="inlineStr"${st ? ` s="${st}"` : ""}><is><t xml:space="preserve">${x(v)}</t></is></c>`).join("")}</row>`; };
+  row(["채증물 목록"], 2); info.forEach((c) => row(c)); r++; row(EV_HEAD, 1); evRowsFor().forEach((c) => row(c, 3));
+  const widths = [6, 16, 12, 10, 6, 24, 8, 24, 16, 14, 16, 20];
+  const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${rows}</sheetData></worksheet>`;
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="14"/><name val="맑은 고딕"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDDE3EE"/></patternFill></fill></fills><borders count="2"><border/><border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  const enc = new TextEncoder(), f = (name, s) => ({ name, data: enc.encode(s) });
+  const blob = makeZip([
+    f("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`),
+    f("_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`),
+    f("xl/workbook.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="채증물 목록" sheetId="1" r:id="rId1"/></sheets></workbook>`),
+    f("xl/_rels/workbook.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`),
+    f("xl/worksheets/sheet1.xml", sheet), f("xl/styles.xml", styles)]);
+  await evSaveBlob("xlsx", new Blob([blob], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+}
+async function evHwpx() {
+  const W = hwpxWriter(), { K, I, p, table } = W, e = state.evid;
+  const paras = [];
+  paras.push(p([[I.lab2, "채증물 목록"]], I.pc));
+  [["사건명", state.caseName || ""], ["작성일", dotDate(state.date)], ["작성자", rankName(state.user)], ["사무실 확인", evCheckLine()]]
+    .forEach(([k, v]) => paras.push(p([[I.desc4, `${k}: ${v}`]], I.pl)));
+  paras.push(p([], I.pl));
+  const head = ["순번", "분류", "품목", "수량", "수거 위치", "라벨 번호", "보낼 곳", "확인"];
+  const mm = [10, 20, 24, 9, 0, 38, 20, 12], fixed = mm.reduce((a, b) => a + HMM(b), 0), widths = mm.map((v) => (v ? HMM(v) : K.bodyW - fixed));
+  const cell = (c, v, cp) => ({ col: c, content: p([[cp, String(v)]], c === 4 ? I.pl : I.pc) });
+  const rows = [[HMM(8), head.map((h, i) => cell(i, h, I.lab4))]];
+  evRowsFor().forEach((r) => { const v = [r[0], r[1].replace(" 증거물", ""), r[2] + (r[3] ? `(${r[3]})` : ""), r[4], r[5], r[7], r[8], r[10].startsWith("✓") ? "✓" : ""]; rows.push([HMM(8), v.map((t, i) => cell(i, t, I.desc4))]); });
+  paras.push(p([[0, table(widths, rows), true]], I.pc));
+  W.text.push("채증물 목록", state.caseName || "");
+  let first = paras[0]; const i = first.indexOf("<hp:run ");
+  first = first.slice(0, i) + `<hp:run charPrIDRef="0">${K.secpr}</hp:run>` + first.slice(i);
+  const section = K.secHead + first + paras.slice(1).join("") + "</hs:sec>";
+  const enc = new TextEncoder(), b64 = (str) => Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
+  const data = { "Contents/header.xml": enc.encode(K.header), "Contents/section0.xml": enc.encode(section), "Contents/content.hpf": enc.encode(K.hpf), "Preview/PrvText.txt": enc.encode(W.text.join("\r\n")) };
+  const files = K.order.map((n) => ({ name: n, data: data[n] || b64(K.files[n]) }));
+  await evSaveBlob("hwpx", makeZip(files));
 }
 async function evCopyText() {
   const s = evSeq(), e = state.evid;
-  const lines = [`${state.caseName} ${e.type} / ${dotDate(state.date)} / ${e.place || state.check.v_addr || ""} / ${rankName(state.user)}`];
+  const lines = [`${state.caseName} / ${dotDate(state.date)} / ${rankName(state.user)}`];
   evRowsSorted().forEach((x) => lines.push(`${s[x.id]}. ${evTitle(x)}${x.loc ? " - " + x.loc : ""}${x.mark ? " (#" + x.mark + ")" : ""}${x.label ? " [" + x.label + "]" : ""}${x.nfs ? " ※국과수" : ""}${x.memo ? " / " + x.memo : ""}`));
   const t = lines.join("\n");
   try { await navigator.clipboard.writeText(t); evToast("복사됨"); } catch (err) { prompt("복사", t); }
