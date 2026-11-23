@@ -24,6 +24,7 @@ header h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text
 header .cnt{font-size:13px;color:rgba(255,255,255,.8)}
 header button{padding:6px 12px;background:transparent;border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:8px}
 header button.pri{background:#fff;color:var(--navy);border-color:#fff}
+header button.on{background:#fff;color:var(--navy);border-color:#fff;font-weight:700}
 main{flex:1;overflow:auto;padding:12px 12px 20px}
 .info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
 .info .full{grid-column:1/-1}
@@ -53,6 +54,9 @@ button.big.fill svg{color:var(--acc)}
 #slots10 .slot{aspect-ratio:auto;height:100%;min-height:110px}
 #slots10 .slot .lb{font-size:13px;padding:5px 0}
 header button.back{padding:7px 12px}
+#rvStage{flex:1;min-height:0;background:#111;display:flex;align-items:center;justify-content:center;padding:14px}
+#rvImg{max-width:100%;max-height:100%;background:#fff;border-radius:6px}
+#review .bar button{padding:18px 6px;font-size:19px;font-weight:700}
 .consent{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:16px;line-height:1.6;margin-bottom:8px}
 .consent.sub2{font-size:13px;color:var(--sub)}
 .signName{margin:14px 2px 8px;font-size:15px;color:var(--sub)}.signName b{color:var(--tx);margin-left:6px}
@@ -163,7 +167,7 @@ header button.back{padding:7px 12px}
 <section id="home" class="screen">
   <header><button class="back" id="homeBack">‹</button><h1 id="homeTitle"></h1><span class="cnt" id="cnt"></span></header>
   <main>
-    <button id="infoBtn" class="card"><span id="infoSum"></span><span class="chev">›</span></button>
+    <button id="infoBtn" class="card" style="display:none"><span id="infoSum"></span><span class="chev">›</span></button>
     <button id="signBtn" class="card"><span id="signSum"></span><span class="chev">›</span></button>
     <div id="slots10">
       <div class="hand">왼손</div><div class="row" id="rowL"></div>
@@ -173,7 +177,7 @@ header button.back{padding:7px 12px}
   </main>
   <div class="bar">
     <button id="btnStart" class="pri" style="flex:2">촬영</button>
-    <button id="btnOut">저장 · 문서</button>
+    <button id="btnOut">사진 저장</button>
   </div>
 </section>
 
@@ -229,6 +233,15 @@ header button.back{padding:7px 12px}
   </main>
 </section>
 
+<section id="review" class="screen">
+  <header><h1 id="rvTitle"></h1><button id="rvEnh">융선 강조</button></header>
+  <div id="rvStage"><canvas id="rvImg"></canvas></div>
+  <div class="bar">
+    <button id="rvRetake" style="flex:1">다시 촬영</button>
+    <button id="rvKeep" class="pri" style="flex:1.4">저장</button>
+  </div>
+</section>
+
 <section id="ed" class="screen">
   <header><button id="edDone">‹</button><h1 id="edTitle"></h1><button id="edNext" class="pri">다음 ▶</button></header>
   <div id="stage">
@@ -270,11 +283,12 @@ header button.back{padding:7px 12px}
 </div></div>
 
 <div class="sheet" id="out"><div class="box">
-  <div class="ttl" id="docName"></div>
+  <div class="ttl" id="docName" style="display:none"></div>
   <div class="seg" id="ppiSeg" style="width:100%"><button data-p="500" style="flex:1">500 ppi</button><button data-p="1000" style="flex:1">1000 ppi</button></div>
-  <button id="btnPrint" class="pri">인쇄 / PDF</button>
-  <button id="btnPng">문서 이미지 저장</button>
-  <button id="btnZip">사진 저장 (ZIP)</button>
+  <button id="btnPrint" class="pri" style="display:none">인쇄 / PDF</button>
+  <button id="btnPng" style="display:none">문서 이미지 저장</button>
+  <button id="zipEnh">융선 강조 사진 포함</button>
+  <button id="btnZip" class="pri">사진 저장 (ZIP)</button>
   <button id="btnRe" class="danger">새로 채취</button>
   <button id="oClose">닫기</button>
 </div></div>
@@ -291,7 +305,7 @@ header button.back{padding:7px 12px}
 const FN=['','왼손 시지','왼손 중지','왼손 환지','왼손 소지','왼손 무지','오른손 시지','오른손 중지','오른손 환지','오른손 소지','오른손 무지'];
 const SN=['','시지','중지','환지','소지','무지','시지','중지','환지','소지','무지'];
 const OUT_PPMM=500/25.4, TMAX=70*Math.PI/180, DEF_FW=16, MAXW=4096;
-const DEFO={flip:true,inv:false,curve:false,mode:'raw'};
+const DEFO={flip:true,inv:false,curve:true,mode:'raw'};
 const TONEN={raw:'원본',gray:'대비',enh:'강조',bin:'흑백'};
 const procTxt=o=>[o.flip?'좌우반전':'',o.inv?'명암반전':'',o.curve?'곡면보정':'',o.mode&&o.mode!=='raw'?TONEN[o.mode]:''].filter(Boolean).join('·')||'보정 없음';
 const $=id=>document.getElementById(id);
@@ -435,8 +449,7 @@ function processFinger(W,p,o,cal,maxSide,ppi){
   for(let v=0;v<oh;v++)for(let u=0;u<ow;u++){
     const i=v*ow+u,s0=((u+.5)/ow-.5)*srcW,y0=((v+.5)/oh-.5)*srcH,x0=o.curve?r*Math.sin(s0/r):s0;
     const e=x0*x0/a2+y0*y0/b2;
-    if(e>=1){if(rgb){rgb[i*4]=rgb[i*4+1]=rgb[i*4+2]=255;rgb[i*4+3]=255}continue}
-    const mk=Math.min(1,(1-e)/0.08);msk[i]=mk;
+    const mk=1;msk[i]=1;void e;   // 평면 날인처럼 사각형 전체를 씀
     let acc=0,ar=0,ag=0,ab=0;
     for(let j=0;j<n;j++)for(let q=0;q<n;q++){
       const s=((u+(q+.5)/n)/ow-.5)*srcW,yL=((v+(j+.5)/n)/oh-.5)*srcH;
@@ -451,6 +464,58 @@ function processFinger(W,p,o,cal,maxSide,ppi){
   if(rgb)return {rgb,res:null,ow,oh,ppi:pxmm*25.4,mode:sc.mode,ppmm,wmm:srcW/ppmm,hmm:srcH/ppmm};
   return {res:tone(val,msk,ow,oh,o,pxmm),ow,oh,ppi:pxmm*25.4,mode:sc.mode,ppmm,wmm:srcW/ppmm,hmm:srcH/ppmm};
 }
+/* 융선 강조: Hong·Wan·Jain(1998) 방향성 Gabor 필터 방식 (Kovesi 구현과 같은 절차)
+   ① 국소 정규화 → ② 융선 방향(구조 텐서) → ③ 융선 간격(FFT) → ④ 방향·간격 맞춤 Gabor 필터 */
+function resampleF(src,w,h,W2,H2){const o=new Float32Array(W2*H2),sx=w/W2,sy=h/H2;
+  for(let y=0;y<H2;y++){const fy=Math.min(h-1.001,Math.max(0,(y+.5)*sy-.5)),y0=fy|0,ty=fy-y0;
+    for(let x=0;x<W2;x++){const fx=Math.min(w-1.001,Math.max(0,(x+.5)*sx-.5)),x0=fx|0,tx=fx-x0,i=y0*w+x0;
+      o[y*W2+x]=src[i]*(1-tx)*(1-ty)+src[i+1]*tx*(1-ty)+src[i+w]*(1-tx)*ty+src[i+w+1]*tx*ty}}return o}
+function gaborCore(val,w0,h0,pxmm0){
+  // 500ppi 기준으로 계산(속도), 결과는 원래 크기로 되돌림
+  const f=Math.min(1,(500/25.4)/pxmm0),w=Math.max(16,Math.round(w0*f)),h=Math.max(16,Math.round(h0*f)),pxmm=pxmm0*(w/w0);
+  const I=f<1?resampleF(val,w0,h0,w,h):val,n=w*h;
+  // ① 국소 정규화
+  const R0=Math.max(4,Math.round(pxmm*0.9)),one=new Float32Array(n).fill(1),sq=new Float32Array(n);
+  for(let i=0;i<n;i++)sq[i]=I[i]*I[i];
+  const A0=integ(one,w,h),A1=integ(I,w,h),A2=integ(sq,w,h),z=new Float32Array(n),lv=new Float32Array(n);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x,c=bsum(A0,w,h,x,y,R0),m=bsum(A1,w,h,x,y,R0)/c,v=Math.max(0,bsum(A2,w,h,x,y,R0)/c-m*m);lv[i]=v;z[i]=(I[i]-m)/Math.sqrt(v+9)}
+  // ② 융선 방향
+  const gxx=new Float32Array(n),gyy=new Float32Array(n),gxy=new Float32Array(n);
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const i=y*w+x,gx=(z[i+1]-z[i-1])*2+z[i-w+1]-z[i-w-1]+z[i+w+1]-z[i+w-1],gy=(z[i+w]-z[i-w])*2+z[i+w-1]-z[i-w-1]+z[i+w+1]-z[i-w+1];gxx[i]=gx*gx;gyy[i]=gy*gy;gxy[i]=gx*gy}
+  const Rt=Math.max(4,Math.round(pxmm*0.5)),Ixx=integ(gxx,w,h),Iyy=integ(gyy,w,h),Ixy=integ(gxy,w,h),c2=new Float32Array(n),s2=new Float32Array(n),coh=new Float32Array(n);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x,a=bsum(Ixx,w,h,x,y,Rt),c=bsum(Iyy,w,h,x,y,Rt),b=bsum(Ixy,w,h,x,y,Rt),d=a-c,r=Math.hypot(d,2*b);
+    c2[i]=r>0?d/r:1;s2[i]=r>0?2*b/r:0;coh[i]=r/(a+c+1e-6)}
+  const Ic=integ(c2,w,h),Is=integ(s2,w,h),theta=new Float32Array(n);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;theta[i]=0.5*Math.atan2(bsum(Is,w,h,x,y,Rt),bsum(Ic,w,h,x,y,Rt))+Math.PI/2}
+  // ③ 융선 간격 (가운데 영역 스펙트럼의 최대값)
+  let period=RIDGE_MM*pxmm;
+  {const N=64;if(w>=N&&h>=N){const re=new Float64Array(N*N),im=new Float64Array(N*N),ox=(w-N)>>1,oy=(h-N)>>1;
+    for(let j=0;j<N;j++)for(let i=0;i<N;i++){const wn=(0.5-0.5*Math.cos(2*Math.PI*(i+.5)/N))*(0.5-0.5*Math.cos(2*Math.PI*(j+.5)/N));re[j*N+i]=z[(oy+j)*w+ox+i]*wn}
+    const rr=new Float64Array(N),ii=new Float64Array(N);
+    for(let j=0;j<N;j++){for(let i=0;i<N;i++){rr[i]=re[j*N+i];ii[i]=im[j*N+i]}fft1(rr,ii);for(let i=0;i<N;i++){re[j*N+i]=rr[i];im[j*N+i]=ii[i]}}
+    for(let i=0;i<N;i++){for(let j=0;j<N;j++){rr[j]=re[j*N+i];ii[j]=im[j*N+i]}fft1(rr,ii);for(let j=0;j<N;j++){re[j*N+i]=rr[j];im[j*N+i]=ii[j]}}
+    const B=new Float64Array(N),C=new Float64Array(N);
+    for(let j=0;j<N;j++)for(let i=0;i<N;i++){const kx=i<N/2?i:i-N,ky=j<N/2?j:j-N,b=Math.round(Math.hypot(kx,ky));if(b<N){B[b]+=re[j*N+i]**2+im[j*N+i]**2;C[b]++}}
+    const lo=Math.max(2,Math.floor(N/(pxmm*0.8))),hi=Math.min(N/2-1,Math.ceil(N/(pxmm*0.3)));let bi=-1,bv=0;
+    for(let b=lo;b<=hi;b++){const v=C[b]?B[b]/C[b]:0;if(v>bv){bv=v;bi=b}}
+    if(bi>0)period=N/bi}}
+  period=Math.max(4,Math.min(pxmm*0.8,period));
+  // ④ Gabor 필터 묶음 (방향 32개)
+  const NB=32,sg=0.5*period,r=Math.ceil(3*sg),K=2*r+1,bank=[];
+  for(let k=0;k<NB;k++){const t=k*Math.PI/NB,ct=Math.cos(t),st=Math.sin(t),ker=new Float32Array(K*K);let sum=0,cnt=0;
+    for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++){const u=x*ct+y*st,v=-x*st+y*ct,g=Math.exp(-(u*u+v*v)/(2*sg*sg))*Math.cos(2*Math.PI*v/period);ker[(y+r)*K+x+r]=g;sum+=g;cnt++}
+    const mu=sum/cnt;let e=0;for(let i=0;i<ker.length;i++){ker[i]-=mu;e+=ker[i]*ker[i]}e=Math.sqrt(e)||1;for(let i=0;i<ker.length;i++)ker[i]/=e;bank.push(ker)}
+  const out=new Float32Array(n);let ss=0,cn=0;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const i=y*w+x;let t=theta[i]%Math.PI;if(t<0)t+=Math.PI;const ker=bank[Math.round(t/Math.PI*NB)%NB];let acc=0;
+    if(y>=r&&y<h-r&&x>=r&&x<w-r){for(let ky=0;ky<K;ky++){const row=(y-r+ky)*w+x-r,kr=ky*K;for(let kx=0;kx<K;kx++)acc+=z[row+kx]*ker[kr+kx]}}
+    else{for(let ky=0;ky<K;ky++){const yy=Math.min(h-1,Math.max(0,y-r+ky));for(let kx=0;kx<K;kx++){const xx=Math.min(w-1,Math.max(0,x-r+kx));acc+=z[yy*w+xx]*ker[ky*K+kx]}}}
+    out[i]=acc;ss+=acc*acc;cn++;
+  }
+  const sd=Math.sqrt(ss/cn)||1,res=new Float32Array(n);
+  for(let i=0;i<n;i++){const q=Math.min(1,Math.max(0,(coh[i]-0.05)/0.25))*Math.min(1,lv[i]/40);res[i]=0.5+0.5*Math.tanh(out[i]/sd*1.2)*(0.35+0.65*q)}
+  return f<1?resampleF(res,w,h,w0,h0):res;
+}
 function tone(val,msk,w,h,o,pxmm){
   const n=w*h,res=new Float32Array(n);
   if(o.mode==='raw'||!o.mode){
@@ -463,34 +528,8 @@ function tone(val,msk,w,h,o,pxmm){
     c=0;for(let k=255;k>=0;k--){c+=hist[k];if(c>=tot*0.01){hi=k;break}}
     const d=Math.max(1,hi-lo);for(let i=0;i<n;i++)res[i]=clamp((val[i]-lo)/d);
   }else{
-    const R=Math.max(3,Math.round(pxmm*0.8)),a1=new Float32Array(n),a2=new Float32Array(n);
-    for(let i=0;i<n;i++){a1[i]=val[i]*msk[i];a2[i]=val[i]*val[i]*msk[i]}
-    const I0=integ(msk,w,h),I1=integ(a1,w,h),I2=integ(a2,w,h),z=new Float32Array(n);
-    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-      const i=y*w+x;if(msk[i]<=0)continue;
-      const s0=bsum(I0,w,h,x,y,R);if(s0<1)continue;
-      const m=bsum(I1,w,h,x,y,R)/s0,vv=Math.max(0,bsum(I2,w,h,x,y,R)/s0-m*m);
-      z[i]=(val[i]-m)/Math.sqrt(vv+4);
-    }
-    // 융선 방향을 따라 매끄럽게 하고(끊긴 융선 잇기), 가로질러서는 또렷하게
-    const gxx=new Float32Array(n),gyy=new Float32Array(n),gxy=new Float32Array(n);
-    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const i=y*w+x,gx=z[i+1]-z[i-1],gy=z[i+w]-z[i-w];gxx[i]=gx*gx;gyy[i]=gy*gy;gxy[i]=gx*gy}
-    const Rt=Math.max(3,Math.round(pxmm*0.45)),Ixx=integ(gxx,w,h),Iyy=integ(gyy,w,h),Ixy=integ(gxy,w,h);
-    const sm=new Float32Array(n),st=Math.max(0.6,pxmm*0.055),K=5,wt=[];let ws=0;
-    for(let k=-K;k<=K;k++){const v=Math.exp(-(k*k)/(2*(K*0.55)**2));wt.push(v);ws+=v}
-    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-      const i=y*w+x;if(msk[i]<=0)continue;
-      const a=bsum(Ixx,w,h,x,y,Rt),c=bsum(Iyy,w,h,x,y,Rt),bb=bsum(Ixy,w,h,x,y,Rt);
-      const phi=0.5*Math.atan2(2*bb,a-c),dx=-Math.sin(phi)*st,dy=Math.cos(phi)*st;
-      let acc=0;for(let k=-K;k<=K;k++){const xx=x+k*dx,yy=y+k*dy;acc+=wt[k+K]*(xx<0||yy<0||xx>w-1||yy>h-1?0:bil(z,w,h,xx,yy))}
-      sm[i]=acc/ws;
-    }
-    // 가로 방향 선명화(언샤프)
-    const Is=integ(sm,w,h),r2=Math.max(1,Math.round(pxmm*0.06));
-    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-      const i=y*w+x,bl=bsum(Is,w,h,x,y,r2)/((2*r2+1)**2),zs=sm[i]+0.8*(sm[i]-bl);
-      res[i]=o.mode==='bin'?(zs>0?1:0):clamp(0.5+zs*0.32);
-    }
+    const e=gaborCore(val,w,h,pxmm);
+    for(let i=0;i<n;i++)res[i]=o.mode==='bin'?(e[i]>0.5?1:0):e[i];
   }
   for(let i=0;i<n;i++){let v=o.inv?1-res[i]:res[i];res[i]=msk[i]*v+(1-msk[i])}
   return res;
@@ -536,7 +575,7 @@ function docName(){return S.mode==='crim'?(S.kind==='one'?'수사자료표 (별�
 function slotBtn(n){
   const f=S.f[n],b=document.createElement('button');
   b.className='slot'+(f&&f.thumb?' done':'');
-  b.innerHTML=(f&&f.thumb?`<img src="${f.thumb}" alt="">`:'<span class="plus">+</span>')+`<span class="no">${n}</span><span class="lb">${S.kind==='one'?FN[n]:SN[n]}</span>`+(f&&f.extras&&f.extras.length?`<span class="ex">+${f.extras.length}</span>`:'')+(f&&f.blurry?'<span class="ex" style="left:auto;right:4px;top:auto;bottom:26px;background:var(--danger);color:#fff">흐림</span>':'');
+  b.innerHTML=(f&&f.thumb?`<img src="${f.thumb}" alt="">`:'<span class="plus">+</span>')+`<span class="no">${n}</span><span class="lb">${S.kind==='one'?FN[n]:SN[n]}</span>`+(f&&f.extras&&f.extras.length?`<span class="ex">+${f.extras.length}</span>`:'');
   b.onclick=()=>f?openAct(n):openCam(n);return b;
 }
 function fillInfo(){document.querySelectorAll('.info [data-k]').forEach(i=>{i.value=S.info[i.dataset.k]||''})}
@@ -619,7 +658,7 @@ $('infoDone').onclick=()=>{
 };
 function startNew(kind,one){
   if(Object.keys(S.f).length&&!confirm('이전에 찍은 지문을 지우고 새로 채취할까요?'))return;
-  S={mode:'id',kind,one:one||null,tipDown:S.tipDown,camId:S.camId,autoShot:S.autoShot,lastMm:S.lastMm,flash:S.flash,outPpi:S.outPpi,info:{},f:{}};save();goHome();
+  S={mode:'id',kind,one:one||null,tipDown:S.tipDown,camId:S.camId,zipEnh:S.zipEnh,autoShot:S.autoShot,lastMm:S.lastMm,flash:S.flash,outPpi:S.outPpi,info:{},f:{}};save();renderHome();openCam(req()[0]);
 }
 function openPick(){
   $('pickTitle').textContent='지문 채취';$('onePick').style.display='none';$('pTen').style.display='';$('pOne').style.display='';
@@ -635,7 +674,8 @@ $('homeBack').onclick=()=>openPick();
 $('pTen').onclick=()=>startNew('ten');
 $('pOne').onclick=()=>{$('pTen').style.display='none';$('pOne').style.display='none';$('pResume').style.display='none';$('onePick').style.display='flex'};
 $('btnStart').onclick=()=>{const n=nextEmpty(req()[0]);if(n)openCam(n);else toast('촬영 완료')};
-const syncPpi=()=>document.querySelectorAll('#ppiSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.p===(S.outPpi||1000)));
+const syncPpi=()=>{document.querySelectorAll('#ppiSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.p===(S.outPpi||1000)));$('zipEnh').classList.toggle('on',S.zipEnh!==false);$('zipEnh').textContent=S.zipEnh!==false?'융선 강조 사진 포함 ✓':'융선 강조 사진 포함';};
+$('zipEnh').onclick=()=>{S.zipEnh=S.zipEnh===false;save();syncPpi()};
 document.querySelectorAll('#ppiSeg button').forEach(b=>b.onclick=()=>{S.outPpi=+b.dataset.p;save();syncPpi()});
 $('btnOut').onclick=()=>{$('docName').textContent=docName();syncPpi();$('out').classList.add('act')};
 const closeOut=()=>$('out').classList.remove('act');
@@ -839,6 +879,7 @@ async function openCam(n){
     let back=ds.filter(d=>/back|rear|environment|후면/i.test(d.label));if(!back.length)back=ds.filter(d=>!/front|user|전면/i.test(d.label));
     camList=back.map(d=>d.deviceId).filter(Boolean);
     const curId=(track.getSettings&&track.getSettings().deviceId)||S.camId;
+    if(!S.camId&&camList.length>=2&&curId!==camList[1]){S.camId=camList[1];save();stream.getTracks().forEach(t=>t.stop());stream=null;track=null;return openCam(n)}   // 기본은 2번 렌즈
     $('camLens').style.display=camList.length>1?'':'none';$('camLens').textContent='렌즈 '+(Math.max(0,camList.indexOf(curId))+1)+'/'+camList.length;
   }catch(e){$('camLens').style.display='none'}
   try{const c=track.getCapabilities?track.getCapabilities():{};
@@ -981,14 +1022,14 @@ async function grab(){
   const fm=S.flash||'off';let tmpTorch=false;
   if(fm==='auto'&&!canFlash&&canTorch&&!torchOn){await setTorch(true);tmpTorch=true;await new Promise(r=>setTimeout(r,450))}
   const fr=document.createElement('canvas');fr.width=vw;fr.height=vh;fr.getContext('2d').drawImage(vid,0,0);
-  const gv=mapGuide(G,vw,vh,vw,vh),fs=sharpOf(fr,vw,vh,gv);
+  const gv=mapGuide(G,vw,vh,vw,vh);
   let pw=vw,ph=vh,tries=0,blurry=false;
   while(tries<2){
     tries++;
     let b=await takeOnce(fm),bw=0,bh=0;
     if(b){try{const al=await alignPhoto(b,fr);if(al.score>0.3){b=al.blob;bw=al.pw;bh=al.ph}else b=null}catch(e){b=null}}
-    if(b){try{const hp=mapGuide(G,vw,vh,bw,bh),bm=await decode(b),cp=clipFrac(bm,bw,bh,hp),cf=clipFrac(fr,vw,vh,gv),ps=sharpOf(bm,bw,bh,hp);if(bm.close)bm.close();
-      if(cp>0.08&&cp>cf*2+0.03)b=null;else if(ps<fs*0.7){blurry=true;if(tries<2){toast('초점 다시 맞추는 중');await refocus();continue}}else blurry=false}catch(e){}}
+    if(b){try{const hp=mapGuide(G,vw,vh,bw,bh),bm=await decode(b),cp=clipFrac(bm,bw,bh,hp),cf=clipFrac(fr,vw,vh,gv);if(bm.close)bm.close();
+      if(cp>0.08&&cp>cf*2+0.03)b=null}catch(e){}}
     if(b){blob=b;pw=bw;ph=bh}
     break;
   }
@@ -1005,11 +1046,22 @@ async function grab(){
   S.f[n]={orig:file,name:file.name,taken:new Date().toISOString(),extras:old&&old.extras||[],p:null,hint,o:{...DEFO},cal:null,thumb:null,res:[pw,ph],blurry};
   cur=n;save();
   try{const Wk=await loadWork(file),h=hint,pp=Math.abs(Wk.w/Wk.h-h.asp)<0.03?{cx:h.cx*Wk.w,cy:h.cy*Wk.h,a:h.a*Wk.w,b:h.b*Wk.h,ang:h.ang||0}:defParams(Wk);
-    S.f[n].p=pp;S.f[n].thumb=toCanvas(processFinger(Wk,pp,S.f[n].o,null,640)).toDataURL('image/jpeg',0.92);save()}catch(e){}
+    S.f[n].p=pp;const RR=processFinger(Wk,pp,S.f[n].o,null,1000),rc=toCanvas(RR,$('rvImg'));rvBase=toCanvas(RR);rvPpi=RR.ppi;rvEnhC=null;$('rvEnh').classList.remove('on');
+    const tc=document.createElement('canvas'),k=Math.min(1,640/Math.max(rc.width,rc.height));tc.width=Math.round(rc.width*k);tc.height=Math.round(rc.height*k);tc.getContext('2d').drawImage(rc,0,0,tc.width,tc.height);
+    S.f[n].thumb=tc.toDataURL('image/jpeg',0.92)}catch(e){}
   busy(false);
-  const nx2=nextEmpty(n%10+1);
-  if(nx2){toast(blurry?`${n}. ${FN[n]} 흐림 — 확인 필요`:`${n}. ${FN[n]} 저장 · ${pw}×${ph}`);openCam(nx2)}else{goHome();toast(blurry?`${n}. ${FN[n]} 흐림 — 확인 필요`:'촬영 완료')}
+  rvPrev=old||null;rvN=n;$('rvTitle').textContent=n+'. '+FN[n];show('review');
 }
+let rvPrev=null,rvN=0,rvBase=null,rvEnhC=null,rvPpi=500;
+function enhanceCanvas(src,ppi){const w=src.width,h=src.height,d=src.getContext('2d').getImageData(0,0,w,h).data,g=new Float32Array(w*h);
+  for(let i=0;i<g.length;i++)g[i]=.3*d[i*4]+.59*d[i*4+1]+.11*d[i*4+2];
+  const e=gaborCore(g,w,h,ppi/25.4),c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d'),im=x.createImageData(w,h);
+  for(let i=0;i<e.length;i++){const v=e[i]*255;im.data[i*4]=im.data[i*4+1]=im.data[i*4+2]=v;im.data[i*4+3]=255}x.putImageData(im,0,0);return c}
+$('rvEnh').onclick=async()=>{if(!rvBase)return;const on=!$('rvEnh').classList.contains('on');
+  if(on&&!rvEnhC){busy(true,'융선 강조 중…');await new Promise(r=>setTimeout(r,30));try{rvEnhC=enhanceCanvas(rvBase,rvPpi)}finally{busy(false)}}
+  const src=on?rvEnhC:rvBase,c=$('rvImg');c.width=src.width;c.height=src.height;c.getContext('2d').drawImage(src,0,0);$('rvEnh').classList.toggle('on',on)};
+$('rvRetake').onclick=()=>{if(rvPrev)S.f[rvN]=rvPrev;else delete S.f[rvN];save();openCam(rvN)};
+$('rvKeep').onclick=()=>{save();const nx2=nextEmpty(rvN%10+1);if(nx2)openCam(nx2);else{goHome();toast('촬영 완료')}};
 $('camSkip').onclick=()=>{const from=camN,nx=nextEmpty(from%10+1);stopCam();if(nx&&nx!==from)openCam(nx);else goHome()};
 $('shutter').onclick=()=>grab();
 $('camLens').onclick=async e=>{e.stopPropagation();if(camList.length<2)return;const cur=(track&&track.getSettings&&track.getSettings().deviceId)||S.camId;S.camId=camList[(Math.max(0,camList.indexOf(cur))+1)%camList.length];save();const n=camN;stopCam();await openCam(n)};
@@ -1026,8 +1078,8 @@ async function processAll(){
     busy(true,`처리 중… ${n}/10`);
     await new Promise(r=>setTimeout(r,10));
     const Wk=await loadWork(f.orig),p=f.p||defParams(Wk),o={...DEFO,...f.o};
-    const pp=S.outPpi||1000,R=processFinger(Wk,p,o,f.cal,4000,pp),FR=processFinger(Wk,p,{...o,curve:false},f.cal,4000,pp),R5=pp===500?R:processFinger(Wk,p,o,f.cal,4000,500);
-    out[n]={R,c:toCanvas(R),FR,fc:toCanvas(FR),R5,c5:pp===500?null:toCanvas(R5),o,cal:f.cal,src:[Wk.srcW,Wk.srcH],ppmmO:R.ppmm*Wk.srcW/Wk.w};
+    const pp=S.outPpi||1000,R=processFinger(Wk,p,o,f.cal,4000,pp),FR=R,R5=pp===500?R:processFinger(Wk,p,o,f.cal,4000,500);
+    const cR=toCanvas(R);out[n]={R,c:cR,FR,fc:cR,R5,c5:pp===500?null:toCanvas(R5),o,cal:f.cal,src:[Wk.srcW,Wk.srcH],ppmmO:R.ppmm*Wk.srcW/Wk.w};
   }
   return out;
 }
@@ -1184,10 +1236,10 @@ $('btnPrint').onclick=async()=>{closeOut();
 };
 $('btnZip').onclick=async()=>{closeOut();
   try{
-    const r=await sheetBlob();if(!r){toast('채취한 지문이 없습니다');return}
+    const P0=await processAll();if(!Object.keys(P0).length){toast('채취한 지문이 없습니다');return}const r={P:P0};
     busy(true,'묶는 중…');
     const files=[],log=[],I=INFO(),u8=async b=>new Uint8Array(await b.arrayBuffer());
-    log.push(`${MODEN[S.mode]} ${S.kind==='one'?'일지':'십지'}지문 채취 처리기록`,`문서: ${docName()}`,'',`사건번호: ${(S.mode==='crim'?I.c_case:I.caseNo)||''}`,`성명: ${I.name||''}`,`채취일시: ${(I.date||'').replace('T',' ')}`,`채취장소: ${I.place||''}`,`채취자: ${I.taker||''} / ${I.org||''}`,`기록 생성: ${new Date().toLocaleString('ko-KR')}`,'');
+    log.push(`${S.kind==='one'?'일지':'십지'}지문 채취 처리기록`,'',`사건번호: ${(S.mode==='crim'?I.c_case:I.caseNo)||''}`,`성명: ${I.name||''}`,`채취일시: ${(I.date||'').replace('T',' ')}`,`채취장소: ${I.place||''}`,`채취자: ${I.taker||''} / ${I.org||''}`,`기록 생성: ${new Date().toLocaleString('ko-KR')}`,'');
     for(const n of req()){
       const f=S.f[n];if(!f)continue;const q=r.P[n],pre=`${pad(n)}_${FN[n]}`;
       const ob=await u8(f.orig),on=`원본/${pre}_원본.${extOf(f.orig)}`;files.push({name:on,data:ob});
@@ -1198,6 +1250,7 @@ $('btnZip').onclick=async()=>{closeOut();
           files.push({name:fl?`좌우반전/${pre}_좌우반전_스케일.jpg`:`원본/${pre}_원본_스케일.jpg`,data:await u8(await new Promise(rs=>c.toBlob(rs,'image/jpeg',0.95)))})}
         if(bm.close)bm.close()}
       const pb=await pngWithDpi(q.c,q.R.ppi);files.push({name:`지문/${pre}_${Math.round(q.R.ppi)}ppi.png`,data:await u8(pb)});
+      if(S.zipEnh!==false){busy(true,`융선 강조 중… ${n}`);await new Promise(r=>setTimeout(r,10));files.push({name:`융선강조/${pre}_융선강조_${Math.round(q.R.ppi)}ppi.png`,data:await u8(await pngWithDpi(enhanceCanvas(q.c,q.R.ppi),q.R.ppi))});busy(true,'묶는 중…')}
       files.push({name:`AFIS/${pre}_500ppi_600x600.png`,data:await u8(await pngWithDpi(afisCanvas(q.c5||q.c,q.R5),500))});
       log.push(`  처리: ${[q.o.flip?'좌우반전':'',q.o.inv?'명암반전':'',q.o.curve?'곡면보정(원통 ±70°)':''].filter(Boolean).join(', ')||'없음'} / 톤: ${TONEN[q.o.mode||'raw']}`,
         `  배율: ${({ruler:'자 보정',ridge:`융선 간격 자동 (평균 ${RIDGE_MM}mm 가정, 오차 약 ±15%)`,width:'추정 (손가락 폭 16mm 가정)'})[q.R.mode]} — ${q.R.ppmm.toFixed(2)} px/mm (작업 영상 기준)`,
@@ -1206,7 +1259,6 @@ $('btnZip').onclick=async()=>{closeOut();
     }
     for(const f of files)if(!f.data&&f.blob)f.data=await u8(f.blob);
     if(S.mode==='crim'){log.push(`채취 동의 서명: ${S.sign?'있음 ('+new Date(S.signAt).toLocaleString('ko-KR')+')':'없음'}`);if(S.sign)files.push({name:'채취동의서명.png',data:await u8(await (await fetch(S.sign)).blob())})}
-    files.push({name:docName().split(' (')[0].replace(/\s/g,'')+'.png',data:await u8(r.blob)});
     files.push({name:'처리기록.txt',data:new TextEncoder().encode('﻿'+log.join('\r\n'))});
     download(makeZip(files),`${baseName()}_${S.kind==='one'?'일지':'십지'}지문.zip`);
   }catch(e){toast('저장 실패')}finally{busy(false)}
