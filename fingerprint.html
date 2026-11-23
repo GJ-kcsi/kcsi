@@ -157,7 +157,7 @@ header button.back{padding:7px 12px}
     <button id="pResume" class="card" style="display:none"><span id="pResumeTxt"></span><span class="chev">›</span></button>
     <button class="big fill" id="pTen"><svg viewBox="0 0 50 24" width="130" height="62" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(24,0) scale(-1,1)"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></g><g transform="translate(26,0)"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></g></svg><span>십지지문</span></button>
     <button class="big fill" id="pOne"><svg viewBox="0 0 24 24" width="62" height="62" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 14a8 8 0 0 1-8 8"/><path d="M18 11v-1a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V9a2 2 0 0 0-2-2a2 2 0 0 0-2 2v1"/><path d="M10 9.5V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v10"/><path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg><span>일지 지문</span></button>
-    <div class="seg" id="modeSeg" style="flex:none"><button data-sm="app" style="flex:1;padding:14px">카메라 앱</button><button data-sm="guide" style="flex:1;padding:14px">가이드 촬영</button></div>
+    <div class="seg" id="modeSeg" style="flex:none;display:none"><button data-sm="app" style="flex:1;padding:14px">카메라 앱</button><button data-sm="guide" style="flex:1;padding:14px">가이드 촬영</button></div>
     <div id="onePick" style="display:none;flex:1;flex-direction:column">
       <div class="hand">왼손</div><div class="row" id="pickL"></div>
       <div class="hand">오른손</div><div class="row" id="pickR"></div>
@@ -235,7 +235,7 @@ header button.back{padding:7px 12px}
 </section>
 
 <section id="review" class="screen">
-  <header><h1 id="rvTitle"></h1><button id="rvEnh">융선 강조</button></header>
+  <header><h1 id="rvTitle"></h1><button id="rvEnh" style="display:none">융선 강조</button></header>
   <div id="rvStage"><canvas id="rvImg"></canvas></div>
   <div class="bar">
     <button id="rvRetake" style="flex:1">다시 촬영</button>
@@ -286,7 +286,7 @@ header button.back{padding:7px 12px}
 
 <div class="sheet" id="out"><div class="box">
   <div class="ttl" id="docName" style="display:none"></div>
-  <div class="seg" id="ppiSeg" style="width:100%"><button data-p="500" style="flex:1">500 ppi</button><button data-p="1000" style="flex:1">1000 ppi</button></div>
+  <div class="seg" id="ppiSeg" style="width:100%;display:none"><button data-p="500" style="flex:1">500 ppi</button><button data-p="1000" style="flex:1">1000 ppi</button></div>
   <button id="btnPrint" class="pri" style="display:none">인쇄 / PDF</button>
   <button id="btnPng" style="display:none">문서 이미지 저장</button>
   <button id="zipEnh" style="display:none"></button>
@@ -684,7 +684,7 @@ $('homeBack').onclick=()=>openPick();
 $('pTen').onclick=()=>startNew('ten');
 $('pOne').onclick=()=>{$('pTen').style.display='none';$('pOne').style.display='none';$('pResume').style.display='none';$('onePick').style.display='flex'};
 $('btnStart').onclick=()=>{const n=nextEmpty(req()[0]);if(n)shoot(n);else toast('촬영 완료')};
-const syncPpi=()=>{document.querySelectorAll('#ppiSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.p===(S.outPpi||1000)));$('zipEnh').classList.toggle('on',S.zipEnh!==false);$('zipEnh').textContent=S.zipEnh!==false?'융선 강조 사진 포함 ✓':'융선 강조 사진 포함';};
+const syncPpi=()=>{document.querySelectorAll('#ppiSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.p===(1000)));$('zipEnh').classList.toggle('on',S.zipEnh!==false);$('zipEnh').textContent=S.zipEnh!==false?'융선 강조 사진 포함 ✓':'융선 강조 사진 포함';};
 $('zipEnh').onclick=()=>{S.zipEnh=S.zipEnh===false;save();syncPpi()};
 document.querySelectorAll('#ppiSeg button').forEach(b=>b.onclick=()=>{S.outPpi=+b.dataset.p;save();syncPpi()});
 $('btnOut').onclick=()=>{$('docName').textContent=docName();syncPpi();$('out').classList.add('act')};
@@ -846,7 +846,7 @@ function updPv(){
     `<div>배율 <b>${SCN[fs.mode]}</b>${fs.mode==='width'?' <span class="w">(손가락 폭 16mm 가정)</span>':fs.mode==='ridge'?' <span class="w">(±15%)</span>':''}</div>`+
     `<div>크기 <b>${fs.wmm.toFixed(1)} × ${fs.hmm.toFixed(1)} mm</b></div>`+
     `<div>원본 <b>${W.srcW} × ${W.srcH}</b> · 지두 <b>${Math.round(2*E.p.a*W.srcW/W.w)} px</b></div>`+
-    `<div>출력 <b>${Math.round(fs.ow*(S.outPpi||1000)/500)} × ${Math.round(fs.oh*(S.outPpi||1000)/500)} px · ${S.outPpi||1000} ppi</b></div>`+
+    `<div>출력 <b>${Math.round(fs.ow*(1000)/500)} × ${Math.round(fs.oh*(1000)/500)} px · ${1000} ppi</b></div>`+
     `<div>${procTxt(E.o)}</div>`;
 }
 function sizeInfo(e){
@@ -865,7 +865,7 @@ $('edNext').onclick=()=>{const n=E.n;commit();const nx=nextReq(n);if(!nx){closeE
 $('tMore').onclick=()=>{const r=$('moreRow'),on=r.style.display==='none';r.style.display=on?'flex':'none';$('tMore').classList.toggle('on',on);requestAnimationFrame(draw)};
 $('tSave').onclick=async()=>{
   busy(true);
-  try{const R=processFinger(W,E.p,E.o,E.cal,4000,S.outPpi||1000);const blob=await jpgWithDpi(scaledPhoto(toCanvas(R),false,R.ppi/25.4,R.mode),R.ppi);download(blob,`${baseName()}_${pad(E.n)}_${FN[E.n]}_${Math.round(R.ppi)}ppi.jpg`)}
+  try{const R=processFinger(W,E.p,E.o,E.cal,4000,1000);const blob=await jpgWithDpi(scaledPhoto(toCanvas(R),false,R.ppi/25.4,R.mode),R.ppi);download(blob,`${baseName()}_${pad(E.n)}_${FN[E.n]}_${Math.round(R.ppi)}ppi.jpg`)}
   finally{busy(false)}
 };
 
@@ -1143,7 +1143,7 @@ function detectFinger(W){
   {const ux=Math.sin(ang),uy=-Math.cos(ang);cx+=ux*a*0.2;cy+=uy*a*0.2}   // 지두 중심은 손끝 쪽으로 약간
   return {cx:cx/k,cy:cy/k,a:a/k,b:a*1.65/k,ang};   // 손끝부터 첫마디 주름까지 여유 있게
 }
-function shoot(n){camN=n;cur=n;if(S.shootMode==='guide'){openCam(n);return}pick='native';$('fCam').click()}
+function shoot(n){camN=n;cur=n;pick='native';$('fCam').click()}   // 폰 기본 카메라 앱으로 촬영
 async function handleNative(file){
   const n=camN,old=S.f[n];busy(true,'불러오는 중…');
   S.f[n]={orig:file,name:file.name||'',taken:new Date().toISOString(),extras:old&&old.extras||[],p:null,o:{...DEFO},cal:null,thumb:null};
@@ -1178,7 +1178,7 @@ async function processAll(){
     busy(true,`처리 중… ${n}/10`);
     await new Promise(r=>setTimeout(r,10));
     const Wk=await loadWork(f.orig),p=f.p||defParams(Wk),o={...DEFO,...f.o};
-    const pp=S.outPpi||1000,R=processFinger(Wk,p,o,f.cal,4000,pp),FR=R,R5=pp===500?R:processFinger(Wk,p,o,f.cal,4000,500);
+    const pp=1000,R=processFinger(Wk,p,o,f.cal,4000,pp),FR=R,R5=pp===500?R:processFinger(Wk,p,o,f.cal,4000,500);
     const cR=toCanvas(R);out[n]={R,c:cR,FR,fc:cR,R5,c5:pp===500?null:toCanvas(R5),o,cal:f.cal,src:[Wk.srcW,Wk.srcH],ppmmO:R.ppmm*Wk.srcW/Wk.w};
   }
   return out;
@@ -1342,11 +1342,11 @@ $('btnZip').onclick=async()=>{closeOut();
       const f=S.f[n],q=P[n];if(!f||!q)continue;const pre=`${pad(n)}_${FN[n].replace(/\s/g,'')}`;
       busy(true,`저장 중… ${n}`);await new Promise(r=>setTimeout(r,10));
       files.push({name:`${pre}_0_촬영원본.${extOf(f.orig)}`,data:await u8(f.orig)});   // 폰이 찍은 파일 그대로(손대지 않음)
-      {const bm=await decode(f.orig),c=scaledPhoto(bm,false,q.ppmmO,q.R.mode);if(bm.close)bm.close();
-        files.push({name:`${pre}_1_원본.jpg`,data:await u8(await jpgWithDpi(c,q.ppmmO*25.4))})}
-      const pm=q.R.ppi/25.4;
-      files.push({name:`${pre}_2_${[q.o.flip?'좌우반전':'',q.o.curve?'곡면보정':''].filter(Boolean).join('_')||'보정없음'}.jpg`,data:await u8(await jpgWithDpi(scaledPhoto(q.c,false,pm,q.R.mode),q.R.ppi))});
-      files.push({name:`${pre}_3_융선강조.jpg`,data:await u8(await jpgWithDpi(scaledPhoto(enhanceCanvas(q.c,q.R.ppi),false,pm,q.R.mode),q.R.ppi))});
+      {const bm=await decode(f.orig),w0=bm.width||bm.naturalWidth,h0=bm.height||bm.naturalHeight,fk=(1000/25.4)/q.ppmmO,rc=document.createElement('canvas');   // 원본도 1000ppi로 맞춤
+        rc.width=Math.max(1,Math.round(w0*fk));rc.height=Math.max(1,Math.round(h0*fk));const rx=rc.getContext('2d');rx.imageSmoothingQuality='high';rx.drawImage(bm,0,0,rc.width,rc.height);if(bm.close)bm.close();
+        files.push({name:`${pre}_1_원본.jpg`,data:await u8(await jpgWithDpi(scaledPhoto(rc,false,1000/25.4,q.R.mode),1000))})}
+      const pm=1000/25.4;
+      files.push({name:`${pre}_2_${[q.o.flip?'좌우반전':'',q.o.curve?'곡면보정':''].filter(Boolean).join('_')||'보정없음'}.jpg`,data:await u8(await jpgWithDpi(scaledPhoto(q.c,false,pm,q.R.mode),1000))});
     }
     busy(true,'묶는 중…');
     download(makeZip(files),`${baseName()}_${S.kind==='one'?'일지':'십지'}지문.zip`);
