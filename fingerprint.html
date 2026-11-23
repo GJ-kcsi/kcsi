@@ -245,7 +245,7 @@ header button.back{padding:7px 12px}
 </section>
 
 <section id="ed" class="screen">
-  <header><button id="edDone">‹</button><h1 id="edTitle"></h1><button id="edNext" class="pri">다음 ▶</button></header>
+  <header><button id="edDone">‹</button><h1 id="edTitle"></h1><button id="edNext" class="pri" style="display:none">다음 ▶</button><button id="edOk" class="pri">완료</button></header>
   <div id="stage">
     <canvas id="cv"></canvas>
     <div id="calBar"><span>길이</span><input id="calMm" type="number" inputmode="decimal" value="10" step="0.5"><span>mm</span><button id="calOk" class="pri">적용</button><button id="calNo">취소</button></div>
@@ -731,7 +731,7 @@ async function openEditor(n){
   }catch(err){busy(false);toast('사진을 열 수 없습니다');return}
   busy(false);
   $('edTitle').textContent=n+'. '+FN[n];
-  $('edNext').style.display=nextReq(n)?'':'none';
+  $('edNext').style.display='none';
   show('ed');
   requestAnimationFrame(()=>{fit();syncTools();draw();schedPv()});
 }
@@ -861,6 +861,7 @@ function commit(){
 function closeEditor(){E=null;W=null;goHome()}
 $('edDone').onclick=()=>{if(edFromReview){edFromReview=false;const n=E.n,Wk=W;commit();busy(true);try{makeReview(n,Wk)}finally{busy(false)}E=null;W=null;show('review');return}commit();closeEditor()};
 const nextReq=n=>{const r=req(),i=r.indexOf(n);return i>=0&&i<r.length-1?r[i+1]:0};
+$('edOk').onclick=()=>$('edDone').click();
 $('edNext').onclick=()=>{const n=E.n;commit();const nx=nextReq(n);if(!nx){closeEditor();return}cur=nx;if(S.f[cur])openEditor(cur);else{E=null;W=null;openCam(cur)}};
 $('tMore').onclick=()=>{const r=$('moreRow'),on=r.style.display==='none';r.style.display=on?'flex':'none';$('tMore').classList.toggle('on',on);requestAnimationFrame(draw)};
 $('tSave').onclick=async()=>{
