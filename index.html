@@ -162,6 +162,28 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 .evgrp{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-top:4px}
 .evit{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer}
 .evit.in{border-color:#1f9d55;box-shadow:inset 3px 0 #1f9d55}
+.dvit{margin-top:10px;padding:14px}body.dvmode .dvit b{font-size:19px}body.dvmode .dvit small{font-size:14.5px}body.dvmode .dvno{font-size:14px;padding:6px 8px;min-width:60px}
+.dvzrow{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:10px}.dvzrow .dvzone{margin-bottom:0}.dvmapb{min-width:110px}
+.dvmapw{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:6px 0 10px;background:#fff}.dvmapw canvas{display:block;width:100%;height:auto;touch-action:none}
+.dvtools{display:flex;gap:6px;margin-bottom:10px}.dvtools .dvchip{flex:1;padding:10px 0}
+.dvzone{width:100%;display:flex!important;align-items:center;justify-content:space-between;padding:0 18px;margin-bottom:10px}.dvzone b{font-size:26px}.dvzone span{color:var(--muted)}
+.dvtree{display:flex;flex-direction:column;gap:6px;margin:6px 0 12px;max-height:60vh;overflow:auto}.dvz{display:flex;gap:6px;padding-left:calc(var(--lv) * 28px)}.dvz [data-zsel]{flex:1;text-align:left}.dvzadd{min-width:56px;color:var(--muted)}
+body.dvmode #view .btn{min-height:60px;font-size:18px}body.dvmode #view .evbig{min-height:80px;font-size:23px}
+body.dvmode .evsheet .btn{min-height:58px;font-size:18px}body.dvmode .evsheet .icon{width:52px;height:52px;font-size:20px}
+.dvchip{font:inherit;font-size:17px;font-weight:600;min-height:52px;padding:10px 18px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.dvinfob{width:100%;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:56px;font-weight:700;margin-bottom:10px}.dvinfob small{font-weight:400;color:var(--muted)}
+.dvcrew{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:6px;margin-top:6px;align-items:center}.dvcrew .dvin{padding:10px 8px}
+.dvqty{display:flex;align-items:center;gap:12px;margin-top:10px}.dvqty span{color:var(--muted)}.dvqty b{font-size:22px;min-width:36px;text-align:center}.dvqty .dvchip{width:64px;font-size:24px;padding:4px}
+.dvflist{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;max-height:40vh;overflow:auto}
+.dvchip[aria-pressed=true]{background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
+.dvchips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 8px}
+.dvroot .dvseg{margin:8px 0}.dvroot .dvseg button{min-height:56px;font-size:18px;font-weight:700}.dvroot .dvseg button[aria-pressed=true]{background:var(--navy);color:var(--navy-ink)}
+.dvlab{font-size:14px;color:var(--muted);margin-top:12px}.dvin{width:100%;font:inherit;font-size:17px;padding:12px;border:1px solid var(--line);border-radius:10px;box-sizing:border-box}
+.dvtwo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.dvbtn{min-height:64px!important;font-size:19px!important;display:flex;align-items:center;justify-content:center;gap:8px}.dvbtn img{width:40px;height:40px;object-fit:cover;border-radius:6px}
+.dvfoot{position:sticky;bottom:0;background:var(--card);padding-top:8px}.dvfoot>:only-child{grid-column:1/-1}
+.dvmore{margin-top:14px}.dvmore summary{font-size:15px;color:var(--muted);padding:12px 0;cursor:pointer}.dvhno{font-size:20px}.dvpar{color:var(--muted);margin:-4px 0 4px}
+.dvno{flex:none;min-width:52px;padding:4px 6px;border-radius:7px;background:var(--navy);color:var(--navy-ink);font-size:12px;font-weight:700;text-align:center}.dvno.P{background:#7c3aed}.dvno.F{background:#b45309}.dvno.E{background:#0f766e}
+.dvprops{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.dvp{font:inherit;font-size:16px;min-height:46px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}.dvp.add{color:var(--muted);border-style:dashed}
 .evpick{border-color:#2563eb}.evlist-pick .evit{border-style:dashed}.evdst{display:flex;gap:6px;margin-top:6px}.evdst .chip{padding:6px 12px}.evdst .chip[aria-pressed=true]{background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
 .evst{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
 .evst button{font:inherit;font-size:12.5px;font-weight:700;padding:5px 7px;border-radius:999px;border:1px solid var(--line);background:transparent;color:#a3aab8;cursor:pointer}
@@ -195,9 +217,11 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 <header><div class="bar">
   <button id="back" class="back hide" type="button">← 처음</button>
   <h1 id="title">KCSI Docs</h1>
+  <button id="newSec" class="back hide" type="button">새로 작성</button>
 </div></header>
 
 <div id="vtabs" class="vtabs hide"><button type="button" data-vt="check">점검 목록표</button><button type="button" data-vt="items">유류물 목록</button><button type="button" data-vt="kakao">간이 보고서</button><button type="button" data-vt="autopsy">검시결과 보고서</button><button type="button" id="vtFp">지문 채취</button></div>
+<div id="ptabs" class="vtabs hide" style="grid-template-columns:1fr 1fr"><button type="button" data-vt="photos">현장 사진</button><button type="button" data-vt="docs">문서 사진</button></div>
 <main id="view"></main>
 
 <footer class="dock"><div class="in">
@@ -510,7 +534,7 @@ const RRN = { top: { p: 1, x0: 165, x1: 288, y: 270 }, bottom: { p: 1, x0: 165, 
 let route = "home";
 // 폰의 뒤로 가기: 문서 화면이면 첫 화면으로, 첫 화면이면 앱 종료(브라우저 기본 동작)
 function go(r, fromBack) {
-  if (r !== "home" && route === "home" && !fromBack) history.pushState({ kcsi: r }, "", "#" + r);
+  if (r !== "home" && (route === "home" || (route === "evid" && r === "hand")) && !fromBack) history.pushState({ kcsi: r }, "", "#" + r);
   else if (r !== "home" && route !== "home" && !fromBack) history.replaceState({ kcsi: r }, "", "#" + r);
   route = r; $("back").classList.toggle("hide", r === "home"); window.scrollTo(0, 0); render();
 }
@@ -536,9 +560,12 @@ window.addEventListener("popstate", () => {
 
 function render() {
   const v = $("view");
-  const titles = { home: "KCSI Docs", check: "변사 현장 점검 목록표", photos: "현장 사진", items: "유류물 목록", hand: "의뢰증거물 인수인계서", docs: "문서 사진", kakao: "간이 보고서", autopsy: "검시결과보고서", evid: "채증물 관리" };
+  const titles = { home: "KCSI Docs", check: "변사 현장 점검 목록표", photos: "현장 사진", items: "유류물 목록", hand: "의뢰증거물 인수인계서", docs: "문서 사진", kakao: "간이 보고서", autopsy: "검시결과보고서", dvi: "K-DVI 수습 관리", evid: "증거물 관리" };
   $("title").textContent = titles[route];
+  document.body.classList.toggle("dvmode", route === "dvi");
   $("vtabs").classList.toggle("hide", !["check", "items", "kakao", "autopsy"].includes(route));
+  $("newSec").classList.toggle("hide", !secOf(route));
+  $("ptabs").classList.toggle("hide", !["photos", "docs"].includes(route));
   document.querySelectorAll("[data-vt]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.vt === route));
   if (route === "home") renderHome(v);
   if (route === "check") renderCheck(v);
@@ -549,6 +576,7 @@ function render() {
   if (route === "items") renderItems(v);
   if (route === "hand") renderHand(v);
   if (route === "evid") renderEvid(v);
+  if (route === "dvi") renderDvi(v);
   updateDock();
 }
 
@@ -558,7 +586,7 @@ function counts() {
   const filled = Object.entries(state.check).filter(([k, x]) => CHECK_DEFAULTS[k] !== x && !(uv["check." + k] && uv["check." + k] === x)).map(([, x]) => x).filter((x) => (Array.isArray(x) ? x.length : String(x ?? "").trim() !== "")).length
     + (state.pads.body.length ? 1 : 0) + (state.pads.sketch.length ? 1 : 0);
   const items = state.items.filter((r) => Object.values(r).some((x) => String(x).trim())).length;
-  return { check: filled, photos: state.photos.length, items, hand: handFilled(), docs: state.docs.length, evid: state.evid ? state.evid.items.length : 0 };
+  return { check: filled, photos: state.photos.length, items, hand: handFilled(), docs: state.docs.length, evid: state.evid ? state.evid.items.length : 0, dvi: state.dvi && state.dvi.items ? state.dvi.items.length : 0 };
 }
 function renderHome(v) {
   const c = counts();
@@ -584,10 +612,9 @@ function renderHome(v) {
       <label class="f">작성일<input id="date" type="date"></label>
     </section>
     ${menu("check", 1, "변사 사건", [c.check ? "점검표" : "", c.items ? `유류물 ${c.items}개` : "", autAny() ? "검시결과보고서" : ""].filter(Boolean).join(" · ") || "입력 안 함")}
-    ${menu("evid", 2, "채증물 관리", c.evid ? `${c.evid}건 · 확인 ${state.evid.items.filter((x) => x.inAt).length}` : "입력 안 함")}
-    ${menu("hand", 3, "의뢰증거물 인수인계서", c.hand ? `증거물 ${c.hand}개 입력됨` : "입력 안 함")}
-    ${menu("photos", 4, "현장 사진", c.photos ? `사진 ${c.photos}장` : "입력 안 함")}
-    ${menu("docs", 5, "문서 사진", c.docs ? `${c.docs}장` : "입력 안 함")}
+    ${menu("evid", 2, "증거물 관리", c.evid ? `${c.evid}건 · 확인 ${state.evid.items.filter((x) => x.inAt).length}` : "입력 안 함")}
+    ${menu("dvi", 3, "K-DVI 수습 관리", c.dvi ? `${c.dvi}건${dvS().last ? ` · ${dvS().last} ${dvS().items.filter((x) => x.checks.some((k) => k.w === dvS().last)).length}` : ""}` : "입력 안 함")}
+    ${menu("photos", 4, "현장 사진", [c.photos ? `사진 ${c.photos}장` : "", c.docs ? `문서 ${c.docs}장` : ""].filter(Boolean).join(" · ") || "입력 안 함")}
     <section class="panel" aria-label="출력할 문서">
       <h2>출력할 문서</h2>
       <label class="inc"><input type="checkbox" id="inc_check"> 변사 현장 점검 목록표</label>
@@ -768,11 +795,12 @@ function fixSketch(v) { return (v || []).map((o) => (Array.isArray(o) ? { t: "fr
 function drawSketch(g, items, W, H, opt = {}) {
   const lw = Math.max(2, W / 260), ink = "#111";
   g.save(); g.lineCap = g.lineJoin = "round";
-  const order = items.map((o, i) => i).sort((a, b) => (["line", "free"].includes(items[a].t) ? 0 : 1) - (["line", "free"].includes(items[b].t) ? 0 : 1));
+  const order = items.map((o, i) => i).sort((a, b) => (["line", "free", "rectp"].includes(items[a].t) ? 0 : 1) - (["line", "free", "rectp"].includes(items[b].t) ? 0 : 1));
   order.forEach((i) => {
     const o = items[i], hi = opt.sel === i;
     g.strokeStyle = hi ? "#e08a00" : ink; g.lineWidth = hi ? lw * 1.6 : lw;
     if (o.t === "line") { g.beginPath(); g.moveTo(o.a[0] * W, o.a[1] * H); g.lineTo(o.b[0] * W, o.b[1] * H); g.stroke(); return; }
+    if (o.t === "rectp") { g.setLineDash([lw * 3, lw * 2]); g.strokeRect(Math.min(o.a[0], o.b[0]) * W, Math.min(o.a[1], o.b[1]) * H, Math.abs(o.b[0] - o.a[0]) * W, Math.abs(o.b[1] - o.a[1]) * H); g.setLineDash([]); return; }
     if (o.t === "free") {
       g.beginPath(); o.pts.forEach(([x, y], k) => (k ? g.lineTo(x * W, y * H) : g.moveTo(x * W, y * H))); g.stroke(); return;
     }
@@ -790,6 +818,12 @@ function drawSketch(g, items, W, H, opt = {}) {
       g.fillStyle = "#fff"; g.fillRect(-L / 2, -t / 2, L, t);
       g.strokeRect(-L / 2, -t / 2, L, t);
       g.beginPath(); g.moveTo(-L / 2, 0); g.lineTo(L / 2, 0); g.stroke();
+    } else if (o.t === "north") {                    // 방위표(N 쪽이 북)
+      const w = L * 0.24, keep = g.fillStyle;
+      g.beginPath(); g.moveTo(0, -L / 2); g.lineTo(-w, L / 2); g.lineTo(0, L * 0.28); g.closePath(); g.fillStyle = g.strokeStyle; g.fill(); g.stroke();
+      g.beginPath(); g.moveTo(0, -L / 2); g.lineTo(w, L / 2); g.lineTo(0, L * 0.28); g.closePath(); g.fillStyle = "#fff"; g.fill(); g.stroke();
+      g.fillStyle = g.strokeStyle; g.font = `800 ${L * 0.36}px ${FONT}`; g.textAlign = "center"; g.textBaseline = "alphabetic";
+      g.fillText("N", 0, -L / 2 - L * 0.08); g.fillStyle = keep;
     } else if (o.t === "person") {                   // 누운 사람 윤곽(머리 쪽이 위)
       const u = L / 10, R = PERSON_HALF, pts = R.concat(R.slice().reverse().map(([x, y]) => [-x, y]));
       g.lineJoin = "round"; g.beginPath();
@@ -813,11 +847,11 @@ function paintSketchPreview(cv) {
   }
   drawSketch(g, state.pads.sketch, cv.width, cv.height);
 }
-function openSketch(onDone) {
-  const items = state.pads.sketch, undo = [];
+function openSketch(onDone, opt = {}) {   // opt: { items, region:{w,h}, bg:Image } — 없으면 변사 현장 약도
+  const items = opt.items || state.pads.sketch, undo = [], REG = opt.region || SK_REGION;
   let tool = "line", sel = -1, cur = null, drag = null, closed = false;
   const box = document.createElement("div"); box.className = "skx";
-  const tools = [["line", "직선"], ["free", "손그림"], ["door", "문"], ["window", "창문"], ["person", "사람"], ["select", "선택·이동"]];
+  const tools = [["line", "직선"], ["rect", "네모"], ["free", "손그림"], ["door", "문"], ["window", "창문"], ["person", "사람"], ["north", "방위"], ["select", "선택·이동"]];
   box.innerHTML = `<div class="tb">${tools.map(([k, t]) => `<button type="button" data-tool="${k}" aria-pressed="${k === tool}">${t}</button>`).join("")}
       <span class="sep"></span>
       <button type="button" data-act="rot" class="hide">회전</button><button type="button" data-act="big" class="hide">크게</button><button type="button" data-act="small" class="hide">작게</button><button type="button" data-act="del" class="hide">지우기</button>
@@ -827,23 +861,24 @@ function openSketch(onDone) {
   const cv = box.querySelector("canvas"), g = cv.getContext("2d"), area = box.querySelector(".area");
   try {
     const req = box.requestFullscreen || box.webkitRequestFullscreen;
-    if (req) Promise.resolve(req.call(box)).then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock("landscape").catch(() => {})).catch(() => {});
+    if (req) Promise.resolve(req.call(box)).then(() => !opt.region && screen.orientation && screen.orientation.lock && screen.orientation.lock("landscape").catch(() => {})).catch(() => {});
   } catch (e) {}
   let W = 0, H = 0;
-  const step = 1 / SK_GRID, stepY = step * (SK_REGION.w / SK_REGION.h);
+  const step = 1 / SK_GRID, stepY = step * (REG.w / REG.h);
   const snap = ([x, y]) => [Math.round(x / step) * step, Math.round(y / stepY) * stepY].map((v) => Math.min(1, Math.max(0, v)));
   function paint(preview) {
     g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+    if (opt.bg) { const im = opt.bg, r = Math.min(W / im.width, H / im.height); g.globalAlpha = 0.85; g.drawImage(im, (W - im.width * r) / 2, (H - im.height * r) / 2, im.width * r, im.height * r); g.globalAlpha = 1; }
     g.fillStyle = "#c9d3dc";                         // 격자 점
     const rr = Math.max(1.2, W / 700);
     for (let i = 0; i <= SK_GRID; i++) for (let j = 0; j * stepY <= 1.0001; j++) { g.beginPath(); g.arc(i * step * W, j * stepY * H, rr, 0, Math.PI * 2); g.fill(); }
     drawSketch(g, preview ? items.concat([preview]) : items, W, H, { sel });
   }
   const fit = () => {                               // 약도 칸 비율을 지키며 화면에 꽉 차게
-    const aw = area.clientWidth - 12, ah = area.clientHeight - 12, k = Math.min(aw / SK_REGION.w, ah / SK_REGION.h);
+    const aw = area.clientWidth - 12, ah = area.clientHeight - 12, k = Math.min(aw / REG.w, ah / REG.h);
     const dpr = window.devicePixelRatio || 1;
-    cv.style.width = Math.floor(SK_REGION.w * k) + "px"; cv.style.height = Math.floor(SK_REGION.h * k) + "px";
-    W = cv.width = Math.floor(SK_REGION.w * k * dpr); H = cv.height = Math.floor(SK_REGION.h * k * dpr);
+    cv.style.width = Math.floor(REG.w * k) + "px"; cv.style.height = Math.floor(REG.h * k) + "px";
+    W = cv.width = Math.floor(REG.w * k * dpr); H = cv.height = Math.floor(REG.h * k * dpr);
     paint();
   };
   const pt = (e) => { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) / b.width, (e.clientY - b.top) / b.height]; };
@@ -868,7 +903,7 @@ function openSketch(onDone) {
     return b;
   };
   const save = () => { undo.push(JSON.stringify(items)); if (undo.length > 80) undo.shift(); };
-  const symbolSize = { door: 0.06, window: 0.07, person: 0.09 };
+  const symbolSize = { door: 0.06, window: 0.07, person: 0.09, north: 0.08 };
   const hit = (p) => {                               // 누른 곳에서 가장 가까운 그림
     const px = p[0] * W, py = p[1] * H, tol = Math.max(18, W / 40);
     let best = -1, bd = tol;
@@ -907,6 +942,7 @@ function openSketch(onDone) {
     }
     sel = -1; showSel();
     if (tool === "line") { const a = magnet(p); cur = { t: "line", a, b: a.slice() }; }
+    else if (tool === "rect") { const a = magnet(p); cur = { t: "rectp", a, b: a.slice() }; }
     else if (tool === "free") cur = { t: "free", pts: [p] };
     else { const q = snap(p); cur = { t: tool, x: q[0], y: q[1], r: 0, s: symbolSize[tool] }; }
     paint(cur);
@@ -916,6 +952,7 @@ function openSketch(onDone) {
     if (drag && sel >= 0) { shift(items[sel], p[0] - drag.last[0], p[1] - drag.last[1]); drag.last = p; drag.moved = true; paint(); return; }
     if (!cur) return;
     if (cur.t === "line") cur.b = straight(cur.a, p);
+    else if (cur.t === "rectp") cur.b = snap(p);
     else if (cur.t === "free") cur.pts.push(p);
     else { const q = snap(p); cur.x = q[0]; cur.y = q[1]; }
     paint(cur);
@@ -935,8 +972,16 @@ function openSketch(onDone) {
       cur.b = magnet(straight(cur.a, cur.b));
       if (cur.a[0] === cur.b[0] && cur.a[1] === cur.b[1]) { cur = null; paint(); return; }
     }
+    if (cur.t === "rectp") {                      // 네모 = 벽 네 개(문·창문도 붙일 수 있게 직선으로 저장)
+      const [x0, y0] = cur.a, [x1, y1] = magnet(cur.b); cur = null;
+      if (Math.abs(x1 - x0) < 1e-6 || Math.abs(y1 - y0) < 1e-6) { paint(); return; }
+      save(); [[[x0, y0], [x1, y0]], [[x1, y0], [x1, y1]], [[x1, y1], [x0, y1]], [[x0, y1], [x0, y0]]].forEach(([a, b]) => items.push({ t: "line", a, b }));
+      showSel(); paint(); saveSoon(); return;
+    }
     if (cur.t === "free" && cur.pts.length < 2) cur.pts.push([cur.pts[0][0] + 0.002, cur.pts[0][1]]);
-    save(); items.push(cur); cur = null;
+    save();
+    if (cur.t === "north") for (let i = items.length - 1; i >= 0; i--) if (items[i].t === "north") items.splice(i, 1);   // 방위표는 하나만
+    items.push(cur); cur = null;
     if (!["line", "free"].includes(items[items.length - 1].t)) sel = items.length - 1;   // 방금 찍은 기호는 바로 돌리거나 크기 조절
     showSel(); paint(); saveSoon();
   };
@@ -949,7 +994,7 @@ function openSketch(onDone) {
       showSel(); paint(); return;
     }
     const o = items[sel];
-    if (b.dataset.act === "rot" && o) { save(); o.r = (o.r + 45) % 360; }
+    if (b.dataset.act === "rot" && o) { save(); o.r = (o.r + (o.t === "north" ? 15 : 45)) % 360; }
     if (b.dataset.act === "big" && o) { save(); o.s = Math.min(0.3, o.s * 1.25); }
     if (b.dataset.act === "small" && o) { save(); o.s = Math.max(0.02, o.s / 1.25); }
     if (b.dataset.act === "del" && o) { save(); items.splice(sel, 1); sel = -1; }
@@ -1519,6 +1564,10 @@ $("yes").addEventListener("click", () => {
   Object.assign(state, { caseName: "", date: today(), include: { check: true, photos: true, items: true, hand: true, docs: true }, check: {}, pads: { body: [], sketch: [] },
     photos: [], docs: [], kakao: { summary: "", notes: "", morgue: "" }, items: [], confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" }, sigs: { det: [], sci: [], hf: [], ht: [] }, hand: handDefault(), autopsy: autDefault(), evid: evDefault() });
   applyDefaults(); applyUser({}, state.user); $("sheet").classList.add("hide"); saveNow(); go("home");
+  clearFp();
+});
+
+function clearFp() {
   try {   // 지문 채취(fingerprint.html)의 사진도 함께 지움 (촬영 설정은 남김)
     const r = indexedDB.open("kcsi-fingerprint", 1);
     r.onupgradeneeded = () => r.result.createObjectStore("kv");
@@ -1526,6 +1575,31 @@ $("yes").addEventListener("click", () => {
       q.onsuccess = () => { const o = q.result; if (o) st.put({ mode: "id", kind: null, one: null, autoShot: o.autoShot, lastMm: o.lastMm, flash: o.flash, outPpi: o.outPpi, camId: o.camId, camSig: o.camSig, tipDown: o.tipDown, zipEnh: o.zipEnh, info: {}, f: {} }, "case3"); };
       t.oncomplete = () => db.close(); } catch (e) {} };
   } catch (e) {}
+}
+// ---------- 분야별 새로 작성 ----------
+const SEC_OF = { check: "byun", items: "byun", kakao: "byun", autopsy: "byun", evid: "evid", dvi: "dvi", photos: "photo", docs: "photo" };
+const secOf = (r) => SEC_OF[r] || "";
+const SEC_INFO = {
+  byun: ["변사 사건", "점검 목록표, 유류물 목록, 인수인계서, 간이 보고서, 검시결과 보고서, 지문 채취"],
+  evid: ["증거물 관리", "증거물 목록"],
+  dvi: ["K-DVI 수습 관리", "수습 목록, 구역, 약도"],
+  photo: ["현장 사진", "현장 사진, 문서 사진"],
+};
+$("newSec").addEventListener("click", async () => {
+  const k = secOf(route); if (!k) return;
+  const [t, what] = SEC_INFO[k];
+  const ok = await evAsk(`${t} 새로 작성`, `${what} 모두 지워집니다. 되돌릴 수 없습니다.`, [["ok", "지우고 새로 작성", true]]);
+  if (ok !== "ok") return;
+  if (k === "byun") {
+    Object.assign(state, { check: {}, pads: { body: [], sketch: [] }, kakao: { summary: "", notes: "", morgue: "" }, items: [],
+      confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "" }, sigs: { det: [], sci: [], hf: [], ht: [] }, hand: handDefault(), autopsy: autDefault() });
+    Object.assign(state.include, { check: true, items: true, hand: true });
+    applyDefaults(); applyUser({}, state.user); clearFp();
+  }
+  if (k === "evid") state.evid = evDefault();
+  if (k === "dvi") state.dvi = fixDvi(null);
+  if (k === "photo") { state.photos.concat(state.docs).forEach((p) => p.url && URL.revokeObjectURL(p.url)); state.photos = []; state.docs = []; }
+  saveNow(); render(); window.scrollTo(0, 0); evToast("새로 작성합니다");
 });
 
 // ================= PDF 그리기 =================
@@ -2820,7 +2894,7 @@ $("openKcsi").addEventListener("change", async (ev) => {
     Object.assign(state, { caseName: st.caseName || "", date: st.date || today(), include: { check: true, photos: true, items: true, hand: true, docs: true, ...(st.include || {}) },
       check: st.check || {}, pads: { body: (st.pads || {}).body || [], sketch: fixSketch((st.pads || {}).sketch) }, perPage: st.perPage === 4 ? 4 : 2, items: st.items || [],
       confirm: { det_rank: "", det_name: "", sci_rank: "", sci_name: "", ...(st.confirm || {}) }, sigs: { det: [], sci: [], hf: [], ht: [], ...(st.sigs || {}) },
-      hand: fixHand(st.hand), evid: fixEvid(st.evid), kakao: { summary: "", notes: "", morgue: "", ...(st.kakao || {}) }, autopsy: fixAut(st.autopsy) });
+      hand: fixHand(st.hand), evid: fixEvid(st.evid), dvi: fixDvi(st.dvi), kakao: { summary: "", notes: "", morgue: "", ...(st.kakao || {}) }, autopsy: fixAut(st.autopsy) });
     state.photos = m.photos.filter((p) => z[p.file]).map((p, i) => ({ id: String(Date.now()) + i, blob: new Blob([z[p.file]], { type: "image/jpeg" }), rot: p.rot || 0, desc: p.desc || "" }));
     state.docs = (m.docs || []).filter((d) => z[d.file]).map((d, i) => ({ id: "d" + Date.now() + i, blob: new Blob([z[d.file]], { type: "image/jpeg" }), rot: 0 }));
     saveNow(); go("home");
@@ -2929,7 +3003,12 @@ function evNorm(s) {
   if (/^\d+$/.test(s)) s = "KCSI-" + s.padStart(6, "0");
   return s;
 }
-function evSeq() { const it = [...state.evid.items].sort((a, b) => evOrd(a.cat) - evOrd(b.cat) || a.t - b.t); const m = {}; it.forEach((x, i) => (m[x.id] = i + 1)); return m; }
+// 번호표가 A-1, B-2 처럼 쓰이면 구역(A, B)으로 묶음 · 1, 2, 3은 그대로
+const evZone = (x) => { const m = String(x.mark || "").trim().match(/^([A-Za-z가-힣]{1,3})\s*[-–]\s*\d+$/); return m ? m[1].toUpperCase() : ""; };
+const evMarkNo = (x) => { const m = String(x.mark || "").match(/(\d+)\s*$/); return m ? +m[1] : 1e9; };
+const evZoned = () => state.evid.items.some((x) => evZone(x));
+const evZoneCmp = (a, b) => { const za = evZone(a), zb = evZone(b); return za === zb ? 0 : !za ? 1 : !zb ? -1 : za.localeCompare(zb, "ko", { numeric: true }); };
+function evSeq() { const z = evZoned(); const it = [...state.evid.items].sort((a, b) => (z ? evZoneCmp(a, b) || evMarkNo(a) - evMarkNo(b) : 0) || evOrd(a.cat) - evOrd(b.cat) || evMarkNo(a) - evMarkNo(b) || a.t - b.t); const m = {}; it.forEach((x, i) => (m[x.id] = i + 1)); return m; }
 const evTitle = (x) => `${x.cat}${x.sub ? " " + x.sub : ""} ${x.qty || 1}점`;
 function evToast(m) {
   let t = $("evToast");
@@ -2948,13 +3027,15 @@ function renderEvid(v) {
   const nItm = e.items.filter((x) => x.toItems).length, nHand = e.items.filter((x) => x.toHand).length;
   const stN = EV_ST.map(([k, t, c]) => [t, c, e.items.filter((x) => x[k]).length]);
   let g = null, rows = "";
+  const zoned = evZoned();
   if (!inN || inN === e.items.length) evOnlyMiss = false;
   for (const x of list) {
     if (evOnlyMiss && x.inAt) continue;
-    if (e.sort === "cat" && g !== evGroup(x.cat)) { g = evGroup(x.cat); rows += `<div class="evgrp"><span>${g + 1}. ${EV_GROUPS[g][0]}</span><span>${e.items.filter((y) => evGroup(y.cat) === g).length}건</span></div>`; }
+    if (e.sort === "cat" && zoned && g !== evZone(x)) { g = evZone(x); rows += `<div class="evgrp"><span>${g ? esc(g) + " 구역" : "구역 없음"}</span><span>${e.items.filter((y) => evZone(y) === g).length}건</span></div>`; }
+    else if (e.sort === "cat" && !zoned && g !== evGroup(x.cat)) { g = evGroup(x.cat); rows += `<div class="evgrp"><span>${g + 1}. ${EV_GROUPS[g][0]}</span><span>${e.items.filter((y) => evGroup(y.cat) === g).length}건</span></div>`; }
     rows += `<div class="evit${x.inAt ? " in" : ""}" data-ev="${x.id}" role="button" tabindex="0"><span class="evno">${seq[x.id]}</span>
-      <span class="evb"><b>${esc(evTitle(x))}</b>${x.inAt ? '<button type="button" class="evin" data-evin>확인</button>' : ""}${x.label ? `<i class="evtag lb">${esc(x.label)}</i>` : '<i class="evtag no">QR 없음</i>'}
-      <small>${x.mark ? "#" + esc(x.mark) + " · " : ""}${esc(x.loc || "")}${x.memo ? " · " + esc(x.memo) : ""}</small><small>${x.issuer && x.issuer !== x.by ? "발급 " + esc(x.issuer) + " · " : ""}${x.by ? "수거 " + esc(x.by) : ""}${x.inAt ? `${x.by ? " · " : ""}확인 ${esc(x.inBy || "")} ${evHM(x.inAt)}` : ""}</small>
+      <span class="evb"><b>${esc(evTitle(x))}</b>${x.inAt ? '<button type="button" class="evin" data-evin>확인</button>' : ""}${x.label ? `<i class="evtag lb">${esc(x.label)}</i>` : ""}
+      <small>${x.mark ? "#" + esc(x.mark) + " · " : ""}${esc(x.loc || "")}${x.memo ? " · " + esc(x.memo) : ""}</small><small>${x.issuer && !(x.by && x.issuer.endsWith(x.by)) ? "발급 " + esc(x.issuer) + " · " : ""}${x.by ? "채취 " + esc(x.by) + " " + evHM(x.t) : ""}${x.inAt ? `${x.by ? " · " : ""}확인 ${esc(x.inBy || "")} ${evHM(x.inAt)}` : ""}</small>
       <span class="evst">${EV_ST.map(([k, t, c]) => `<button type="button" class="${c}" data-dst="${k}" aria-pressed="${!!x[k]}">${t}</button>`).join("")}</span></span>
       ${x.photo ? `<img src="${x.photo}" alt="">` : ""}</div>`;
   }
@@ -2968,11 +3049,12 @@ function renderEvid(v) {
     </div>
     <section class="panel">
       <div class="evsum"><span class="tot">${e.items.length}건 · ${tot}점</span>${e.items.length ? `<span class="${inN === e.items.length ? "ok" : "miss"}">확인 ${inN}/${e.items.length}</span>` : ""}</div>
-      <div class="seg"><button type="button" data-evsort="cat" aria-pressed="${e.sort === "cat"}">품목별</button><button type="button" data-evsort="time" aria-pressed="${e.sort !== "cat"}">수거순</button>${inN && inN < e.items.length ? `<button type="button" id="evMiss" aria-pressed="${evOnlyMiss}">미확인 ${e.items.length - inN}</button>` : ""}</div>
+      <div class="seg"><button type="button" data-evsort="cat" aria-pressed="${e.sort === "cat"}">${evZoned() ? "구역별" : "품목별"}</button><button type="button" data-evsort="time" aria-pressed="${e.sort !== "cat"}">채취순</button>${inN && inN < e.items.length ? `<button type="button" id="evMiss" aria-pressed="${evOnlyMiss}">미확인 ${e.items.length - inN}</button>` : ""}</div>
       ${rows || '<div class="empty">—</div>'}
     </section>
     <section class="panel"><h2>정리</h2>
       <button id="evToDocs" class="btn" type="button" ${nItm + nHand ? "" : "disabled"}>문서 생성 (유류물 ${nItm}, 인수인계 ${nHand})</button>
+      <button id="evHand" class="btn" type="button">의뢰증거물 인수인계서${state.hand.items.filter((r) => Object.values(r).some((v) => String(v).trim())).length ? ` (${state.hand.items.filter((r) => Object.values(r).some((v) => String(v).trim())).length})` : ""}</button>
       <button id="evXlsx" class="btn" type="button" ${e.items.length ? "" : "disabled"}>채증물 목록 생성 (엑셀)</button>
         <button id="evHwpx" class="btn" type="button" ${e.items.length ? "" : "disabled"}>채증물 목록 생성 (한글)</button>
     </section>
@@ -2995,6 +3077,7 @@ function renderEvid(v) {
   $("evOpen").addEventListener("click", () => { let f = $("evOpenF"); if (!f) { f = document.createElement("input"); f.type = "file"; f.id = "evOpenF"; f.accept = ".json,application/json"; f.multiple = true; f.hidden = true; document.body.appendChild(f);
     f.addEventListener("change", async (ev) => { const fs = [...ev.target.files]; ev.target.value = ""; if (fs.length) evImportMany(await Promise.all(fs.map((x) => x.text()))); }); } f.click(); });
   $("evToDocs").addEventListener("click", evToDocs);
+  $("evHand").addEventListener("click", () => go("hand"));
   $("evXlsx").addEventListener("click", evXlsx);
   $("evHwpx").addEventListener("click", evHwpx);
   $("evText").addEventListener("click", evCopyText);
@@ -3021,22 +3104,29 @@ async function evScanAdd(again) {
 }
 function evPickCat(label) {
   const el = evLayer("evCat", `<div class="pickhead"><b>${label ? esc(label) : "품목"}</b><button class="icon" data-evx type="button" aria-label="닫기">✕</button></div>
-    ${EV_GROUPS.map(([g, cs], gi) => `<div class="evcg">${gi + 1}. ${g}</div><div class="evcats">${cs.map(([k]) => `<button type="button" class="chip" data-evcat="${esc(k)}">${esc(k.replace(/^기타\(.*\)$/, "기타"))}</button>`).join("")}</div>`).join("")}`);
+    ${EV_GROUPS.map(([g, cs], gi) => `<div class="evcg">${gi + 1}. ${g}</div><div class="evcats">${cs.map(([k]) => `<button type="button" class="chip" data-evcat="${esc(k)}">${esc(k.replace(/^기타\(.*\)$/, "기타"))}</button>`).join("")}</div>`).join("")}
+    <div class="evcats"><button type="button" class="chip" data-evcat="">직접 쓰기</button></div>`);
   el.querySelectorAll("[data-evcat]").forEach((b) => b.addEventListener("click", () => { evClose("evCat"); evOpenItem(null, b.dataset.evcat, label); }));
 }
 let evPhoto = null;
-function evNextMark() { const ms = state.evid.items.map((x) => parseInt(x.mark)).filter((n) => !isNaN(n)); return ms.length ? Math.max(...ms) + 1 : 1; }
+function evNextMark() {
+  const it = state.evid.items, last = [...it].sort((a, b) => a.t - b.t).pop(), z = last ? evZone(last) : "";
+  if (z) { const sep = (String(last.mark).match(/\s*[-–]\s*/) || ["-"])[0]; return `${String(last.mark).trim().match(/^[A-Za-z가-힣]{1,3}/)[0]}${sep}${Math.max(...it.filter((x) => evZone(x) === z).map(evMarkNo)) + 1}`; }
+  const ms = it.map((x) => parseInt(x.mark)).filter((n) => !isNaN(n)); return ms.length ? Math.max(...ms) + 1 : 1;
+}
 function evOpenItem(id, cat, label) {
   const e = state.evid, x = id ? e.items.find((i) => i.id === id) : { cat, qty: 1, mark: String(evNextMark()), loc: e.lastLoc || "", label: label || "", nfs: false, memo: "", sub: "" };
   evPhoto = x.photo || null;
   const subs = (c) => (EV_CATS.find(([k]) => k === c) || [0, []])[1];
   const el = evLayer("evItem", `
     <div class="pickhead"><b>${id ? "채증물 " + evSeq()[id] : "채증물 추가"}</b><button class="icon" data-evx type="button" aria-label="닫기">✕</button></div>
-    <div class="row"><label class="f">품목<select id="eiCat">${EV_CATS.map(([k]) => `<option ${k === x.cat ? "selected" : ""}>${esc(k)}</option>`).join("")}</select></label>
+    <div class="row"><label class="f">품목<input id="eiCat" type="text" list="eiCatL" value="${esc(x.cat || "")}" autocomplete="off"><datalist id="eiCatL">${EV_CATS.map(([k]) => `<option value="${esc(k)}">`).join("")}</datalist></label>
       <label class="f">수량<input id="eiQty" type="number" min="1" inputmode="numeric" value="${esc(x.qty || 1)}"></label></div>
     <div class="q"><span>세부</span><div class="chips" id="eiSubs"></div><input id="eiSub" type="text" value="${esc(x.sub || "")}" autocomplete="off"></div>
-    <div class="row"><label class="f">번호표<input id="eiMark" type="text" inputmode="numeric" value="${esc(x.mark || "")}"></label>
+    <div class="row"><label class="f">번호표<input id="eiMark" type="text" value="${esc(x.mark || "")}" autocapitalize="characters" autocomplete="off"></label>
       <label class="f">수거 위치<input id="eiLoc" type="text" value="${esc(x.loc || "")}" autocomplete="off"></label></div>
+    <label class="f">채취자<input id="eiBy" type="text" value="${esc(id ? x.by || "" : rankName(state.user))}" autocomplete="off"></label>
+    <label class="f">채취 일시<input id="eiT" type="datetime-local" value="${evLocal(id ? x.t : Date.now())}"></label>
     <div class="q"><span>QR 번호</span><div style="display:flex;gap:6px"><input id="eiLabel" type="text" value="${esc(x.label || "")}" autocapitalize="characters" autocomplete="off"><button id="eiScan" class="btn small" type="button">QR</button></div></div>
     <div class="q"><span>사진</span><div style="display:flex;gap:6px;align-items:center"><img id="eiPh" class="evph${evPhoto ? "" : " hide"}" alt="" src="${evPhoto || ""}">
       <button id="eiPhB" class="btn small" type="button">촬영</button><button id="eiPhX" class="btn small${evPhoto ? "" : " hide"}" type="button">삭제</button>
@@ -3050,6 +3140,7 @@ function evOpenItem(id, cat, label) {
     $("eiSubs").querySelectorAll("[data-sub]").forEach((b) => b.addEventListener("click", () => { $("eiSub").value = $("eiSub").value === b.dataset.sub ? "" : b.dataset.sub; drawSubs(); })); };
   drawSubs();
   $("eiCat").addEventListener("change", () => { $("eiSub").value = ""; drawSubs(); });
+  if (!x.cat) setTimeout(() => $("eiCat").focus(), 50);
   $("eiSub").addEventListener("input", drawSubs);
   $("eiScan").addEventListener("click", async () => { const r = await evCamera("one"); if (r) $("eiLabel").value = evNorm(r); });
   const setPh = (p) => { evPhoto = p; $("eiPh").src = p || ""; $("eiPh").classList.toggle("hide", !p); $("eiPhX").classList.toggle("hide", !p); };
@@ -3060,12 +3151,14 @@ function evOpenItem(id, cat, label) {
       cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height); setPh(cv.toDataURL("image/jpeg", 0.62)); URL.revokeObjectURL(img.src); };
     img.src = URL.createObjectURL(f); });
   const save = () => {
-    const val = { cat: $("eiCat").value, sub: $("eiSub").value.trim(), qty: Math.max(1, parseInt($("eiQty").value) || 1), mark: $("eiMark").value.trim(), loc: $("eiLoc").value.trim(),
+    const cat = $("eiCat").value.trim(); if (!cat) { $("eiCat").focus(); return false; }
+    const tv = Date.parse($("eiT").value);
+    const val = { cat, by: $("eiBy").value.trim(), t: isNaN(tv) ? (x.t || Date.now()) : tv, sub: $("eiSub").value.trim(), qty: Math.max(1, parseInt($("eiQty").value) || 1), mark: $("eiMark").value.trim(), loc: $("eiLoc").value.trim(),
       label: evNorm($("eiLabel").value), nfs: !!x.nfs, memo: $("eiMemo").value.trim(), photo: evPhoto };
     val.issuer = evLblIss[val.label] || (x.label === val.label ? x.issuer || "" : "");
     if (val.label) { const d = e.items.find((i) => i.label === val.label && i.id !== id); if (d && !confirm(`${val.label}은(는) 이미 ${evTitle(d)}에 등록돼 있습니다. 그래도 저장할까요?`)) return false; }
     e.lastLoc = val.loc;
-    if (id) Object.assign(x, val, { u: Date.now() }); else { e.items.push({ id: evUid(), t: Date.now(), inAt: null, toItems: false, toHand: false, toNfs: false, toDisp: false, by: rankName(state.user), ...val }); if (!e.by) { e.by = rankName(state.user); e.team = (state.user.org || "").trim(); } }
+    if (id) Object.assign(x, val, { u: Date.now() }); else { e.items.push({ id: evUid(), inAt: null, toItems: false, toHand: false, toNfs: false, toDisp: false, ...val }); if (!e.by) { e.by = rankName(state.user); e.team = (state.user.org || "").trim(); } }
     saveSoon(); return true;
   };
   $("eiSave").addEventListener("click", () => { if (save()) { evClose("evItem"); evScanMode = false; render(); } });
@@ -3247,6 +3340,7 @@ async function evShowQR() {
 
 // ---------- 다른 문서로 옮기기 ----------
 function evRowsSorted() { const s = evSeq(); return [...state.evid.items].sort((a, b) => s[a.id] - s[b.id]); }
+function evLocal(t) { const d = new Date(t); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); }
 function evTime(t) { const d = new Date(t); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return dotDateTime(d.toISOString().slice(0, 16)); }
 function evDocName(x) { return `${x.cat}${x.sub ? "(" + x.sub + ")" : ""}`; }
 function evToDocs() {   // 보낼 곳이 정해진 채증물을 유류물 목록 · 인수인계서에 넣기(다시 누르면 갱신, 보낼 곳을 바꾸면 옮겨짐)
@@ -3264,7 +3358,7 @@ function evToDocs() {   // 보낼 곳이 정해진 채증물을 유류물 목록
   const h = state.hand;
   h.items = h.items.filter((r) => (r.evid ? wh.has(r.evid) : Object.values(r).some((v) => String(v).trim())));
   for (const x of list.filter((y) => y.toHand)) {
-    const row = { no: x.label || String(seq[x.id]), name: `${evDocName(x)}${x.loc ? " - " + x.loc : ""}`, qty: String(x.qty || 1), evid: x.id };
+    const row = { no: x.label || x.mark || String(seq[x.id]), name: `${evDocName(x)}${x.loc ? " - " + x.loc : ""}`, qty: String(x.qty || 1), evid: x.id };
     const i = h.items.findIndex((r) => r.evid === x.id);
     if (i >= 0) h.items[i] = { ...h.items[i], ...row }; else h.items.push({ ...handRow(), ...row });
   }
@@ -3275,11 +3369,12 @@ function evToDocs() {   // 보낼 곳이 정해진 채증물을 유류물 목록
   showSheet("문서에 넣었습니다", `유류물 목록 ${wi.size}건 · 인수인계서 ${wh.size}건`, "alert");
 }
 // ---------- SCAS 입력용 목록: 엑셀(xlsx) · 한글(hwpx) ----------
-const EV_HEAD = ["순번", "분류", "품목", "세부", "수량", "수거 위치", "번호표", "QR 번호", "처리", "수거자", "보유 확인", "메모"];
-function evRowsFor() {
+const evHead = () => [...(evZoned() ? ["구역"] : []), "순번", "분류", "품목", "세부", "수량", "수거 위치", "번호표", "QR 번호", "채취 일시", "채취자", "처리", "보유 확인", "메모"];
+const evCells = (r) => [...(evZoned() ? [r.zone ? r.zone + " 구역" : "구역 없음"] : []), r.no, r.grp, r.cat, r.sub, r.qty, r.loc, r.mark, r.label, r.t, r.by, r.st, r.chk, r.memo];
+function evRowsFor() {   // 목록 행 (구역이 있으면 구역 → 분류 순)
   const seq = evSeq();
-  return evRowsSorted().map((x) => [seq[x.id], EV_GROUPS[evGroup(x.cat)][0], x.cat, x.sub || "", x.qty || 1, x.loc || "", x.mark || "", x.label || "",
-    EV_ST.filter(([k]) => x[k]).map(([, t]) => t).join(", "), x.by || "", x.inAt ? `✓ ${evHM(x.inAt)} ${x.inBy || ""}`.trim()  : "미확인", x.memo || ""]);
+  return evRowsSorted().map((x) => ({ no: seq[x.id], zone: evZone(x), grp: EV_GROUPS[evGroup(x.cat)][0], cat: x.cat, sub: x.sub || "", qty: x.qty || 1, loc: x.loc || "", mark: x.mark || "", label: x.label || "",
+    t: evTime(x.t), by: x.by || "", st: EV_ST.filter(([k]) => x[k]).map(([, t]) => t).join(", "), chk: x.inAt ? `✓ ${evHM(x.inAt)} ${x.inBy || ""}`.trim() : "미확인", memo: x.memo || "", photo: x.photo || "" }));
 }
 function evCheckLine() {   // 사무실 확인 요약: "6건 중 5건 확인 · 미확인 #3 담배꽁초"
   const it = evRowsSorted(), k = it.filter((x) => x.inAt).length, miss = it.filter((x) => !x.inAt);
@@ -3290,24 +3385,53 @@ async function evSaveBlob(ext, blob) {
   const t = await pickTarget(ext, evStem()); if (!t) return;
   const n = await writeTarget(t, blob); if (n) showSheet("저장했습니다", n, "alert");
 }
+// ---------- 목록 파일에 사진 썸네일 넣기 (엑셀 · 한글 공용) ----------
+async function thumbOf(src) {
+  if (!src || !/^data:image\//.test(src)) return null;
+  try { const im = new Image(); im.src = src; await im.decode(); let u = src;
+    if (!/^data:image\/jpe?g/.test(src)) { const c = document.createElement("canvas"); c.width = im.naturalWidth; c.height = im.naturalHeight; const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0); u = c.toDataURL("image/jpeg", 0.8); }
+    return { bytes: Uint8Array.from(atob(u.split(",")[1]), (c) => c.charCodeAt(0)), w: im.naturalWidth, h: im.naturalHeight }; } catch (err) { return null; }
+}
+function xlsxPicParts(pics) {   // pics: [{ row, col (0부터), t }]
+  if (!pics.length) return [];
+  const PX = 9525, box = 88, enc = new TextEncoder();
+  const anchors = pics.map((p, i) => { const k = Math.min(box / p.t.w, box / p.t.h), cx = Math.round(p.t.w * k * PX), cy = Math.round(p.t.h * k * PX);
+    return `<xdr:twoCellAnchor editAs="oneCell"><xdr:from><xdr:col>${p.col}</xdr:col><xdr:colOff>28575</xdr:colOff><xdr:row>${p.row}</xdr:row><xdr:rowOff>28575</xdr:rowOff></xdr:from><xdr:to><xdr:col>${p.col}</xdr:col><xdr:colOff>${28575 + cx}</xdr:colOff><xdr:row>${p.row}</xdr:row><xdr:rowOff>${28575 + cy}</xdr:rowOff></xdr:to><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${i + 2}" name="사진 ${i + 1}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rIdP${i + 1}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:twoCellAnchor>`; }).join("");
+  const rel = (b) => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${b}</Relationships>`;
+  return [
+    { name: "xl/worksheets/_rels/sheet1.xml.rels", data: enc.encode(rel('<Relationship Id="rIdD1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/>')) },
+    { name: "xl/drawings/drawing1.xml", data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">${anchors}</xdr:wsDr>`) },
+    { name: "xl/drawings/_rels/drawing1.xml.rels", data: enc.encode(rel(pics.map((p, i) => `<Relationship Id="rIdP${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image${i + 1}.jpeg"/>`).join(""))) },
+    ...pics.map((p, i) => ({ name: `xl/media/image${i + 1}.jpeg`, data: p.t.bytes }))];
+}
+function hwpxThumb(W, t, maxW, maxH) { const k = Math.min(maxW / t.w, maxH / t.h); return W.pic(t.bytes, t.w, t.h, Math.round(t.w * k), Math.round(t.h * k)); }
+function hwpxZip(W, K, section) {   // 그림이 있으면 BinData · 목록(hpf)에 함께 넣음
+  const enc = new TextEncoder(), b64 = (str) => Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
+  const hpf = W.images.length ? K.hpf.replace('<opf:item id="section0"', W.images.map((m) => `<opf:item id="${m.name}" href="${m.path}" media-type="image/jpg" isEmbeded="1"/>`).join("") + '<opf:item id="section0"') : K.hpf;
+  const data = { "Contents/header.xml": enc.encode(K.header), "Contents/section0.xml": enc.encode(section), "Contents/content.hpf": enc.encode(hpf), "Preview/PrvText.txt": enc.encode(W.text.join("\r\n")) };
+  const files = [];
+  for (const n of K.order) { if (n === "Contents/section0.xml") W.images.forEach((m) => files.push({ name: m.path, data: m.data })); files.push({ name: n, data: data[n] || b64(K.files[n]) }); }
+  return makeZip(files);
+}
 async function evXlsx() {
   const x = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const col = (i) => String.fromCharCode(65 + i);
   const e = state.evid, info = [["사건명", state.caseName || ""], ["작성일", dotDate(state.date)], ["작성자", rankName(state.user)], ["확인", evCheckLine()]];
   let r = 0, rows = "";
-  const row = (cells, st) => { r++; rows += `<row r="${r}">${cells.map((v, i) => typeof v === "number" ? `<c r="${col(i)}${r}"${st ? ` s="${st}"` : ""}><v>${v}</v></c>`
+  const row = (cells, st, ht) => { r++; rows += `<row r="${r}" ht="${ht || (st === 2 ? 24 : 17)}" customHeight="1">${cells.map((v, i) => typeof v === "number" ? `<c r="${col(i)}${r}"${st ? ` s="${st}"` : ""}><v>${v}</v></c>`
     : `<c r="${col(i)}${r}" t="inlineStr"${st ? ` s="${st}"` : ""}><is><t xml:space="preserve">${x(v)}</t></is></c>`).join("")}</row>`; };
-  row(["채증물 목록"], 2); info.forEach((c) => row(c)); r++; row(EV_HEAD, 1); evRowsFor().forEach((c) => row(c, 3));
-  const widths = [6, 16, 12, 10, 6, 22, 8, 24, 26, 12, 24, 18];
-  const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${rows}</sheetData><pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>`;
-  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="14"/><name val="맑은 고딕"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDDE3EE"/></patternFill></fill></fills><borders count="2"><border/><border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  row(["채증물 목록"], 2); info.forEach((c) => row(c)); r++; row([...evHead(), "사진"], 1); const pics = [], ncol = evHead().length;
+  for (const c of evRowsFor()) { const t = await thumbOf(c.photo); row([...evCells(c), ""], 3, t ? 72 : 0); if (t) pics.push({ row: r - 1, col: ncol, t }); }
+  const widths = [...(evZoned() ? [11] : []), 6, 16, 12, 10, 6, 22, 8, 24, 17, 14, 24, 24, 18, 14];
+  const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${rows}</sheetData><pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>${pics.length ? '<drawing r:id="rIdD1"/>' : ""}</worksheet>`;
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="14"/><name val="맑은 고딕"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDDE3EE"/></patternFill></fill></fills><borders count="2"><border/><border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
   const enc = new TextEncoder(), f = (name, s) => ({ name, data: enc.encode(s) });
   const blob = makeZip([
-    f("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`),
+    f("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>${pics.length ? '<Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>' : ""}<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`),
     f("_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`),
     f("xl/workbook.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="채증물 목록" sheetId="1" r:id="rId1"/></sheets></workbook>`),
     f("xl/_rels/workbook.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`),
-    f("xl/worksheets/sheet1.xml", sheet), f("xl/styles.xml", styles)]);
+    f("xl/worksheets/sheet1.xml", sheet), f("xl/styles.xml", styles), ...xlsxPicParts(pics)]);
   await evSaveBlob("xlsx", new Blob([blob], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
 }
 async function evHwpx() {
@@ -3317,27 +3441,683 @@ async function evHwpx() {
   [["사건명", state.caseName || ""], ["작성일", dotDate(state.date)], ["작성자", rankName(state.user)], ["보유 확인", evCheckLine()]]
     .forEach(([k, v]) => paras.push(p([[I.desc4, `${k}: ${v}`]], I.pl)));
   paras.push(p([], I.pl));
-  const head = ["순번", "분류", "품목", "수량", "수거 위치", "QR 번호", "처리", "확인"];
-  const mm = [10, 20, 24, 9, 0, 38, 20, 12], fixed = mm.reduce((a, b) => a + HMM(b), 0), widths = mm.map((v) => (v ? HMM(v) : K.bodyW - fixed));
-  const cell = (c, v, cp) => ({ col: c, content: p([[cp, String(v)]], c === 4 ? I.pl : I.pc) });
-  const rows = [[HMM(8), head.map((h, i) => cell(i, h, I.lab4))]];
-  evRowsFor().forEach((r) => { const v = [r[0], r[1].replace(" 증거물", ""), r[2] + (r[3] ? `(${r[3]})` : ""), r[4], r[5], r[7], r[8], r[10].startsWith("✓") ? "✓" : ""]; rows.push([HMM(8), v.map((t, i) => cell(i, t, I.desc4))]); });
+  const head = ["순번", "품목", "수량", "수거 위치", "채취 일시", "채취자", "QR 번호", "처리", "확인", "사진"];
+  const mm = [8, 20, 8, 0, 20, 16, 28, 16, 8, 22], fixed = mm.reduce((a, b) => a + HMM(b), 0), widths = mm.map((v) => (v ? HMM(v) : K.bodyW - fixed));
+  const cell = (c, v, cp) => ({ col: c, content: p([[cp, String(v)]], c === 3 ? I.pl : I.pc) });
+  const rows = [[HMM(8), head.map((h, i) => cell(i, h, I.lab4))]], zoned = evZoned();
+  let g = null;
+  for (const r of evRowsFor()) {
+    const k = zoned ? r.zone : r.grp;
+    if (k !== g) { g = k; rows.push([HMM(7), [{ col: 0, span: head.length, content: p([[I.lab4, zoned ? (k ? k + " 구역" : "구역 없음") : k]], I.pl) }]]); }
+    const v = [r.no, r.cat + (r.sub ? `(${r.sub})` : ""), r.qty, r.loc + (r.mark ? ` #${r.mark}` : ""), r.t.replace(/^\d{4}\.\s*/, ""), r.by, r.label, r.st, r.chk.startsWith("✓") ? "✓" : ""];
+    const t = await thumbOf(r.photo);
+    rows.push([t ? HMM(20) : HMM(8), [...v.map((x, i) => cell(i, x, I.desc4)), { col: 9, content: t ? p([[0, hwpxThumb(W, t, HMM(20), HMM(18)), true]], I.pc) : p([], I.pc) }]]);
+  }
   paras.push(p([[0, table(widths, rows), true]], I.pc));
   W.text.push("채증물 목록", state.caseName || "");
   let first = paras[0]; const i = first.indexOf("<hp:run ");
   first = first.slice(0, i) + `<hp:run charPrIDRef="0">${K.secpr}</hp:run>` + first.slice(i);
   const section = K.secHead + first + paras.slice(1).join("") + "</hs:sec>";
-  const enc = new TextEncoder(), b64 = (str) => Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
-  const data = { "Contents/header.xml": enc.encode(K.header), "Contents/section0.xml": enc.encode(section), "Contents/content.hpf": enc.encode(K.hpf), "Preview/PrvText.txt": enc.encode(W.text.join("\r\n")) };
-  const files = K.order.map((n) => ({ name: n, data: data[n] || b64(K.files[n]) }));
-  await evSaveBlob("hwpx", makeZip(files));
+  const blob = hwpxZip(W, K, section);
+  await evSaveBlob("hwpx", blob);
 }
 async function evCopyText() {
   const s = evSeq(), e = state.evid;
   const lines = [`${state.caseName} / ${dotDate(state.date)} / ${rankName(state.user)}`];
-  evRowsSorted().forEach((x) => lines.push(`${s[x.id]}. ${evTitle(x)}${x.loc ? " - " + x.loc : ""}${x.mark ? " (#" + x.mark + ")" : ""}${x.label ? " [" + x.label + "]" : ""}${EV_ST.filter(([k]) => x[k]).length ? " ※" + EV_ST.filter(([k]) => x[k]).map(([, t]) => t).join("·") : ""}${x.memo ? " / " + x.memo : ""}`));
+  let zg = null; const zoned = evZoned();
+  evRowsSorted().forEach((x) => (zoned && evZone(x) !== zg && lines.push(`[${(zg = evZone(x)) ? zg + " 구역" : "구역 없음"}]`), lines.push(`${s[x.id]}. ${evTitle(x)}${x.loc ? " - " + x.loc : ""}${x.mark ? " (#" + x.mark + ")" : ""}${x.label ? " [" + x.label + "]" : ""}${EV_ST.filter(([k]) => x[k]).length ? " ※" + EV_ST.filter(([k]) => x[k]).map(([, t]) => t).join("·") : ""}${x.memo ? " / " + x.memo : ""}`)));
   const t = lines.join("\n");
   try { await navigator.clipboard.writeText(t); evToast("복사됨"); } catch (err) { prompt("복사", t); }
+}
+
+// ================= K-DVI 수습 관리 =================
+// 코딩번호(K-DVI): 분류-종류-번호-구역[-병원번호]  예) PM-Ca-D001-A1 · PM-Bp-D003-B2 · AM-At-M001-C1
+//   한글: 사후-시신-D001-A1 · 생전-유류품-M001-C1 / 시신에 딸린 소지품: 시신 코드-P1
+const DV_POINTS = ["현장 수습", "임시영안소 출발", "안치실 출발"];
+const DV_PRE = { B: ["성인", "소아", "고령", "착의", "탈의", "훼손"], P: ["머리", "몸통", "왼팔", "오른팔", "왼다리", "오른다리", "손", "발", "뼈"],
+  F: ["근육", "뼈", "치아", "모발", "혈액"], O: [], E: [] };
+const DV_ECAT = { "현금 · 유가증권": ["현금", "수표", "상품권", "카드"], "귀금속": ["반지", "목걸이", "귀걸이", "팔찌", "시계"], "신분증": ["주민등록증", "운전면허증", "여권", "기타"],
+  "전자기기": ["휴대전화", "태블릿", "기타"], "의류 · 신발": ["상의", "하의", "외투", "신발"], "기타": ["지갑", "가방", "열쇠", "안경"] };
+const DV_TYPE = { B: ["Ca", "시신"], P: ["Bp", "시신편"], F: ["Fr", "조직"], O: ["Ot", "기타"], E: ["At", "유류품"] };
+const dvInfoDef = () => ({ dt: "", place: "", team: "", crew: [] });
+const dvDefault = () => ({ id: evUid(), scene: "A", last: "", zones: [], items: [], info: dvInfoDef(), zinfo: {} });
+function fixDvi(x) {
+  const d = dvDefault(), v = { ...d, ...(x || {}) }; v.items = Array.isArray(v.items) ? v.items : [];
+  v.info = { ...dvInfoDef(), ...(v.info || {}) }; v.info.crew = Array.isArray(v.info.crew) ? v.info.crew : []; v.zinfo = v.zinfo || {};
+  v.items.forEach((i) => { i.checks = Array.isArray(i.checks) ? i.checks : [];
+    if (!i.num && !i.parent) { const m = String(i.no || "").match(/^P[ME] \d+ (\d+)(?: ([A-Z0-9-]+))?/); if (m) { i.num = +m[1]; i.zone = i.zone || (m[2] || "").replace(/^([A-Z]+)-(\d+)/, "$1$2"); } if (i.kind === "E" && !i.parent) i.kind = "E"; }
+    if (i.parent && !i.pn) i.pn = +((String(i.no || "").match(/-P(\d+)$/) || [0, 1])[1]); });
+  v.items.forEach((i) => (i.no = dvCode(i, false, v)));
+  return v;
+}
+const dvS = () => (state.dvi = state.dvi && Array.isArray(state.dvi.items) ? state.dvi : fixDvi(state.dvi));
+const dvKind = { B: "시신", P: "시신편", F: "조직", O: "기타", E: "유류품" };
+const dvKindOf = (x) => (x.parent ? "소지품" : dvKind[x.kind]);
+const dvSeq = (x) => `${x.kind === "E" ? "M" : x.nat || "D"}${String(x.num || 0).padStart(3, "0")}`;
+const dvKey = (x) => `${x.kind === "E" ? "M" : "D"}${x.num || 0}`;
+function dvCode(x, ko, dd) {
+  const d = dd || dvS();
+  if (x.parent) { const b = d.items.find((i) => i.id === x.parent); return b ? `${dvCode(b, ko, d)}-${ko ? "소" : "P"}${x.pn || 1}` : x.no || ""; }
+  const [t, tk] = DV_TYPE[x.kind] || DV_TYPE.B, am = x.kind === "E";
+  return [ko ? (am ? "생전" : "사후") : am ? "AM" : "PM", ko ? tk : t, dvSeq(x), x.zone, x.hosp].filter(Boolean).join("-");
+}
+function dvNo(s) {   // QR 글자 → "D12" · "M3" (번호표 라벨 KDVI-D001, 코딩번호 PM-Ca-D001-A1 등)
+  const v = String(s || "").trim().toUpperCase();
+  const m = v.match(/^(?:KDVI[-:])?([DM])[KF]?(\d{1,4})$/) || v.match(/^(?:PM|AM)-[A-Z]{2}-([DM])[KF]?(\d{1,4})(?:-|$)/);
+  return m ? `${m[1]}${+m[2]}` : "";
+}
+const dvNextNum = (ser) => Math.max(0, ...dvS().items.filter((x) => !x.parent && (x.kind === "E" ? "M" : "D") === ser).map((x) => x.num || 0)) + 1;
+const dvNextPn = (pid) => Math.max(0, ...dvS().items.filter((x) => x.parent === pid).map((x) => x.pn || 0)) + 1;
+const dvSort = (a, b) => dvKey(a).localeCompare(dvKey(b), "ko", { numeric: true }) || (a.pn || 0) - (b.pn || 0);
+const dvLast = (x) => x.checks.length ? x.checks.reduce((a, c) => (c.at > a.at ? c : a)) : null;
+
+function renderDvi(v) {
+  const d = dvS(), bodies = d.items.filter((x) => x.kind !== "E").sort(dvSort), loose = d.items.filter((x) => x.kind === "E" && !x.parent).sort(dvSort);
+  const props = (pid) => d.items.filter((x) => x.parent === pid).sort(dvSort);
+  const cnt = (f) => d.items.filter(f).length, nB = cnt((x) => x.kind === "B"), nP = cnt((x) => x.kind === "P"), nF = cnt((x) => x.kind === "F"), nO = cnt((x) => x.kind === "O"), nS = cnt((x) => x.parent), nE = cnt((x) => x.kind === "E" && !x.parent);
+  const w = d.last, nOk = w ? d.items.filter((x) => x.checks.some((c) => c.w === w)).length : 0;
+  const badge = (x) => { const c = dvLast(x); return c ? `<button type="button" class="evin" data-dvin="${x.id}">${esc(c.w)}</button>` : ""; };
+  const card = (x) => `<div class="evit dvit" data-dv="${x.id}" role="button" tabindex="0"><span class="dvno ${x.kind}">${dvKindOf(x)}</span>
+    <span class="evb"><b>${esc(x.no)}</b>${badge(x)}<small>${esc([x.sex, x.cat, x.desc].filter(Boolean).join(" · "))}${x.loc ? (x.sex || x.desc ? " · " : "") + esc(x.loc) : ""}</small>
+    <small>${x.by ? "수습 " + esc(x.by) + " " + evHM(x.t) : ""}${x.label ? " · QR" : ""}</small>
+    ${x.kind !== "E" ? `<span class="dvprops">${props(x.id).map((y) => `<button type="button" class="dvp" data-dvp="${y.id}">P${y.pn || 1} ${esc([y.cat ? y.cat.split(" · ")[0] : "", y.desc].filter(Boolean).join(" · ") || "소지품")}${dvLast(y) ? " ✓" : ""}</button>`).join("")}<button type="button" class="dvp add" data-dvadd="${x.id}">+ 소지품</button></span>` : ""}</span>
+    ${x.photo ? `<img src="${x.photo}" alt="">` : ""}</div>`;
+  const inf = d.info;
+  v.innerHTML = `
+    <button id="dvInfoB" class="btn dvinfob" type="button">${inf.team || inf.place ? esc([inf.team ? inf.team + " 팀" : "", inf.place].filter(Boolean).join(" · ")) : "재난 정보"}${inf.dt ? `<small>${esc(dotDateTime(inf.dt))}</small>` : ""}</button>
+    <div class="dvzrow"><button id="dvZoneB" class="btn dvzone" type="button"><span>구역</span><b>${esc(d.scene || "A")}</b><span>▾</span></button>
+      <button id="dvMapB" class="btn dvmapb" type="button">${dvMapOf(d.scene) ? "약도" : "약도 그리기"}</button></div>
+    <div class="evacts">
+      <button id="dvScan" class="btn primary evbig" type="button">QR 찍기</button>
+      <button id="dvAddB" class="btn" type="button">시신</button>
+      <button id="dvAddP" class="btn" type="button">시신편</button>
+      <button id="dvAddF" class="btn" type="button">조직</button>
+      <button id="dvAddE" class="btn" type="button">유류품</button>
+      <button id="dvCheck" class="btn" type="button" ${d.items.length ? "" : "disabled"}>보유 확인</button>
+      <button id="dvSend" class="btn" type="button" ${d.items.length ? "" : "disabled"}>목록 보내기</button>
+      <button id="dvOpen" class="btn" type="button">목록 불러오기</button>
+    </div>
+    <section class="panel">
+      <div class="evsum"><span class="tot">${[["시신", nB], ["시신편", nP], ["조직", nF], ["기타", nO], ["소지품", nS], ["유류품", nE]].filter(([, n]) => n).map(([k, n]) => `${k} ${n}`).join(" · ") || "0건"}</span>${w && d.items.length ? `<span class="${nOk === d.items.length ? "ok" : "miss"}">${esc(w)} ${nOk}/${d.items.length}</span>` : ""}</div>
+      ${bodies.map(card).join("") || (loose.length ? "" : '<div class="empty">—</div>')}
+      ${loose.length ? `<div class="evgrp"><span>유류품</span><span>${loose.length}건</span></div>${loose.map(card).join("")}` : ""}
+    </section>
+    <section class="panel"><h2>정리</h2>
+      <button id="dvXlsx" class="btn" type="button" ${d.items.length ? "" : "disabled"}>수습 목록 생성 (엑셀)</button>
+      <button id="dvHwpx" class="btn" type="button" ${d.items.length ? "" : "disabled"}>수습 목록 생성 (한글)</button>
+      <button id="dvForm" class="btn" type="button" ${d.items.length ? "" : "disabled"}>점검 목록표 · 유류품 목록 출력</button>
+      <button id="dvText" class="btn" type="button" ${d.items.length ? "" : "disabled"}>수습 목록 복사 (붙여넣기용)</button>
+    </section>`;
+  $("dvZoneB").addEventListener("click", dvZonePick);
+  $("dvInfoB").addEventListener("click", dvInfoEdit);
+  $("dvForm").addEventListener("click", dvFormSheet);
+  $("dvMapB").addEventListener("click", () => dvMapEdit(d.scene || "A"));
+  $("dvScan").addEventListener("click", () => dvScan());
+  $("dvAddB").addEventListener("click", () => dvOpen(null, { kind: "B" }));
+  $("dvAddP").addEventListener("click", () => dvOpen(null, { kind: "P" }));
+  $("dvAddF").addEventListener("click", () => dvOpen(null, { kind: "F" }));
+  $("dvAddE").addEventListener("click", () => dvOpen(null, { kind: "E" }));
+  $("dvCheck").addEventListener("click", dvCheckIn);
+  $("dvSend").addEventListener("click", dvSend);
+  $("dvOpen").addEventListener("click", () => { let f = $("dvOpenF"); if (!f) { f = document.createElement("input"); f.type = "file"; f.id = "dvOpenF"; f.accept = ".json,application/json"; f.multiple = true; f.hidden = true; document.body.appendChild(f);
+    f.addEventListener("change", async (ev) => { const fs = [...ev.target.files]; ev.target.value = ""; if (fs.length) dvImport(await Promise.all(fs.map((x) => x.text()))); }); } f.click(); });
+  $("dvXlsx").addEventListener("click", dvXlsx);
+  $("dvHwpx").addEventListener("click", dvHwpx);
+  $("dvText").addEventListener("click", dvCopy);
+  v.querySelectorAll("[data-dv]").forEach((b) => b.addEventListener("click", (ev) => {
+    const t = ev.target.closest("[data-dvin],[data-dvp],[data-dvadd]");
+    if (!t) return dvOpen(b.dataset.dv);
+    if (t.dataset.dvp) return dvOpen(t.dataset.dvp);
+    if (t.dataset.dvadd) return dvOpen(null, { kind: "E", parent: t.dataset.dvadd });
+    const x = d.items.find((i) => i.id === t.dataset.dvin), c = dvLast(x);
+    if (c && confirm(`${c.w} 확인을 취소할까요?`)) { x.checks = x.checks.filter((k) => k !== c); x.u = Date.now(); saveSoon(); render(); }
+  }));
+}
+
+// 재난 정보(한 번만): 발생 일시 · 장소 · 팀번호 · 현장조사 팀
+function dvInfoEdit() {
+  const d = dvS(), f = d.info;
+  if (!f.crew.length) f.crew = [{ org: state.user.org || "", rank: state.user.rank || "", name: state.user.name || "" }];
+  const row = (c, i) => `<div class="dvcrew">${["org", "rank", "name"].map((k) => `<input class="dvin" data-c="${i}" data-k="${k}" type="text" value="${esc(c[k] || "")}" placeholder="${{ org: "소속", rank: "계급", name: "성명" }[k]}" autocomplete="off">`).join("")}<button class="icon" type="button" data-cx="${i}" aria-label="빼기">✕</button></div>`;
+  const draw = () => {
+    const el = evLayer("dvInfoBox", `<div class="dvroot"><div class="pickhead"><b>재난 정보</b><button class="icon" data-evx type="button" aria-label="닫기">✕</button></div>
+      <label class="f">재난 발생 일시<input id="diDt" type="datetime-local" value="${esc(f.dt || "")}"></label>
+      <label class="f">발생 장소<input id="diPl" class="dvin" type="text" value="${esc(f.place || "")}" autocomplete="off"></label>
+      <label class="f">팀번호<input id="diTm" class="dvin" type="text" value="${esc(f.team || "")}" autocomplete="off"></label>
+      <div class="dvlab">현장조사 팀</div>${f.crew.map(row).join("")}
+      ${f.crew.length < 5 ? '<button id="diAdd" class="btn dvbtn" type="button" style="width:100%">+ 팀원</button>' : ""}
+      <button id="diOk" class="btn primary dvbtn" type="button" style="width:100%;margin-top:14px">저장</button></div>`);
+    const take = () => { f.dt = $("diDt").value; f.place = $("diPl").value.trim(); f.team = $("diTm").value.trim();
+      el.querySelectorAll("[data-c]").forEach((i) => { f.crew[+i.dataset.c][i.dataset.k] = i.value.trim(); }); };
+    if ($("diAdd")) $("diAdd").addEventListener("click", () => { take(); f.crew.push({ org: f.crew[0] ? f.crew[0].org : "", rank: "", name: "" }); draw(); });
+    el.querySelectorAll("[data-cx]").forEach((b) => b.addEventListener("click", () => { take(); f.crew.splice(+b.dataset.cx, 1); draw(); }));
+    $("diOk").addEventListener("click", () => { take(); f.crew = f.crew.filter((c) => c.org || c.rank || c.name); saveSoon(); evClose("dvInfoBox"); render(); });
+  };
+  draw();
+}
+// 구역 고르기: 가지도 (A → A1 → A1-1 …), 누르면 선택 · + 로 아래 가지 추가 · 병원(현장 구조 즉시 이송)
+const dvZPar = (z) => (/-\d+$/.test(z) ? z.replace(/-\d+$/, "") : /^[A-Z]+\d+$/.test(z) ? z.replace(/\d+$/, "") : "");
+const dvZLv = (z) => { let n = 0; while ((z = dvZPar(z))) n++; return n; };
+function dvZoneList() {
+  const d = dvS(), used = d.items.filter((x) => !x.parent && x.zone).map((x) => x.zone);
+  const all = new Set(["A", "B", "C", "D", ...(d.zones || []), d.scene, ...used].filter(Boolean));
+  [...all].forEach((z) => { let p = z; while ((p = dvZPar(p))) all.add(p); });
+  return (d.zones = [...all].sort((a, b) => a.localeCompare(b, "ko", { numeric: true })));
+}
+function dvZonePick() {
+  const d = dvS(), zs = dvZoneList(), hos = d.hosps || [];
+  const kids = (z) => zs.filter((y) => dvZPar(y) === z);
+  const node = (z) => `<div class="dvz" style="--lv:${dvZLv(z)}"><button type="button" class="dvchip" data-zsel="${esc(z)}" aria-pressed="${z === d.scene}">${esc(z)}</button><button type="button" class="dvchip dvzadd" data-zadd="${esc(z)}">+</button></div>${kids(z).map(node).join("")}`;
+  const el = evLayer("dvZone", `<div class="dvroot"><div class="pickhead"><b>구역</b><button class="icon" data-evx type="button" aria-label="닫기">✕</button></div>
+    <div class="dvtree">${zs.filter((z) => !dvZPar(z) && !hos.includes(z)).map(node).join("")}
+    ${hos.length ? `<div class="dvlab">병원</div>${hos.map((h) => `<div class="dvz" style="--lv:0"><button type="button" class="dvchip" data-zsel="${esc(h)}" aria-pressed="${h === d.scene}">${esc(h)}</button></div>`).join("")}` : ""}</div>
+    <div class="dvtwo"><button type="button" class="btn dvbtn" data-zadd="">+ 구역</button><button type="button" class="btn dvbtn" id="dvHosp">+ 병원</button></div></div>`);
+  el.querySelectorAll("[data-zsel]").forEach((b) => b.addEventListener("click", () => { d.scene = b.dataset.zsel; saveSoon(); evClose("dvZone"); render(); }));
+  el.querySelectorAll("[data-zadd]").forEach((b) => b.addEventListener("click", () => { const z = b.dataset.zadd;
+    const sep = z && /^[A-Z]+$/.test(z) ? "" : "-";
+    const n = z ? `${z}${sep}${Math.max(0, ...kids(z).map((y) => +y.match(/(\d+)$/)[1] || 0)) + 1}` : String.fromCharCode(Math.max(...zs.filter((y) => /^[A-Z]$/.test(y)).map((m) => m.charCodeAt(0))) + 1);
+    d.zones = [...new Set([...(d.zones || []), n])]; saveSoon(); dvZonePick(); }));
+  $("dvHosp").addEventListener("click", () => { const h = (prompt("병원 약자 (예: SU)", "") || "").trim().toUpperCase(); if (!h) return;
+    d.hosps = [...new Set([...hos, h])]; d.scene = h; saveSoon(); evClose("dvZone"); render(); });
+}
+// 구역 약도: 구역마다 한 번 그리거나(모눈) 사진을 깔아 두고, 등록할 때 눌러서 위치만 표시
+const DV_MW = 1000, DV_MH = 1400;
+const DV_ZQ = [["risk", "위험요소 · 안전 고려사항", "내용"], ["chg", "현장 변경", "변경 사유"], ["cctv", "CCTV", "위치"]];
+const dvMapOf = (z) => ((dvS().maps = dvS().maps || {})[z]);
+function dvMapDraw(cv, m, marks, hi) {
+  const g = cv.getContext("2d"), W = cv.width, H = cv.height, k = W / DV_MW;
+  g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+  if (m && m.bgImg instanceof Image) { const im = m.bgImg, r = Math.min(W / im.width, H / im.height); g.drawImage(im, (W - im.width * r) / 2, (H - im.height * r) / 2, im.width * r, im.height * r); }
+  else { g.strokeStyle = "#dfe3ea"; g.lineWidth = 1; for (let x = 0; x <= W; x += 25 * k) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); } for (let y = 0; y <= H; y += 25 * k) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); } }
+  if (m) drawSketch(g, dvMapItems(m), W, H);
+  for (const p of marks || []) { const on = p.id === hi, r = (on ? 50 : 42) * k;
+    g.fillStyle = on ? "#dc2626" : p.kind === "E" ? "#0f766e" : p.kind === "P" ? "#7c3aed" : p.kind === "F" ? "#b45309" : "#1e3a5f";
+    g.beginPath(); g.arc(p.x * W, p.y * H, r, 0, 7); g.fill(); g.fillStyle = "#fff"; g.font = `bold ${(on ? 36 : 30) * k}px sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(p.lab, p.x * W, p.y * H + 1); g.textBaseline = "alphabetic"; }
+}
+const dvMarks = (z) => dvS().items.filter((x) => x.pos && x.pos.z === z && !x.parent).map((x) => ({ id: x.id, kind: x.kind, x: x.pos.x, y: x.pos.y, lab: x.kind === "E" ? `M${x.num}` : String(x.num) }));
+async function dvMapLoad(m) { if (m && m.bg && !(m.bgImg instanceof Image)) { const im = new Image(); im.src = m.bg; try { await im.decode(); Object.defineProperty(m, "bgImg", { value: im, writable: true, configurable: true, enumerable: false }); } catch (err) {} } return m; }
+function dvMapItems(m) {   // 예전 손그림(픽셀 좌표) → 약도 그림 형식
+  if (!m.items) m.items = (m.strokes || []).map((st) => ({ t: "free", pts: st.map(([x, y]) => [x / DV_MW, y / DV_MH]) }));
+  delete m.strokes; return m.items;
+}
+async function dvMapEdit(z) {
+  const d = dvS(); d.maps = d.maps || {}; const m = d.maps[z] || { items: [] }; d.maps[z] = m; dvMapItems(m); await dvMapLoad(m);
+  const zi = (d.zinfo[z] = d.zinfo[z] || {});
+  const el = evLayer("dvMapBox", `<div class="dvroot"><div class="pickhead"><b>${esc(z)} 약도</b><button class="icon" data-evx type="button" aria-label="닫기">✕</button></div>
+    <div class="dvmapw"><canvas id="dvMapC" width="${DV_MW / 2}" height="${DV_MH / 2}"></canvas></div>
+    <button id="dvMapD" class="btn primary dvbtn" type="button" style="width:100%">그리기</button>
+    <div class="dvtwo"><button id="dvMapP" class="btn dvbtn" type="button">사진</button><button id="dvMapX" class="btn dvbtn" type="button">지우기</button></div>
+    ${DV_ZQ.map(([k, t, dl]) => `<div class="dvlab">${t}</div><div class="seg dvseg" data-zq="${k}">${["없음", "있음"].map((o) => `<button type="button" data-o="${o}" aria-pressed="${zi[k] === o}">${o}</button>`).join("")}</div>
+      <input class="dvin${zi[k] === "있음" ? "" : " hide"}" data-zd="${k}" type="text" value="${esc(zi[k + "D"] || "")}" placeholder="${dl}" autocomplete="off">`).join("")}
+    <input id="dvMapF" type="file" accept="image/*" capture="environment" hidden></div>`);
+  el.querySelectorAll("[data-zq]").forEach((sg) => sg.querySelectorAll("[data-o]").forEach((b) => b.addEventListener("click", () => { const k = sg.dataset.zq;
+    zi[k] = zi[k] === b.dataset.o ? "" : b.dataset.o; sg.querySelectorAll("[data-o]").forEach((y) => y.setAttribute("aria-pressed", y.dataset.o === zi[k]));
+    el.querySelector(`[data-zd="${k}"]`).classList.toggle("hide", zi[k] !== "있음"); saveSoon(); })));
+  el.querySelectorAll("[data-zd]").forEach((i) => i.addEventListener("input", () => { zi[i.dataset.zd + "D"] = i.value.trim(); saveSoon(); }));
+  const cv = $("dvMapC"), draw = () => dvMapDraw(cv, m, dvMarks(z));
+  const done = () => { m.u = Date.now(); saveSoon(); draw(); render(); };
+  $("dvMapD").addEventListener("click", () => openSketch(done, { items: m.items, region: { w: DV_MW / 4, h: DV_MH / 4 }, bg: m.bgImg instanceof Image ? m.bgImg : null }));
+  $("dvMapP").addEventListener("click", () => $("dvMapF").click());
+  $("dvMapX").addEventListener("click", () => { if (!confirm("약도를 지울까요?")) return; m.items.length = 0; delete m.bg; delete m.bgImg; done(); });
+  $("dvMapF").addEventListener("change", (ev) => { const f = ev.target.files[0]; ev.target.value = ""; if (!f) return; const img = new Image();
+    img.onload = () => { const S = 1400, r = Math.min(1, S / Math.max(img.width, img.height)), c = document.createElement("canvas"); c.width = img.width * r; c.height = img.height * r;
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); m.bg = c.toDataURL("image/jpeg", 0.7); delete m.bgImg; URL.revokeObjectURL(img.src); dvMapLoad(m).then(done); };
+    img.src = URL.createObjectURL(f); });
+  draw();
+}
+function dvMapPick(z, x) {   // 약도를 눌러 위치 표시 → {z, x, y} | null
+  return new Promise(async (ok) => {
+    const m = await dvMapLoad(dvMapOf(z)); let pos = x.pos && x.pos.z === z ? { ...x.pos } : null;
+    const el = evLayer("dvPickBox", `<div class="dvroot"><div class="pickhead"><b>${esc(z)} 약도</b><button class="icon" data-evx type="button" aria-label="닫기">✕</button></div>
+      <div class="dvmapw"><canvas id="dvPickC" width="${DV_MW}" height="${DV_MH}"></canvas></div>
+      <div class="dvtwo"><button id="dvPickX" class="btn dvbtn" type="button">위치 지우기</button><button id="dvPickOk" class="btn primary dvbtn" type="button">확인</button></div></div>`);
+    const cv = $("dvPickC"), me = { id: "_me", kind: x.kind, lab: x.kind === "E" ? `M${x.num || ""}` : String(x.num || "") };
+    const draw = () => dvMapDraw(cv, m, [...dvMarks(z).filter((p) => p.id !== x.id), ...(pos ? [{ ...me, x: pos.x, y: pos.y }] : [])], "_me");
+    cv.addEventListener("pointerdown", (ev) => { const r = cv.getBoundingClientRect(); pos = { z, x: +((ev.clientX - r.left) / r.width).toFixed(4), y: +((ev.clientY - r.top) / r.height).toFixed(4) }; draw(); });
+    let done = false; const fin = (v) => { if (done) return; done = true; evClose("dvPickBox"); ok(v); };
+    $("dvPickOk").addEventListener("click", () => fin(pos || false));
+    $("dvPickX").addEventListener("click", () => fin(false));
+    el.querySelectorAll("[data-evx]").forEach((b) => b.addEventListener("click", () => fin(null)));
+    draw();
+  });
+}
+async function dvMapJpeg(z) {   // 출력용: 약도 + 번호 표시
+  const m = await dvMapLoad(dvMapOf(z)); if (!m) return null;
+  const cv = document.createElement("canvas"); cv.width = DV_MW; cv.height = DV_MH; dvMapDraw(cv, m, dvMarks(z));
+  const u = cv.toDataURL("image/jpeg", 0.85); return { bytes: Uint8Array.from(atob(u.split(",")[1]), (c) => c.charCodeAt(0)), w: DV_MW, h: DV_MH };
+}
+// 인체도(앞 · 뒤): 손으로 X 표시 — 좌표는 그림 칸 기준 0~1 (가로:세로 = 2:3)
+function dvFig(g, cx, cy, u, back) {
+  const R = PERSON_HALF, pts = R.concat(R.slice().reverse().map(([x, y]) => [-x, y]));
+  const m = (i) => { const p = pts[(i + pts.length) % pts.length], q = pts[(i + 1) % pts.length]; return [cx + (p[0] + q[0]) / 2 * u, cy + (p[1] + q[1]) / 2 * u]; };
+  g.beginPath(); const s0 = m(-1); g.moveTo(s0[0], s0[1]);
+  pts.forEach(([x, y], i) => { const e = m(i); g.quadraticCurveTo(cx + x * u, cy + y * u, e[0], e[1]); });
+  g.closePath(); g.stroke();
+  g.beginPath(); g.ellipse(cx, cy - 4.4 * u, 0.55 * u, 0.66 * u, 0, 0, Math.PI * 2); g.stroke();
+  g.beginPath();
+  if (back) { g.moveTo(cx, cy - 3.3 * u); g.lineTo(cx, cy + 0.5 * u); }
+  else { g.moveTo(cx - 0.5 * u, cy - 3.1 * u); g.quadraticCurveTo(cx, cy - 2.9 * u, cx + 0.5 * u, cy - 3.1 * u); g.moveTo(cx - 0.15 * u, cy - 0.6 * u); g.arc(cx, cy - 0.6 * u, 0.15 * u, Math.PI, 3 * Math.PI); }
+  g.stroke();
+}
+function dvBodyDraw(g, X, Y, W, H, strokes, lw) {
+  g.save(); g.strokeStyle = "#444"; g.lineWidth = lw * 0.7; g.lineJoin = g.lineCap = "round";
+  const u = Math.min((W / 2) * 0.86 / 2.92, H * 0.9 / 10.1);
+  dvFig(g, X + W * 0.25, Y + H * 0.51, u, false); dvFig(g, X + W * 0.75, Y + H * 0.51, u, true);
+  g.strokeStyle = "#d61f1f"; g.lineWidth = lw * 1.6;
+  for (const st of strokes || []) { g.beginPath(); st.forEach(([x, y], i) => (i ? g.lineTo(X + x * W, Y + y * H) : g.moveTo(X + x * W, Y + y * H))); g.stroke(); }
+  g.restore();
+}
+function dvBodyEdit(start) {
+  return new Promise((ok) => {
+    const st = start.map((a) => a.slice());
+    const el = evLayer("dvBodyBox", `<div class="dvroot"><div class="pickhead"><b>인체도</b><button class="icon" data-evx type="button" aria-label="닫기">✕</button></div>
+      <div class="dvmapw"><canvas id="dvBdC" width="800" height="1200" style="touch-action:none"></canvas></div>
+      <div class="dvtwo"><button id="dvBdU" class="btn dvbtn" type="button">되돌리기</button><button id="dvBdX" class="btn dvbtn" type="button">지우기</button></div>
+      <button id="dvBdOk" class="btn primary dvbtn" type="button" style="width:100%;margin-top:10px">확인</button></div>`);
+    const cv = $("dvBdC"), g = cv.getContext("2d");
+    const draw = () => { g.fillStyle = "#fff"; g.fillRect(0, 0, 800, 1200); dvBodyDraw(g, 0, 0, 800, 1200, st, 4); };
+    const pt = (ev) => { const b = cv.getBoundingClientRect(); return [+((ev.clientX - b.left) / b.width).toFixed(4), +((ev.clientY - b.top) / b.height).toFixed(4)]; };
+    let cur = null;
+    cv.addEventListener("pointerdown", (ev) => { cv.setPointerCapture(ev.pointerId); cur = [pt(ev)]; st.push(cur); draw(); });
+    cv.addEventListener("pointermove", (ev) => { if (cur) { cur.push(pt(ev)); draw(); } });
+    const up = () => { if (cur && cur.length < 2) cur.push([cur[0][0] + 0.003, cur[0][1] + 0.003]); cur = null; draw(); };
+    cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+    $("dvBdU").addEventListener("click", () => { st.pop(); draw(); });
+    $("dvBdX").addEventListener("click", () => { st.length = 0; draw(); });
+    let done = false; const fin = (v) => { if (done) return; done = true; evClose("dvBodyBox"); ok(v); };
+    $("dvBdOk").addEventListener("click", () => fin(st));
+    el.querySelectorAll("[data-evx]").forEach((b) => b.addEventListener("click", () => fin(null)));
+    draw();
+  });
+}
+let dvScanMode = false;
+async function dvScan() {
+  dvScanMode = true;
+  const r = await evCamera("one"); if (!r) { dvScanMode = false; return; }
+  if (navigator.vibrate) navigator.vibrate(60);
+  const d = dvS(), key = dvNo(r), lb = key ? "" : evNorm(r);
+  const mine = d.items.find((x) => !x.parent && ((key && dvKey(x) === key) || (lb && x.label === lb)));
+  if (mine) { evToast("이미 등록됨"); return dvOpen(mine.id); }
+  if (key && key[0] === "M") return dvOpen(null, { kind: "E", num: +key.slice(1) });
+  const k = await evAsk(key ? `D${key.slice(1).padStart(3, "0")}` : lb, "", [["B", "시신", true], ["P", "시신편"], ["F", "조직"], ...(key ? [] : [["E", "유류품"]])]);
+  if (k) dvOpen(null, { kind: k, label: lb, num: key ? +key.slice(1) : 0 }); else dvScanMode = false;
+}
+let dvPhoto = null;
+function dvOpen(id, o = {}) {
+  const d = dvS(), x = id ? d.items.find((i) => i.id === id) : { kind: o.kind || "B", parent: o.parent || "", label: o.label || "", desc: "", sex: "", loc: (o.parent && (d.items.find((i) => i.id === o.parent) || {}).loc) || d.lastLoc || "", memo: "" };
+  const kind = x.kind, par = x.parent ? d.items.find((i) => i.id === x.parent) : null;
+  const num = id ? x.num : o.num || (x.parent ? 0 : dvNextNum(kind === "E" ? "M" : "D")), pn = id ? x.pn : x.parent ? dvNextPn(x.parent) : 0;
+  let zone = id ? x.zone || "" : d.scene || "", nat = x.nat || "D", hosp = x.hosp || "";
+  const code = (kk) => dvCode({ kind: kk, num, pn, parent: x.parent, zone, nat, hosp }), no = code(kind);
+  dvPhoto = x.photo || null;
+  const sexes = ["남", "여", "미상"];
+  const locs = [...new Set([...d.items].sort((a, b) => (b.u || b.t) - (a.u || a.t)).map((i) => i.loc).filter(Boolean))].slice(0, 8);
+  let ecat = x.cat || "";
+  const pre = kind === "E" ? DV_ECAT[ecat] || [] : DV_PRE[kind] || [];
+  evLayer("dvItem", `<div class="dvroot">
+    <div class="pickhead"><b class="dvhno">${esc(no)}</b><button class="icon" data-evx type="button" aria-label="닫기">✕</button></div>
+    ${par ? `<div class="dvpar">${esc(par.no)} 소지품</div>` : `<div class="dvpar">${esc(dvCode({ kind, num, zone, nat, hosp }, true))}</div>`}
+    ${kind !== "E" ? `<div class="seg dvseg" id="dvKindS">${["B", "P", "F", "O"].map((q) => `<button type="button" data-k="${q}" aria-pressed="${kind === q}">${dvKind[q]}</button>`).join("")}</div>
+    <div class="seg dvseg" id="dvNatS">${[["D", "국적 미상"], ["DK", "한국인"], ["DF", "외국인"]].map(([v, l]) => `<button type="button" data-n="${v}" aria-pressed="${nat === v}">${l}</button>`).join("")}</div>
+    <div class="seg dvseg" id="dvSexS">${sexes.map((s) => `<button type="button" data-s="${s}" aria-pressed="${x.sex === s}">${s}</button>`).join("")}</div>
+    <div class="dvlab">시신의 완전성</div><div class="seg dvseg" id="dvWholeS">${["예", "아니오"].map((s) => `<button type="button" data-w="${s}" aria-pressed="${x.whole === s}">${s}</button>`).join("")}</div>` : ""}
+    ${kind === "E" ? `<div class="dvchips dvcat" id="dvCat">${Object.keys(DV_ECAT).map((c) => `<button type="button" class="dvchip" data-cat="${esc(c)}" aria-pressed="${c === ecat}">${esc(c)}</button>`).join("")}</div>` : ""}
+    <div class="dvlab">${kind === "E" ? "품명" : "내용"}</div>
+    <div class="dvchips" id="dvPre">${pre.map((t) => `<button type="button" class="dvchip" data-pre="${esc(t)}" aria-pressed="${(x.desc || "").split(/[, ]+/).includes(t)}">${esc(t)}</button>`).join("")}</div>
+    <input id="dvDesc" class="dvin" type="text" value="${esc(x.desc || "")}" autocomplete="off">
+    ${kind === "E" ? `<div class="dvqty"><span>수량</span><button type="button" class="dvchip" data-q="-1">−</button><b id="dvQty">${x.qty || 1}</b><button type="button" class="dvchip" data-q="1">+</button></div>` : ""}
+    <div class="dvlab">발견 위치</div>
+    ${x.parent ? "" : `<div class="seg dvseg" id="dvFpS">${["실내", "실외", "기타"].map((s) => `<button type="button" data-f="${s}" aria-pressed="${x.fpk === s}">${s}</button>`).join("")}</div>`}
+    ${locs.length ? `<div class="dvchips" id="dvLocs">${locs.map((t) => `<button type="button" class="dvchip" data-loc="${esc(t)}" aria-pressed="${t === x.loc}">${esc(t)}</button>`).join("")}</div>` : ""}
+    <input id="dvLoc" class="dvin" type="text" value="${esc(x.loc || "")}" autocomplete="off">
+    <div class="dvtwo"><button id="dvPhB" class="btn dvbtn" type="button"><img id="dvPh" class="evph${dvPhoto ? "" : " hide"}" alt="" src="${dvPhoto || ""}">사진</button>
+      <button id="dvLbB" class="btn dvbtn" type="button">${x.label ? "QR ✓" : "QR 연결"}</button></div>
+    ${x.parent ? "" : `<div class="dvtwo">${kind !== "E" ? `<button id="dvBdB" class="btn dvbtn" type="button">${x.bd && x.bd.length ? "인체도 ✓" : "인체도"}</button>` : ""}<button id="dvPosB" class="btn dvbtn" type="button"${kind === "E" ? ' style="grid-column:1/3"' : ""}>${x.pos ? "약도 위치 ✓" : dvMapOf(zone) ? "약도에 위치 표시" : "약도 그리기"}</button></div>`}
+    <input id="dvPhF" type="file" accept="image/*" capture="environment" hidden><input id="dvLb" type="hidden" value="${esc(x.label || "")}">
+    <details class="dvmore"><summary>번호 · 수습자 · 일시 · 메모</summary>
+      ${x.parent ? "" : `<div class="dvtwo" style="margin-top:4px"><label class="f">번호<input id="dvNumI" type="number" min="1" value="${num}"></label><label class="f">구역<input id="dvZoneI" type="text" value="${esc(zone)}" autocapitalize="characters" autocomplete="off"></label></div>
+`}
+      <label class="f">수습자<input id="dvBy" type="text" value="${esc(id ? x.by || "" : rankName(state.user))}" autocomplete="off"></label>
+      <label class="f">수습 일시<input id="dvT" type="datetime-local" value="${evLocal(id ? x.t : Date.now())}"></label>
+      <label class="f">메모<input id="dvMemo" type="text" value="${esc(x.memo || "")}" autocomplete="off"></label>
+      ${dvPhoto ? '<button id="dvPhX" class="btn" type="button">사진 삭제</button>' : ""}${id ? '<button id="dvDel" class="btn" type="button">삭제</button>' : ""}
+    </details>
+    <div class="dvtwo dvfoot">${id ? "" : '<button id="dvNext" class="btn dvbtn" type="button">저장 후 다음</button>'}<button id="dvSave" class="btn primary dvbtn" type="button">저장</button></div></div>`);
+  $("dvPre").addEventListener("click", (ev) => { const b = ev.target.closest("[data-pre]"); if (!b) return;
+    const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on);
+    const cur = $("dvDesc").value.split(/,\s*/).map((t) => t.trim()).filter(Boolean).filter((t) => t !== b.dataset.pre);
+    if (on) cur.push(b.dataset.pre); $("dvDesc").value = cur.join(", "); });
+  if ($("dvLocs")) $("dvLocs").querySelectorAll("[data-loc]").forEach((b) => b.addEventListener("click", () => { $("dvLoc").value = b.dataset.loc; $("dvLocs").querySelectorAll("[data-loc]").forEach((y) => y.setAttribute("aria-pressed", y === b)); }));
+  let k = kind, sex = x.sex || "", pos = x.pos || null, whole = x.whole || "", fpk = x.fpk || "", qty = +x.qty || 1, bd = (x.bd || []).map((st) => st.map((q) => q.slice()));
+  const segOn = (id, attr, get) => $(id) && $(id).querySelectorAll(`[${attr}]`).forEach((b) => b.addEventListener("click", () => { const v = get(b.getAttribute(attr)); $(id).querySelectorAll(`[${attr}]`).forEach((y) => y.setAttribute("aria-pressed", y.getAttribute(attr) === v)); }));
+  segOn("dvWholeS", "data-w", (v) => (whole = whole === v ? "" : v));
+  segOn("dvFpS", "data-f", (v) => (fpk = fpk === v ? "" : v));
+  document.querySelectorAll("#dvItem [data-q]").forEach((b) => b.addEventListener("click", () => { qty = Math.max(1, qty + +b.dataset.q); $("dvQty").textContent = qty; }));
+  if ($("dvBdB")) $("dvBdB").addEventListener("click", async () => { const r2 = await dvBodyEdit(bd); if (r2) { bd = r2; $("dvBdB").textContent = bd.length ? "인체도 ✓" : "인체도"; } });
+  if ($("dvPosB")) $("dvPosB").addEventListener("click", async () => { const z = (($("dvZoneI") || {}).value || zone).trim().toUpperCase() || "A";
+    if (!dvMapOf(z)) { await dvMapEdit(z); return; }
+    const r = await dvMapPick(z, { ...x, kind: k, num: +(($("dvNumI") || {}).value) || num, pos }); if (r === null) return;
+    pos = r || null; $("dvPosB").textContent = pos ? "약도 위치 ✓" : "약도에 위치 표시"; });
+  const hdr = () => { if (x.parent) return; zone = ($("dvZoneI") || {}).value?.trim().toUpperCase() ?? zone; 
+    const nn = +(($("dvNumI") || {}).value) || num, c = { kind: k, num: nn, zone, nat, hosp };
+    document.querySelector(".dvhno").textContent = dvCode(c); document.querySelector(".dvpar").textContent = dvCode(c, true); };
+  ["dvNumI", "dvZoneI"].forEach((i2) => $(i2) && $(i2).addEventListener("input", hdr));
+  if ($("dvNatS")) $("dvNatS").querySelectorAll("[data-n]").forEach((b) => b.addEventListener("click", () => { nat = b.dataset.n; $("dvNatS").querySelectorAll("[data-n]").forEach((y) => y.setAttribute("aria-pressed", y === b)); hdr(); }));
+  const drawPre = () => { $("dvPre").innerHTML = (kind === "E" ? DV_ECAT[ecat] || [] : DV_PRE[k] || []).map((t) => `<button type="button" class="dvchip" data-pre="${esc(t)}" aria-pressed="${$("dvDesc").value.split(/,\s*/).includes(t)}">${esc(t)}</button>`).join(""); };
+  if ($("dvCat")) $("dvCat").querySelectorAll("[data-cat]").forEach((b) => b.addEventListener("click", () => { if (ecat !== b.dataset.cat) $("dvDesc").value = ""; ecat = b.dataset.cat;
+    $("dvCat").querySelectorAll("[data-cat]").forEach((y) => y.setAttribute("aria-pressed", y === b)); drawPre(); }));
+  if ($("dvKindS")) $("dvKindS").querySelectorAll("[data-k]").forEach((b) => b.addEventListener("click", () => { k = b.dataset.k; $("dvKindS").querySelectorAll("[data-k]").forEach((y) => y.setAttribute("aria-pressed", y === b)); drawPre(); hdr(); }));
+  if ($("dvSexS")) $("dvSexS").querySelectorAll("[data-s]").forEach((b) => b.addEventListener("click", () => { sex = sex === b.dataset.s ? "" : b.dataset.s; $("dvSexS").querySelectorAll("[data-s]").forEach((y) => y.setAttribute("aria-pressed", y.dataset.s === sex)); }));
+  $("dvLbB").addEventListener("click", async () => { const r = await evCamera("one"); if (!r) return; const n = dvNo(r);
+    if (n && $("dvNumI")) { $("dvNumI").value = +n.slice(1); $("dvLb").value = ""; hdr(); } else if (!n) $("dvLb").value = evNorm(r); $("dvLbB").textContent = "QR ✓"; });
+  const setPh = (p) => { dvPhoto = p; $("dvPh").src = p || ""; $("dvPh").classList.toggle("hide", !p); };
+  $("dvPhB").addEventListener("click", () => $("dvPhF").click());
+  if ($("dvPhX")) $("dvPhX").addEventListener("click", () => { setPh(null); $("dvPhX").remove(); });
+  $("dvPhF").addEventListener("change", (ev) => { const f = ev.target.files[0]; ev.target.value = ""; if (!f) return; const img = new Image();
+    img.onload = () => { const S = 480, r = Math.min(1, S / Math.max(img.width, img.height)), cv = document.createElement("canvas"); cv.width = img.width * r; cv.height = img.height * r;
+      cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height); setPh(cv.toDataURL("image/jpeg", 0.62)); URL.revokeObjectURL(img.src); };
+    img.src = URL.createObjectURL(f); });
+  const save = () => {
+    const nn = x.parent ? 0 : +$("dvNumI").value || num, kk = kind === "E" ? "E" : k;
+    if (!x.parent) { zone = $("dvZoneI").value.trim().toUpperCase(); }
+    if (!x.parent && d.items.some((i) => !i.parent && i.id !== id && dvKey(i) === dvKey({ kind: kk, num: nn }))) { showSheet("이미 있는 번호입니다", dvSeq({ kind: kk, num: nn, nat }), "alert"); return false; }
+    const lb = evNorm($("dvLb").value);
+    if (lb && d.items.some((i) => i.label === lb && i.id !== id)) { showSheet("이미 등록된 QR", lb, "alert"); return false; }
+    const tv = Date.parse($("dvT").value);
+    const val = { pos: x.parent ? null : pos && pos.z === zone ? pos : pos ? { ...pos, z: zone } : null, kind: kk, num: nn, pn, zone: x.parent ? "" : zone, nat: kk === "E" ? "" : nat, hosp: x.parent ? "" : hosp, cat: kind === "E" ? ecat : "", sex: kind === "E" ? "" : sex, desc: $("dvDesc").value.trim(), loc: $("dvLoc").value.trim(), by: $("dvBy").value.trim(),
+      t: isNaN(tv) ? x.t || Date.now() : tv, label: lb, memo: $("dvMemo").value.trim(), photo: dvPhoto, u: Date.now(),
+      whole: kk === "E" ? "" : whole, fpk: x.parent ? "" : fpk, qty: kk === "E" ? qty : 0, bd: kk === "E" ? [] : bd };
+    if (id) Object.assign(x, val); else d.items.push({ id: evUid(), parent: x.parent || "", checks: [], ...val });
+    d.items.forEach((i) => (i.no = dvCode(i)));
+    d.lastLoc = val.loc; saveSoon(); return true;
+  };
+  $("dvSave").addEventListener("click", () => { if (save()) { evClose("dvItem"); dvScanMode = false; render(); } });
+  if ($("dvNext")) $("dvNext").addEventListener("click", () => { if (save()) { evClose("dvItem"); render(); if (dvScanMode) dvScan(); else dvOpen(null, { kind: x.parent ? "E" : k, parent: x.parent }); } });
+  if ($("dvDel")) $("dvDel").addEventListener("click", () => { if (!confirm(`${x.no} 삭제할까요?${d.items.some((i) => i.parent === id) ? " (소지품 포함)" : ""}`)) return;
+    d.items = d.items.filter((i) => i.id !== id && i.parent !== id); saveSoon(); evClose("dvItem"); render(); });
+}
+
+// 보유 확인: 지점(현장 · 임시안치소 · 검안 · 인도)을 고르고 카메라로 훑기. QR이 따로 없는 소지품은 시신과 함께 확인
+async function dvCheckIn() {
+  const d = dvS();
+  const w = await evAsk("보유 확인", "", [...new Set([...DV_POINTS, ...(d.last && !DV_POINTS.includes(d.last) ? [d.last] : [])])].map((p) => [p, p, p === (d.last || "임시안치소")]));
+  if (!w) return;
+  d.last = w;
+  const seen = new Set(), other = new Set(), who = rankName(state.user);
+  const has = (x) => x.checks.some((c) => c.w === w);
+  const mark = (x) => { if (!has(x)) { x.checks.push({ w, at: Date.now(), by: who }); x.u = Date.now(); return true; } return false; };
+  let last = "", lastT = 0;
+  const draw = (stat, found) => {
+    const n = d.items.length, k = d.items.filter(has).length;
+    stat.innerHTML = `${esc(w)} <b>${k}</b> / ${n}${other.size ? ` <span class="bad">목록 밖 ${other.size}</span>` : ""}${last && Date.now() - lastT < 1500 ? `<div class="evlast">✓ ${esc(last)}</div>` : ""}`;
+    const miss = d.items.filter((x) => !has(x)).sort(dvSort);
+    found.innerHTML = miss.length ? miss.slice(0, 10).map((x) => `<span>${esc(x.no)} ${esc(x.desc || dvKindOf(x))}</span>`).join("") + (miss.length > 10 ? `<span>+${miss.length - 10}</span>` : "") : '<span class="ok">모두 확인</span>';
+  };
+  await evCamera("check", (codes, stat, found) => {
+    let hit = false;
+    for (const c of codes) {
+      const no = dvNo(c), lb = no ? "" : evNorm(c), key = no || lb; if (seen.has(key)) continue; seen.add(key);
+      const x = d.items.find((i) => (no && !i.parent && dvKey(i) === no) || (lb && i.label === lb));
+      if (!x) { other.add(key); continue; }
+      if (mark(x)) { hit = true; last = `${x.no} ${x.desc || dvKindOf(x)}`; lastT = Date.now(); }
+      if (x.kind !== "E") d.items.filter((i) => i.parent === x.id && !i.label).forEach((i) => mark(i) && (hit = true));
+    }
+    if (hit) { saveSoon(); evBeep(); if (navigator.vibrate) navigator.vibrate(40); }
+    draw(stat, found);
+  });
+  saveSoon(); render();
+  const miss = d.items.filter((x) => !has(x)).length;
+  evToast(miss ? `${w} 미확인 ${miss}건` : `${w} 모두 확인`);
+}
+
+// 목록 보내기 · 불러오기 (여러 팀 기록 합치기)
+const dvStem = () => `${(state.caseName || "재난").replace(/[\\/:*?"<>|\s]/g, "_")}_수습목록`;
+async function dvSend() {
+  const d = dvS(), name = dvStem() + ".json", blob = new Blob([JSON.stringify({ kind: "KCSI-DVI", v: 1, exported: Date.now(), exportedBy: rankName(state.user), dvi: d })], { type: "application/json" });
+  const f = new File([blob], name, { type: "application/json" });
+  if (navigator.canShare && navigator.share && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f] }); return; } catch (err) { if (err && err.name === "AbortError") return; } }
+  const t = await pickTarget("json", dvStem()).catch(() => ({ name })); if (t) { const n = await writeTarget(t, blob); if (n) showSheet("저장했습니다", n, "alert"); }
+}
+function dvImport(texts) {
+  const d = dvS(); let add = 0, upd = 0, bad = 0;
+  for (const t of texts) {
+    let j; try { j = JSON.parse(t); } catch (err) { bad++; continue; }
+    if (!j || j.kind !== "KCSI-DVI" || !j.dvi || !Array.isArray(j.dvi.items)) { bad++; continue; }
+    const map = {};
+    for (const y of j.dvi.items) {
+      const x = d.items.find((i) => i.id === y.id || (y.no && i.no === y.no) || (y.label && i.label === y.label));
+      if (!x) { const n = { checks: [], ...y }; d.items.push(n); map[y.id] = n.id; add++; continue; }
+      map[y.id] = x.id;
+      const ch = [...x.checks]; (y.checks || []).forEach((c) => { if (!ch.some((k) => k.w === c.w && k.at === c.at)) ch.push(c); });
+      if ((y.u || 0) > (x.u || 0)) { Object.assign(x, { ...y, id: x.id, parent: x.parent }); upd++; }
+      x.checks = ch;
+    }
+    d.items.forEach((i) => { if (i.parent && map[i.parent]) i.parent = map[i.parent]; });
+  }
+  saveSoon(); render();
+  showSheet(bad && !add && !upd ? "수습 목록 파일이 아닙니다" : "불러왔습니다", `추가 ${add}건 · 갱신 ${upd}건`, "alert");
+}
+
+// 수습 목록 (엑셀 · 한글 · 붙여넣기)
+function dvRows() {
+  const d = dvS(), out = [];
+  const hist = (x) => [...x.checks].sort((a, b) => a.at - b.at).map((c) => `${c.w} ${evHM(c.at)} ${c.by || ""}`.trim()).join(" → ");
+  const ip = (x) => { const b = x.parent ? d.items.find((i) => i.id === x.parent) : x; return b && b.kind !== "E" ? `PM82-${String(b.num || 0).padStart(4, "0")}${b.zone ? "-" + b.zone : ""}` : ""; };
+  const row = (x) => ({ no: x.no, ko: dvCode(x, true), ip: ip(x), qty: x.kind === "E" ? x.qty || 1 : "", fpk: x.fpk || "", whole: x.whole || "", kind: dvKindOf(x), cat: x.cat || "", sex: x.sex || "", desc: x.desc || "", loc: x.loc || "", t: evTime(x.t), by: x.by || "", label: x.label || "", hist: hist(x), memo: x.memo || "", sub: !!x.parent, photo: x.photo || "" });
+  d.items.filter((x) => x.kind !== "E" && !x.parent).sort(dvSort).forEach((b) => { out.push(row(b)); d.items.filter((x) => x.parent === b.id).sort(dvSort).forEach((p) => out.push(row(p))); });
+  d.items.filter((x) => x.kind === "E" && !x.parent).sort(dvSort).forEach((p) => out.push(row(p)));
+  return out;
+}
+const dvInfo = () => { const d = dvS(); return [["사건명", state.caseName || ""], ["작성일", dotDate(state.date)], ["작성자", rankName(state.user)],
+  ["재난 발생 일시", d.info.dt ? dotDateTime(d.info.dt) : ""], ["발생 장소", d.info.place], ["팀번호", d.info.team], ["현장조사 팀", d.info.crew.map((c) => [c.org, c.rank, c.name].filter(Boolean).join(" ")).join(", ")],
+  ["현황", [["시신", (x) => x.kind === "B"], ["시신편", (x) => x.kind === "P"], ["조직", (x) => x.kind === "F"], ["기타", (x) => x.kind === "O"], ["소지품", (x) => x.parent], ["유류품", (x) => x.kind === "E" && !x.parent]].map(([k, f]) => [k, d.items.filter(f).length]).filter(([, n]) => n).map(([k, n]) => `${k} ${n}`).join(" · ")]]; };
+async function dvXlsx() {
+  const x = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const col = (i) => String.fromCharCode(65 + i);
+  let r = 0, rows = "";
+  const row = (cells, st, ht) => { r++; rows += `<row r="${r}" ht="${ht || (st === 2 ? 24 : 17)}" customHeight="1">${cells.map((v, i) => `<c r="${col(i)}${r}" t="inlineStr"${st ? ` s="${st}"` : ""}><is><t xml:space="preserve">${x(v)}</t></is></c>`).join("")}</row>`; };
+  row(["K-DVI 수습 목록"], 2); dvInfo().forEach((c) => row(c)); r++;
+  row(["코딩번호", "코딩번호(한글)", "인터폴 번호", "구분", "분류", "성별", "내용 · 품명", "수량", "발견장소", "발견 위치", "시신의 완전성", "수습 일시", "수습자", "QR 번호", "보유 확인 이력", "메모", "사진"], 1);
+  const pics = [];
+  for (const o of dvRows()) { const t = await thumbOf(o.photo); row([o.sub ? "  " + o.no : o.no, o.sub ? "  " + o.ko : o.ko, o.ip, o.kind, o.cat, o.sex, o.desc, o.qty, o.fpk, o.loc, o.whole, o.t, o.by, o.label, o.hist, o.memo, ""], 3, t ? 72 : 0); if (t) pics.push({ row: r - 1, col: 16, t }); }
+  const widths = [26, 26, 20, 8, 16, 6, 22, 6, 9, 20, 10, 17, 14, 24, 60, 18, 14];
+  const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${rows}</sheetData><pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>${pics.length ? '<drawing r:id="rIdD1"/>' : ""}</worksheet>`;
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="14"/><name val="맑은 고딕"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDDE3EE"/></patternFill></fill></fills><borders count="2"><border/><border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  const enc = new TextEncoder(), f = (name, s) => ({ name, data: enc.encode(s) });
+  const blob = makeZip([
+    f("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>${pics.length ? '<Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>' : ""}<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`),
+    f("_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`),
+    f("xl/workbook.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="수습 목록" sheetId="1" r:id="rId1"/></sheets></workbook>`),
+    f("xl/_rels/workbook.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`),
+    f("xl/worksheets/sheet1.xml", sheet), f("xl/styles.xml", styles), ...xlsxPicParts(pics)]);
+  const t = await pickTarget("xlsx", dvStem()); if (!t) return;
+  const n = await writeTarget(t, new Blob([blob], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })); if (n) showSheet("저장했습니다", n, "alert");
+}
+async function dvHwpx() {
+  const W = hwpxWriter(), { K, I, p, table } = W, paras = [];
+  paras.push(p([[I.lab2, "K-DVI 수습 목록"]], I.pc));
+  dvInfo().filter(([, v]) => v).forEach(([k, v]) => paras.push(p([[I.desc4, `${k}: ${v}`]], I.pl)));
+  paras.push(p([], I.pl));
+  const head = ["코딩번호", "구분", "내용 · 품명", "발견 위치", "수습 일시", "수습자", "최종 확인", "사진"];
+  const mm = [30, 14, 0, 24, 20, 16, 20, 22], fixed = mm.reduce((a, b) => a + HMM(b), 0), widths = mm.map((v) => (v ? HMM(v) : K.bodyW - fixed));
+  const cell = (c, v, cp) => ({ col: c, content: p([[cp, String(v)]], c === 2 || c === 3 ? I.pl : I.pc) });
+  const rows = [[HMM(8), head.map((h, i) => cell(i, h, I.lab4))]];
+  for (const o of dvRows()) { const lc = o.hist.split(" → ").pop() || "", t = await thumbOf(o.photo);
+    rows.push([t ? HMM(20) : HMM(8), [o.sub ? "└ " + o.no.replace(/^.*-/, "") : o.no, o.kind, [o.sex, o.cat, o.desc].filter(Boolean).join(" · "), o.loc, o.t.replace(/^\d{4}\.\s*/, ""), o.by, lc.replace(/ [^ ]+ [^ ]+$/, "")].map((x, i) => cell(i, x, i === 0 && !o.sub ? I.lab4 : I.desc4)).concat([{ col: 7, content: t ? p([[0, hwpxThumb(W, t, HMM(20), HMM(18)), true]], I.pc) : p([], I.pc) }])]); }
+  paras.push(p([[0, table(widths, rows), true]], I.pc));
+  for (const z of Object.keys(dvS().maps || {}).sort((a, b) => a.localeCompare(b, "ko", { numeric: true }))) {
+    const t = await dvMapJpeg(z); if (!t) continue;
+    paras.push(p([[I.lab4, `별지1  시신 / 유류물 수습장소(현장 요도) · ${z}`]], I.pl, true));
+    paras.push(p([[0, hwpxThumb(W, t, K.bodyW, HMM(230)), true]], I.pc));
+    paras.push(p([[I.desc4, dvMarks(z).map((q) => { const it = dvS().items.find((i) => i.id === q.id); return `${q.lab} ${it ? dvKindOf(it) + (it.desc ? " " + it.desc : "") : ""}`; }).join("  ·  ")]], I.pl));
+  }
+  W.text.push("수습 목록", state.caseName || "");
+  let first = paras[0]; const i = first.indexOf("<hp:run ");
+  first = first.slice(0, i) + `<hp:run charPrIDRef="0">${K.secpr}</hp:run>` + first.slice(i);
+  const section = K.secHead + first + paras.slice(1).join("") + "</hs:sec>";
+
+  const t = await pickTarget("hwpx", dvStem()); if (!t) return;
+  const n = await writeTarget(t, hwpxZip(W, K, section)); if (n) showSheet("저장했습니다", n, "alert");
+}
+// ---------- 2025 K-DVI 양식: 재난희생자 점검 목록표[현장조사] · 유류품 목록 · 별지1 (한글 · PDF) ----------
+const DVF = {
+  page() { const pg = newPage(), g = pg.g; g.save(); g.scale(S, S); g.lineWidth = 0.7; g.strokeStyle = "#111"; g.textBaseline = "middle"; return pg; },
+  t(g, v, x, y, o = {}) { v = String(v ?? ""); if (!v) return; let z = o.size || 8.5; const f = () => (g.font = `${o.bold ? "700 " : ""}${z}px ${FONT}`); f();
+    if (o.w) while (g.measureText(v).width > o.w && z > 5) { z -= 0.25; f(); }
+    g.textAlign = o.align || "left"; g.fillStyle = o.color || "#111"; g.fillText(v, x, y); },
+  box(g, x, y, w, h, fill) { if (fill) { g.fillStyle = fill; g.fillRect(x, y, w, h); } g.strokeRect(x, y, w, h); },
+  ck(g, x, y, on, lab, o = {}) {   // □ 글자 → 다음 x
+    const s = 6.5; g.save(); g.lineWidth = 0.6; g.strokeRect(x, y - s / 2, s, s);
+    if (on) { g.lineWidth = 1.3; g.beginPath(); g.moveTo(x + 1.2, y - 0.2); g.lineTo(x + 2.8, y + 2); g.lineTo(x + 6, y - 3.2); g.stroke(); }
+    g.restore(); this.t(g, lab, x + s + 2, y, { size: o.size || 8.5 }); g.font = `${o.size || 8.5}px ${FONT}`; return x + s + 2 + g.measureText(lab).width + (o.gap ?? 9); },
+  vtext(g, v, x, y0, y1, size = 9) { const a = [...v], st = (y1 - y0) / a.length; a.forEach((c, i) => this.t(g, c, x, y0 + st * (i + 0.5), { size, bold: true, align: "center" })); },
+  dt(v) { const t = typeof v === "number" ? v : Date.parse(v || ""); if (!v || isNaN(t)) return "20      .      .      .            :            경";
+    const d = new Date(t), p = (n) => String(n).padStart(2, "0"); return `${d.getFullYear()}.  ${d.getMonth() + 1}.  ${d.getDate()}.    ${p(d.getHours())} : ${p(d.getMinutes())}  경`; },
+  G: "#e6e8ec",
+};
+const dvAt = (x, w) => { const c = x.checks.filter((k) => k.w === w).sort((a, b) => a.at - b.at)[0]; return c ? c.at : 0; };
+async function dvMapCanvas(z, hi) { const m = await dvMapLoad(dvMapOf(z)); if (!m) return null; const cv = document.createElement("canvas"); cv.width = DV_MW; cv.height = DV_MH; dvMapDraw(cv, m, dvMarks(z), hi); return cv; }
+async function dvPageCheck(x) {
+  const d = dvS(), f = d.info, zi = d.zinfo[x.zone] || {}, pg = DVF.page(), g = pg.g, F = DVF, L = 40, R = 555;
+  const props = x.kind === "E" ? [x] : d.items.filter((i) => i.parent === x.id).sort(dvSort);
+  // 왼쪽 위: 일시 4칸
+  [["재난 발생 일시", f.dt], ["현장 수습 일시", dvAt(x, "현장 수습") || x.t], ["임시영안소 출발 일시", dvAt(x, "임시영안소 출발")], ["안치실 출발 일시", dvAt(x, "안치실 출발")]].forEach(([k, v], i) => {
+    const y = 50 + i * 31; F.box(g, L, y, 150, 14, F.G); F.t(g, k, L + 75, y + 7.5, { bold: true, align: "center" }); F.box(g, L, y + 14, 150, 17); F.t(g, F.dt(v), L + 5, y + 23, { size: 8.5, w: 140 }); });
+  // 가운데: 제목 · 구분 · PM 번호
+  F.box(g, 190, 50, 240, 124); F.t(g, "재난희생자 점검 목록표", 310, 66, { size: 16, bold: true, align: "center" }); F.t(g, "[ 현 장 조 사 ]", 310, 84, { size: 10, bold: true, align: "center" });
+  g.beginPath(); g.moveTo(190, 95); g.lineTo(430, 95); g.stroke();
+  let cx = 206; [["B", "시신(Ca)"], ["P", "시신일부(Bp)"], ["F", "조직(Fr)"]].forEach(([k, l]) => (cx = F.ck(g, cx, 106, x.kind === k, l)));
+  cx = 254; [["O", "기타(Ot)"], ["E", "유류품"]].forEach(([k, l]) => (cx = F.ck(g, cx, 120, x.kind === k, l)));
+  F.box(g, 190, 130, 48, 44, "#f4dce8"); F.t(g, "PM", 214, 152, { size: 17, bold: true, align: "center" });
+  ["팀번호", "현장번호", "시신번호", "참고번호"].forEach((k, i) => { const X = 238 + i * 48; F.box(g, X, 130, 48, 14, F.G); F.t(g, k, X + 24, 137.5, { size: 8, bold: true, align: "center" }); F.box(g, X, 144, 48, 30); });
+  [f.team, x.zone, dvSeq(x), ""].forEach((v, i) => F.t(g, v, 238 + i * 48 + 24, 159.5, { size: 9.5, bold: true, align: "center", w: 44 }));
+  // 오른쪽 위: 현장조사 팀
+  const cw = [20, 45, 27, 33]; let X = 430; ["구분", "소속", "계급", "성명"].forEach((k, i) => { F.box(g, X, 50, cw[i], 14, F.G); F.t(g, k, X + cw[i] / 2, 57.5, { size: 8, bold: true, align: "center" }); X += cw[i]; });
+  F.box(g, 430, 64, 20, 110, F.G); F.vtext(g, "현장조사팀", 440, 70, 168, 8.5);
+  for (let i = 0; i < 5; i++) { const c = f.crew[i] || {}, y = 64 + i * 22; X = 450; [c.org, c.rank, c.name].forEach((v, j) => { F.box(g, X, y, cw[j + 1], 22); F.t(g, v, X + cw[j + 1] / 2, y + 11.5, { size: 7.5, align: "center", w: cw[j + 1] - 3 }); X += cw[j + 1]; }); }
+  // 발생 · 수습 장소
+  [["발생장소", f.place], ["수습장소", [x.zone ? x.zone + " 구역" : "", x.loc].filter(Boolean).join("  ")]].forEach(([k, v], i) => { const y = 174 + i * 22;
+    F.box(g, L, y, 55, 22, F.G); F.t(g, k, L + 27.5, y + 11.5, { bold: true, align: "center" }); F.box(g, 95, y, R - 95, 22); F.t(g, v, 100, y + 11.5, { size: 9, w: R - 105 }); });
+  // 현장상황
+  F.box(g, L, 218, 15, 374, F.G); F.vtext(g, "현장상황", L + 7.5, 380, 470, 9);
+  const yes = (k) => zi[k] === "있음", no = (k) => zi[k] === "없음";
+  F.box(g, 55, 218, 280, 32); cx = F.t(g, "위험요소, 안전의 고려사항 :", 60, 228) || 60; g.font = `8.5px ${FONT}`; cx = 60 + g.measureText("위험요소, 안전의 고려사항 :").width + 6;
+  cx = F.ck(g, cx, 228, no("risk"), "없음"); F.ck(g, cx, 228, yes("risk"), "있음"); F.t(g, `(  ${zi.riskD || ""}`, 60, 241, { w: 255 }); F.t(g, ")", 328, 241);
+  F.box(g, 55, 250, 280, 30); F.t(g, "변경여부:", 60, 259); cx = F.ck(g, 102, 259, no("chg"), "없음"); F.ck(g, cx, 259, yes("chg"), "있음"); F.t(g, `변경사유:  ${zi.chgD || ""}`, 60, 271, { w: 268 });
+  F.box(g, 55, 280, 280, 18); F.t(g, "CCTV :", 60, 289); cx = F.ck(g, 92, 289, no("cctv"), "없음"); cx = F.ck(g, cx, 289, yes("cctv"), "있음 ("); F.t(g, zi.cctvD || "", cx - 4, 289, { w: 320 - cx }); F.t(g, ")", 328, 289);
+  F.box(g, 55, 298, 280, 18); F.t(g, "발견장소:", 60, 307); cx = 100;
+  for (const k of ["실내", "실외", "기타"]) { cx = F.ck(g, cx, 307, x.fpk === k, `${k}(`, { gap: 1 }); const v = x.fpk === k ? x.loc || "" : ""; g.font = `8.5px ${FONT}`; const w = v ? Math.min(70, g.measureText(v).width + 4) : 14; F.t(g, v, cx, 307, { w }); cx += w; F.t(g, ")", cx, 307); cx += 8; }
+  F.ck(g, Math.min(cx, 300), 307, !!x.pos, "별지");
+  F.box(g, 55, 316, 280, 276); F.t(g, "[기록 및 스케치]", 60, 325);
+  const note = [x.desc, x.memo].filter(Boolean).join(" · "); if (note) F.t(g, note, 60, 338, { size: 8.5, w: 268 });
+  if (x.pos) { const mc = await dvMapCanvas(x.pos.z, x.id); if (mc) { const bh = 240, bw = bh * DV_MW / DV_MH; g.drawImage(mc, 195 - bw / 2, 346, bw, bh); g.strokeRect(195 - bw / 2, 346, bw, bh); F.t(g, `${x.pos.z} 구역 약도`, 195 + bw / 2 + 4, 586 - 4, { size: 7.5, color: "#555" }); } }
+  // 시체상황
+  F.box(g, 335, 218, 15, 374, F.G); F.vtext(g, "시체상황", 342.5, 380, 470, 9);
+  const body = x.kind !== "E";
+  F.box(g, 350, 218, 205, 22); F.t(g, "시신의 완전성", 362, 229, { bold: true }); cx = F.ck(g, 440, 229, body && x.whole === "예", "예", { gap: 16 }); F.ck(g, cx, 229, body && x.whole === "아니오", "아니오");
+  F.box(g, 350, 240, 45, 34, F.G); F.t(g, "성별", 372.5, 257, { bold: true, align: "center" }); F.box(g, 395, 240, 160, 34);
+  cx = 404; ["남", "여", "미상"].forEach((k) => (cx = F.ck(g, cx, 250, body && x.sex === k, k, { gap: 20 }))); F.ck(g, 404, 264, false, "기타(", { gap: 0 }); F.t(g, ")", 545, 264);
+  F.box(g, 350, 274, 205, 318); F.t(g, "[시체 유실된 부분에 X 표 하시오]", 355, 283, { size: 8 });
+  dvBodyDraw(g, 355, 292, 195, 292.5, body ? x.bd : [], 0.8);
+  // 현장유류물
+  F.box(g, L, 592, 15, 196, F.G); F.vtext(g, "현장유류물", L + 7.5, 600, 780, 8.5);
+  const cols = [[55, 25, "연번"], [80, 120, "품목"], [200, 30, "수량"], [230, 100, "수거장소"], [330, 90, "수거일시"], [420, 60, "수거자"], [480, 75, "처리"]];
+  cols.forEach(([cx0, w, k]) => { F.box(g, cx0, 592, w, 16, F.G); F.t(g, k, cx0 + w / 2, 600.5, { size: 8, bold: true, align: "center" }); });
+  for (let i = 0; i < 9; i++) { const y = 608 + i * 20, it = props[i];
+    const v = it ? [String(i + 1), it.desc || (it.cat ? it.cat.split(" · ")[0] : "") || "소지품", String(it.qty || 1), it.loc || "", evTime(it.t).replace(/^\d{4}\.\s*/, ""), it.by || "", ""] : [String(i + 1), "", "", "", "", "", ""];
+    if (i === 8 && props.length > 9) v[1] = `외 ${props.length - 8}건 (유류품 목록)`;
+    cols.forEach(([cx0, w], j) => { F.box(g, cx0, y, w, 20); F.t(g, v[j], j === 1 || j === 3 ? cx0 + 3 : cx0 + w / 2, y + 10.5, { size: 7.5, align: j === 1 || j === 3 ? "left" : "center", w: w - 5 }); }); }
+  // 작성자
+  F.box(g, L, 792, 55, 22, F.G); F.t(g, "작 성 자", L + 27.5, 803.5, { bold: true, align: "center" }); F.box(g, 95, 792, R - 95, 22);
+  F.t(g, `소속 :  ${state.user.org || ""}`, 102, 803.5, { size: 9 }); F.t(g, `계급 :  ${state.user.rank || ""}`, 330, 803.5, { size: 9 }); F.t(g, `성명 :  ${state.user.name || ""}`, 430, 803.5, { size: 9 });
+  g.restore(); return toJpeg(pg.c);
+}
+async function dvPageProps(x) {
+  const d = dvS(), props = d.items.filter((i) => i.parent === x.id).sort(dvSort), pg = DVF.page(), g = pg.g, F = DVF, L = 40, R = 555;
+  const dd = new Date(Date.parse(state.date) || Date.now());
+  F.t(g, `'${String(dd.getFullYear()).slice(2)}. ${dd.getMonth() + 1}. ${dd.getDate()}.(${"일월화수목금토"[dd.getDay()]})`, L + 4, 62, { size: 9, bold: true }); F.t(g, state.user.org || "", L + 4, 78, { size: 8.5, bold: true });
+  F.t(g, "유류품 목록", 300, 62, { size: 18, bold: true, align: "center" });
+  F.box(g, L, 98, 70, 26, F.G); F.t(g, "PM", L + 35, 111.5, { size: 11, bold: true, align: "center" }); F.box(g, 110, 98, R - 110, 26);
+  F.t(g, [d.info.team ? `팀 ${d.info.team}` : "", x.zone ? `현장 ${x.zone}` : "", dvSeq(x), [x.sex, dvKindOf(x)].filter(Boolean).join(" ")].filter(Boolean).join("   ·   "), 118, 111.5, { size: 10, bold: true, w: R - 125 });
+  const cols = [[L, 40, "연번"], [80, 230, "품명"], [310, 70, "수량"], [380, 175, "비고"]];
+  cols.forEach(([cx0, w, k]) => { F.box(g, cx0, 136, w, 22, F.G); F.t(g, k, cx0 + w / 2, 147.5, { size: 9.5, bold: true, align: "center" }); });
+  const n = Math.max(17, props.length);
+  const rh = Math.min(28, (640 - 158) / n);
+  for (let i = 0; i < n; i++) { const y = 158 + i * rh, it = props[i];
+    const v = [String(i + 1), it ? [it.cat ? it.cat.split(" · ")[0] : "", it.desc].filter(Boolean).join(" · ") || "소지품" : "", it ? String(it.qty || 1) : "", it ? [it.loc, it.memo].filter(Boolean).join(" · ") : ""];
+    cols.forEach(([cx0, w], j) => { F.box(g, cx0, y, w, rh); F.t(g, v[j], j === 1 || j === 3 ? cx0 + 4 : cx0 + w / 2, y + rh / 2 + 0.5, { size: Math.min(9.5, rh * 0.42), bold: j === 0, align: j === 1 || j === 3 ? "left" : "center", w: w - 8 }); }); }
+  const yb = 158 + n * rh + 14, u = state.user;
+  [["작성자", [u.org, u.rank, u.name]], ["인계자", ["", "", ""]]].forEach(([k, v], i) => { const y = yb + i * 26;
+    F.box(g, L, y, 70, 26, F.G); F.t(g, k, L + 35, y + 13.5, { size: 9.5, bold: true, align: "center" }); F.box(g, 110, y, R - 110, 26);
+    F.t(g, `소속 :  ${v[0]}`, 118, y + 13.5, { size: 9 }); F.t(g, `계급 :  ${v[1]}`, 330, y + 13.5, { size: 9 }); F.t(g, `성명 :  ${v[2]}`, 420, y + 13.5, { size: 9 }); F.t(g, "(인)", 545, y + 13.5, { size: 9, align: "right" }); });
+  const y2 = yb + 52; F.box(g, L, y2, 70, 44, F.G); F.t(g, "인수자", L + 35, y2 + 22.5, { size: 9.5, bold: true, align: "center" }); F.box(g, 110, y2, R - 110, 44);
+  F.t(g, "일시 :", 118, y2 + 12, { size: 9 }); F.t(g, "소속 :", 118, y2 + 32, { size: 9 }); F.t(g, "계급 :", 330, y2 + 32, { size: 9 }); F.t(g, "성명 :", 420, y2 + 32, { size: 9 }); F.t(g, "(인)", 545, y2 + 32, { size: 9, align: "right" });
+  g.restore(); return toJpeg(pg.c);
+}
+async function dvPageMap(z) {
+  const mc = await dvMapCanvas(z); if (!mc) return null;
+  const pg = DVF.page(), g = pg.g, F = DVF;
+  F.t(g, "[별지 1]  시신 / 유류물 수습장소 (현장 요도)", 40, 60, { size: 13, bold: true }); F.t(g, `현장번호  ${z}`, 555, 60, { size: 11, bold: true, align: "right" });
+  const bh = 640, bw = bh * DV_MW / DV_MH; g.drawImage(mc, 297.5 - bw / 2, 80, bw, bh); g.strokeRect(297.5 - bw / 2, 80, bw, bh);
+  const lg = dvMarks(z).map((q) => { const it = dvS().items.find((i) => i.id === q.id); return `${q.lab} ${it ? dvKindOf(it) + (it.desc ? " " + it.desc : "") : ""}`; });
+  for (let i = 0; i < lg.length && i < 24; i++) F.t(g, lg[i], 40 + (i % 4) * 129, 740 + Math.floor(i / 4) * 14, { size: 8, w: 124 });
+  g.restore(); return toJpeg(pg.c);
+}
+function dvFormSheet() {
+  const d = dvS(), list = d.items.filter((x) => !x.parent).sort((a, b) => (a.kind === "E") - (b.kind === "E") || dvSort(a, b));
+  const sel = new Set(list.map((x) => x.id)), want = { chk: true, prop: true, map: true };
+  const lab = (x) => `${dvSeq(x)} ${x.kind === "E" ? x.desc || "유류품" : [x.sex, dvKindOf(x)].filter(Boolean).join(" ")}`;
+  const el = evLayer("dvFormBox", `<div class="dvroot"><div class="pickhead"><b>양식 출력</b><button class="icon" data-evx type="button" aria-label="닫기">✕</button></div>
+    <div class="dvchips">${[["chk", "점검 목록표"], ["prop", "유류품 목록"], ["map", "별지1 약도"]].map(([k, t]) => `<button type="button" class="dvchip" data-fk="${k}" aria-pressed="true">${t}</button>`).join("")}</div>
+    <div class="dvlab">대상</div>
+    <div class="dvflist"><button type="button" class="dvchip" data-fall aria-pressed="true">전체</button>${list.map((x) => `<button type="button" class="dvchip" data-fid="${x.id}" aria-pressed="true">${esc(lab(x))}</button>`).join("")}</div>
+    <div class="dvtwo"><button id="dvFH" class="btn dvbtn" type="button">한글</button><button id="dvFP" class="btn primary dvbtn" type="button">PDF</button></div></div>`);
+  const sync = () => { el.querySelectorAll("[data-fid]").forEach((b) => b.setAttribute("aria-pressed", sel.has(b.dataset.fid))); el.querySelector("[data-fall]").setAttribute("aria-pressed", sel.size === list.length);
+    $("dvFH").disabled = $("dvFP").disabled = !sel.size || !Object.values(want).some(Boolean); };
+  el.querySelectorAll("[data-fk]").forEach((b) => b.addEventListener("click", () => { want[b.dataset.fk] = !want[b.dataset.fk]; b.setAttribute("aria-pressed", want[b.dataset.fk]); sync(); }));
+  el.querySelectorAll("[data-fid]").forEach((b) => b.addEventListener("click", () => { const i = b.dataset.fid; sel.has(i) ? sel.delete(i) : sel.add(i); sync(); }));
+  el.querySelector("[data-fall]").addEventListener("click", () => { if (sel.size === list.length) sel.clear(); else list.forEach((x) => sel.add(x.id)); sync(); });
+  const run = async (ext) => {
+    const items = list.filter((x) => sel.has(x.id)), pages = [];
+    evClose("dvFormBox"); showSheet("만드는 중", "", "progress"); const bar = $("prog").firstElementChild; bar.style.width = "5%";
+    try {
+      let k = 0;
+      for (const x of items) {
+        if (want.chk) pages.push(await dvPageCheck(x));
+        if (want.prop && x.kind !== "E" && d.items.some((i) => i.parent === x.id)) pages.push(await dvPageProps(x));
+        bar.style.width = `${5 + (++k / items.length) * 80}%`;
+      }
+      if (want.map) for (const z of [...new Set(items.filter((x) => x.pos).map((x) => x.pos.z))].sort((a, b) => a.localeCompare(b, "ko", { numeric: true }))) { const pgm = await dvPageMap(z); if (pgm) pages.push(pgm); }
+      bar.style.width = "100%"; $("sheet").classList.add("hide");
+      if (!pages.length) { showSheet("출력할 쪽이 없습니다", "", "alert"); return; }
+      const stem = `${dvStem().replace(/_수습목록$/, "")}_점검목록표`;
+      const blob = ext === "pdf" ? await buildPdf(pages) : await dvPagesHwpx(pages);
+      const t = await pickTarget(ext, stem); if (!t) return;
+      const n = await writeTarget(t, blob); if (n) showSheet("저장했습니다", n, "alert");
+    } catch (err) { console.error(err); showSheet("만들지 못했습니다", String(err && err.message || err), "alert"); }
+  };
+  $("dvFH").addEventListener("click", () => run("hwpx"));
+  $("dvFP").addEventListener("click", () => run("pdf"));
+  sync();
+}
+async function dvPagesHwpx(pages) {   // 쪽 전체 그림(변사 점검표와 같은 방식)
+  const W = hwpxWriter(), { K, I, p, pic } = W, paras = [];
+  for (const b of pages) {
+    const bytes = new Uint8Array(await b.arrayBuffer());
+    let x = pic(bytes, PAGE.w, PAGE.h, K.pageW, K.pageH).replace('textWrap="TOP_AND_BOTTOM"', 'textWrap="BEHIND_TEXT"');
+    x = x.replace(/<hp:pos [^>]*\/>/, '<hp:pos treatAsChar="0" affectLSpacing="0" flowWithText="0" allowOverlap="1" holdAnchorAndSO="0" vertRelTo="PAPER" horzRelTo="PAPER" vertAlign="TOP" horzAlign="LEFT" vertOffset="0" horzOffset="0"/>');
+    paras.push(p([[0, W.HIDE + x, true]], I.pc, paras.length > 0));
+  }
+  W.text.push("재난희생자 점검 목록표");
+  let first = paras[0]; const i = first.indexOf("<hp:run ");
+  first = first.slice(0, i) + `<hp:run charPrIDRef="0">${K.secpr}</hp:run>` + first.slice(i);
+  return hwpxZip(W, K, K.secHead + first + paras.slice(1).join("") + "</hs:sec>");
+}
+async function dvCopy() {
+  const lines = [`${state.caseName || ""} / ${dotDate(state.date)} / ${rankName(state.user)}`.trim(), dvInfo().find(([k]) => k === "현황")[1]];
+  dvRows().forEach((o) => lines.push(`${o.sub ? "  └ " : ""}${o.no} ${o.kind}${o.sex || o.cat ? "(" + (o.sex || o.cat) + ")" : ""}${o.desc ? " " + o.desc : ""}${o.loc ? " - " + o.loc : ""}${o.hist ? " [" + o.hist.split(" → ").pop() + "]" : ""}`));
+  const t = lines.join("\n");
+  try { await navigator.clipboard.writeText(t); evToast("복사했습니다"); } catch (err) { showSheet("수습 목록", t, "alert"); }
 }
 
 // ================= 시작 =================
@@ -3364,6 +4144,7 @@ async function evCopyText() {
   state.kakao = { summary: "", notes: "", morgue: "", ...(state.kakao || {}) };
   state.autopsy = fixAut(state.autopsy);
   state.evid = fixEvid(state.evid);
+  state.dvi = fixDvi(state.dvi);
   profiles = (await DB.get("profiles")) || [];
   applyDefaults();
   setTimeout(showInstall, 600);
