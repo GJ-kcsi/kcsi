@@ -171,6 +171,7 @@ footer.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border
 body.dvmode #view .btn{min-height:60px;font-size:18px}body.dvmode #view .evbig{min-height:80px;font-size:23px}
 body.dvmode .evsheet .btn{min-height:58px;font-size:18px}body.dvmode .evsheet .icon{width:52px;height:52px;font-size:20px}
 .dvchip{font:inherit;font-size:17px;font-weight:600;min-height:52px;padding:10px 18px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.dvroot .dvlabk{font-size:16px;font-weight:700;color:var(--ink);margin-top:18px}.dvroot .dvink{min-height:58px;font-size:19px;border:2px solid var(--navy);background:#f7f9fc;margin-top:6px}
 .dvinfob{width:100%;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:56px;font-weight:700;margin-bottom:10px}.dvinfob small{font-weight:400;color:var(--muted)}
 .dvcrew{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:6px;margin-top:6px;align-items:center}.dvcrew .dvin{padding:10px 8px}
 .dvqty{display:flex;align-items:center;gap:12px;margin-top:10px}.dvqty span{color:var(--muted)}.dvqty b{font-size:22px;min-width:36px;text-align:center}.dvqty .dvchip{width:64px;font-size:24px;padding:4px}
@@ -560,7 +561,7 @@ window.addEventListener("popstate", () => {
 
 function render() {
   const v = $("view");
-  const titles = { home: "KCSI Docs", check: "변사 현장 점검 목록표", photos: "현장 사진", items: "유류물 목록", hand: "의뢰증거물 인수인계서", docs: "문서 사진", kakao: "간이 보고서", autopsy: "검시결과보고서", dvi: "K-DVI 수습 관리", evid: "증거물 관리" };
+  const titles = { home: "KCSI Docs", check: "변사 현장 점검 목록표", photos: "현장 사진", items: "유류물 목록", hand: "의뢰증거물 인수인계서", docs: "문서 사진", kakao: "간이 보고서", autopsy: "검시결과보고서", dvi: "K-DVI", evid: "증거물 관리" };
   $("title").textContent = titles[route];
   document.body.classList.toggle("dvmode", route === "dvi");
   $("vtabs").classList.toggle("hide", !["check", "items", "kakao", "autopsy"].includes(route));
@@ -613,7 +614,7 @@ function renderHome(v) {
     </section>
     ${menu("check", 1, "변사 사건", [c.check ? "점검표" : "", c.items ? `유류물 ${c.items}개` : "", autAny() ? "검시결과보고서" : ""].filter(Boolean).join(" · ") || "입력 안 함")}
     ${menu("evid", 2, "증거물 관리", c.evid ? `${c.evid}건 · 확인 ${state.evid.items.filter((x) => x.inAt).length}` : "입력 안 함")}
-    ${menu("dvi", 3, "K-DVI 수습 관리", c.dvi ? `${c.dvi}건${dvS().last ? ` · ${dvS().last} ${dvS().items.filter((x) => x.checks.some((k) => k.w === dvS().last)).length}` : ""}` : "입력 안 함")}
+    ${menu("dvi", 3, "K-DVI", c.dvi ? `${c.dvi}건${dvS().last ? ` · ${dvS().last} ${dvS().items.filter((x) => x.checks.some((k) => k.w === dvS().last)).length}` : ""}` : "입력 안 함")}
     ${menu("photos", 4, "현장 사진", [c.photos ? `사진 ${c.photos}장` : "", c.docs ? `문서 ${c.docs}장` : ""].filter(Boolean).join(" · ") || "입력 안 함")}
     <section class="panel" aria-label="출력할 문서">
       <h2>출력할 문서</h2>
@@ -1582,7 +1583,7 @@ const secOf = (r) => SEC_OF[r] || "";
 const SEC_INFO = {
   byun: ["변사 사건", "점검 목록표, 유류물 목록, 인수인계서, 간이 보고서, 검시결과 보고서, 지문 채취"],
   evid: ["증거물 관리", "증거물 목록"],
-  dvi: ["K-DVI 수습 관리", "수습 목록, 구역, 약도"],
+  dvi: ["K-DVI", "수습 목록, 구역, 약도"],
   photo: ["현장 사진", "현장 사진, 문서 사진"],
 };
 $("newSec").addEventListener("click", async () => {
@@ -1981,9 +1982,9 @@ function hwpxWriter() {
       + `<hp:outMargin left="0" right="0" top="0" bottom="0"/><hp:shapeComment>그림입니다.</hp:shapeComment></hp:pic>`;
   };
   // rows: [[높이, [{col, span, content, margin}]]]
-  const table = (widths, rows) => {
+  const table = (widths, rows, o = {}) => {
     const tw = widths.reduce((a, b) => a + b, 0), th = rows.reduce((a, r) => a + r[0], 0);
-    let x = `<hp:tbl id="${id()}" zOrder="0" numberingType="TABLE" textWrap="TOP_AND_BOTTOM" textFlow="BOTH_SIDES" lock="0" dropcapstyle="None" pageBreak="NONE" repeatHeader="0" rowCnt="${rows.length}" colCnt="${widths.length}" cellSpacing="0" borderFillIDRef="${I.bf}" noAdjust="1">`
+    let x = `<hp:tbl id="${id()}" zOrder="0" numberingType="TABLE" textWrap="TOP_AND_BOTTOM" textFlow="BOTH_SIDES" lock="0" dropcapstyle="None" pageBreak="${o.split ? "CELL" : "NONE"}" repeatHeader="${o.repeat ? 1 : 0}" rowCnt="${rows.length}" colCnt="${widths.length}" cellSpacing="0" borderFillIDRef="${I.bf}" noAdjust="1">`
       + `<hp:sz width="${tw}" widthRelTo="ABSOLUTE" height="${th}" heightRelTo="ABSOLUTE" protect="0"/>`
       + `<hp:pos treatAsChar="1" affectLSpacing="0" flowWithText="1" allowOverlap="0" holdAnchorAndSO="0" vertRelTo="PARA" horzRelTo="PARA" vertAlign="TOP" horzAlign="LEFT" vertOffset="0" horzOffset="0"/>`
       + `<hp:outMargin left="0" right="0" top="0" bottom="0"/><hp:inMargin left="141" right="141" top="141" bottom="141"/>`;
@@ -1991,7 +1992,7 @@ function hwpxWriter() {
       x += "<hp:tr>";
       for (const c of cells) {
         const span = c.span || 1, w = widths.slice(c.col, c.col + span).reduce((a, b) => a + b, 0), m = c.margin ?? 141;
-        x += `<hp:tc name="" header="0" hasMargin="1" protect="0" editable="0" dirty="0" borderFillIDRef="${I.bf}">`
+        x += `<hp:tc name="" header="${o.repeat && r === 0 ? 1 : 0}" hasMargin="1" protect="0" editable="0" dirty="0" borderFillIDRef="${c.bf || I.bf}">`
           + `<hp:subList id="" textDirection="HORIZONTAL" lineWrap="BREAK" vertAlign="${c.valign || "CENTER"}" linkListIDRef="0" linkListNextIDRef="0" textWidth="0" textHeight="0" hasTextRef="0" hasNumRef="0">${c.content}</hp:subList>`
           + `<hp:cellAddr colAddr="${c.col}" rowAddr="${r}"/><hp:cellSpan colSpan="${span}" rowSpan="1"/><hp:cellSz width="${w}" height="${h}"/>`
           + `<hp:cellMargin left="${m}" right="${m}" top="${m}" bottom="${m}"/></hp:tc>`;
@@ -3374,7 +3375,7 @@ const evCells = (r) => [...(evZoned() ? [r.zone ? r.zone + " 구역" : "구역 �
 function evRowsFor() {   // 목록 행 (구역이 있으면 구역 → 분류 순)
   const seq = evSeq();
   return evRowsSorted().map((x) => ({ no: seq[x.id], zone: evZone(x), grp: EV_GROUPS[evGroup(x.cat)][0], cat: x.cat, sub: x.sub || "", qty: x.qty || 1, loc: x.loc || "", mark: x.mark || "", label: x.label || "",
-    t: evTime(x.t), by: x.by || "", st: EV_ST.filter(([k]) => x[k]).map(([, t]) => t).join(", "), chk: x.inAt ? `✓ ${evHM(x.inAt)} ${x.inBy || ""}`.trim() : "미확인", memo: x.memo || "", photo: x.photo || "" }));
+    t: evTime(x.t), by: x.by || "", st: EV_ST.filter(([k]) => x[k]).map(([, t]) => t).join(", "), chk: x.inAt ? `✓ ${evHM(x.inAt)} ${x.inBy || ""}`.trim() : "미확인", memo: x.memo || "", photo: x.photo || "", inAt: x.inAt || 0, inBy: x.inBy || "" }));
 }
 function evCheckLine() {   // 사무실 확인 요약: "6건 중 5건 확인 · 미확인 #3 담배꽁초"
   const it = evRowsSorted(), k = it.filter((x) => x.inAt).length, miss = it.filter((x) => !x.inAt);
@@ -3403,6 +3404,21 @@ function xlsxPicParts(pics) {   // pics: [{ row, col (0부터), t }]
     { name: "xl/drawings/drawing1.xml", data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">${anchors}</xdr:wsDr>`) },
     { name: "xl/drawings/_rels/drawing1.xml.rels", data: enc.encode(rel(pics.map((p, i) => `<Relationship Id="rIdP${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image${i + 1}.jpeg"/>`).join(""))) },
     ...pics.map((p, i) => ({ name: `xl/media/image${i + 1}.jpeg`, data: p.t.bytes }))];
+}
+function hwpxPlus(K) {   // 목록 문서용 글자 · 칸 모양을 머리에 덧붙임 → { K, ids }
+  let h = K.header;
+  const nb = +h.match(/<hh:borderFills itemCnt="(\d+)"/)[1], nc = +h.match(/<hh:charProperties itemCnt="(\d+)"/)[1];
+  const side = (t, w, c) => `<hh:${t}Border type="SOLID" width="${w}" color="${c}"/>`;
+  const bf = (id, fill, w = "0.12 mm", c = "#8C96A3") => `<hh:borderFill id="${id}" threeD="0" shadow="0" centerLine="NONE" breakCellSeparateLine="0"><hh:slash type="NONE" Crooked="0" isCounter="0"/><hh:backSlash type="NONE" Crooked="0" isCounter="0"/>${["left", "right", "top", "bottom"].map((t) => side(t, w, c)).join("")}<hh:diagonal type="NONE" width="0.1 mm" color="#000000"/>${fill ? `<hc:fillBrush><hc:winBrush faceColor="${fill}" hatchColor="#000000" alpha="0"/></hc:fillBrush>` : ""}</hh:borderFill>`;
+  const bfs = [["bN", ""], ["bH", "#DCE3EE"], ["bG", "#F1F4F8"], ["bL", "#EEF1F5"], ["bX", "", "0.1 mm", "#FFFFFF"]];
+  const ids = {};
+  h = h.replace(/(<hh:borderFills itemCnt=")\d+(">[\s\S]*?)(<\/hh:borderFills>)/, (m, a, b, c) => a + (nb + bfs.length) + b + bfs.map(([k, f, w, col], i) => { ids[k] = nb + 1 + i; return bf(nb + 1 + i, f, w, col); }).join("") + c);
+  const base = h.match(/<hh:charPr id="18"[\s\S]*?<\/hh:charPr>/)[0];
+  const cps = [["cT", 1700, "#1F2A44", 1], ["cH", 900, "#1F2A44", 1], ["cB", 900, "#111111", 0], ["cS", 780, "#5B6472", 0], ["cG", 950, "#1F2A44", 1], ["cI", 950, "#111111", 0]];
+  h = h.replace(/(<hh:charProperties itemCnt=")\d+(">[\s\S]*?)(<\/hh:charProperties>)/, (m, a, b, c) => a + (nc + cps.length) + b + cps.map(([k, ht, col, bold], i) => { ids[k] = nc + i;
+    let x = base.replace('id="18"', `id="${nc + i}"`).replace(/height="\d+"/, `height="${ht}"`).replace(/textColor="[^"]+"/, `textColor="${col}"`).replace("<hh:bold/>", "");
+    return bold ? x.replace("</hh:charPr>", "<hh:bold/></hh:charPr>") : x; }).join("") + c);
+  return { K: { ...K, header: h }, ids };
 }
 function hwpxThumb(W, t, maxW, maxH) { const k = Math.min(maxW / t.w, maxH / t.h); return W.pic(t.bytes, t.w, t.h, Math.round(t.w * k), Math.round(t.h * k)); }
 function hwpxZip(W, K, section) {   // 그림이 있으면 BinData · 목록(hpf)에 함께 넣음
@@ -3435,31 +3451,43 @@ async function evXlsx() {
   await evSaveBlob("xlsx", new Blob([blob], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
 }
 async function evHwpx() {
-  const W = hwpxWriter(), { K, I, p, table } = W, e = state.evid;
-  const paras = [];
-  paras.push(p([[I.lab2, "채증물 목록"]], I.pc));
-  [["사건명", state.caseName || ""], ["작성일", dotDate(state.date)], ["작성자", rankName(state.user)], ["보유 확인", evCheckLine()]]
-    .forEach(([k, v]) => paras.push(p([[I.desc4, `${k}: ${v}`]], I.pl)));
-  paras.push(p([], I.pl));
-  const head = ["순번", "품목", "수량", "수거 위치", "채취 일시", "채취자", "QR 번호", "처리", "확인", "사진"];
-  const mm = [8, 20, 8, 0, 20, 16, 28, 16, 8, 22], fixed = mm.reduce((a, b) => a + HMM(b), 0), widths = mm.map((v) => (v ? HMM(v) : K.bodyW - fixed));
-  const cell = (c, v, cp) => ({ col: c, content: p([[cp, String(v)]], c === 3 ? I.pl : I.pc) });
-  const rows = [[HMM(8), head.map((h, i) => cell(i, h, I.lab4))]], zoned = evZoned();
-  let g = null;
-  for (const r of evRowsFor()) {
+  const W = hwpxWriter(), { I, p, table } = W, e = state.evid, { K, ids: X } = hwpxPlus(W.K);
+  const paras = [], rowsAll = evRowsFor(), zoned = evZoned();
+  const photos = await Promise.all(rowsAll.map((r) => thumbOf(r.photo))), anyPh = photos.some(Boolean);
+  const txt = (v, cp, para = I.pc) => p([[cp, String(v ?? "")]], para);
+  paras.push(txt("채증물 목록", X.cT));
+  paras.push(p([], I.pc));
+  // 사건 정보
+  const iw = [HMM(22), 0, HMM(22), 0]; iw[1] = iw[3] = Math.round((K.bodyW - 2 * HMM(22)) / 2);
+  const tot = e.items.reduce((s2, x) => s2 + (+x.qty || 1), 0);
+  const info = [["사건명", state.caseName || "", "작성일", dotDate(state.date)], ["작성자", rankName(state.user), "현황", `${e.items.length}건 · ${tot}점   ·   보유 확인 ${e.items.filter((x) => x.inAt).length}/${e.items.length}`]];
+  paras.push(p([[0, table(iw, info.map((rw) => [HMM(8), rw.map((v, i) => ({ col: i, bf: i % 2 ? X.bN : X.bL, content: txt(v, i % 2 ? X.cI : X.cH, i % 2 ? I.pl : I.pc) }))])), true]], I.pc));
+  paras.push(p([], I.pc));
+  // 목록
+  const cols = [["순번", 8], ["품목", 26], ["수량", 9], ["수거 위치", 0], ["채취", 23], ["QR 번호", 21], ["처리", 15], ["보유 확인", 23], ...(anyPh ? [["사진", 21]] : [])];
+  const fixed = cols.reduce((a2, [, m]) => a2 + HMM(m), 0), widths = cols.map(([, m]) => (m ? HMM(m) : K.bodyW - fixed)), n = cols.length;
+  const rows = [[HMM(8), cols.map(([h], i) => ({ col: i, bf: X.bH, content: txt(h, X.cH) }))]];
+  let g = null, gi = 0;
+  for (const r of rowsAll) {
     const k = zoned ? r.zone : r.grp;
-    if (k !== g) { g = k; rows.push([HMM(7), [{ col: 0, span: head.length, content: p([[I.lab4, zoned ? (k ? k + " 구역" : "구역 없음") : k]], I.pl) }]]); }
-    const v = [r.no, r.cat + (r.sub ? `(${r.sub})` : ""), r.qty, r.loc + (r.mark ? ` #${r.mark}` : ""), r.t.replace(/^\d{4}\.\s*/, ""), r.by, r.label, r.st, r.chk.startsWith("✓") ? "✓" : ""];
-    const t = await thumbOf(r.photo);
-    rows.push([t ? HMM(20) : HMM(8), [...v.map((x, i) => cell(i, x, I.desc4)), { col: 9, content: t ? p([[0, hwpxThumb(W, t, HMM(20), HMM(18)), true]], I.pc) : p([], I.pc) }]]);
+    if (k !== g) { g = k; const cnt = rowsAll.filter((y) => (zoned ? y.zone : y.grp) === k).length;
+      rows.push([HMM(7), [{ col: 0, span: n, bf: X.bG, content: txt(`${zoned ? (k ? k + " 구역" : "구역 없음") : k}   ·   ${cnt}건`, X.cG, I.pl) }]]); }
+    const t = photos[gi++];
+    const two = (a2, b2, para = I.pc) => p([[X.cB, String(a2 || "")]], para) + (b2 ? p([[X.cS, String(b2)]], para) : "");
+    const cells = [
+      txt(r.no, X.cB), two(r.cat + (r.sub ? ` (${r.sub})` : ""), r.mark ? `#${r.mark}` : "", I.pl), txt(r.qty, X.cB), txt(r.loc, X.cB, I.pl),
+      two(r.t.replace(/^\d{4}\.\s*/, ""), r.by), two(r.label.split(":").slice(0, 2).join(":"), r.label.split(":").slice(2).join(":")), txt(r.st, X.cB), r.inAt ? two(evTime(r.inAt).replace(/^\d{4}\.\s*/, ""), r.inBy) : txt("", X.cB)];
+    if (anyPh) cells.push(t ? p([[0, hwpxThumb(W, t, HMM(20), HMM(17)), true]], I.pc) : p([], I.pc));
+    rows.push([t ? HMM(19) : HMM(11), cells.map((c, i) => ({ col: i, bf: X.bN, content: c }))]);
   }
-  paras.push(p([[0, table(widths, rows), true]], I.pc));
+  paras.push(p([[0, table(widths, rows, { repeat: true, split: true }), true]], I.pc));
+  paras.push(p([], I.pr));
+  paras.push(txt(`${[state.user.org, rankName(state.user)].filter(Boolean).join("  ")}`, X.cI, I.pr));
   W.text.push("채증물 목록", state.caseName || "");
   let first = paras[0]; const i = first.indexOf("<hp:run ");
   first = first.slice(0, i) + `<hp:run charPrIDRef="0">${K.secpr}</hp:run>` + first.slice(i);
   const section = K.secHead + first + paras.slice(1).join("") + "</hs:sec>";
-  const blob = hwpxZip(W, K, section);
-  await evSaveBlob("hwpx", blob);
+  await evSaveBlob("hwpx", hwpxZip(W, K, section));
 }
 async function evCopyText() {
   const s = evSeq(), e = state.evid;
@@ -3470,7 +3498,7 @@ async function evCopyText() {
   try { await navigator.clipboard.writeText(t); evToast("복사됨"); } catch (err) { prompt("복사", t); }
 }
 
-// ================= K-DVI 수습 관리 =================
+// ================= K-DVI =================
 // 코딩번호(K-DVI): 분류-종류-번호-구역[-병원번호]  예) PM-Ca-D001-A1 · PM-Bp-D003-B2 · AM-At-M001-C1
 //   한글: 사후-시신-D001-A1 · 생전-유류품-M001-C1 / 시신에 딸린 소지품: 시신 코드-P1
 const DV_POINTS = ["현장 수습", "임시영안소 출발", "안치실 출발"];
@@ -3681,9 +3709,9 @@ function dvMapPick(z, x) {   // 약도를 눌러 위치 표시 → {z, x, y} | n
     draw();
   });
 }
-async function dvMapJpeg(z) {   // 출력용: 약도 + 번호 표시
+async function dvMapJpeg(z, lab) {   // 출력용: 약도 + 번호 표시 (lab: id → 표시 글자)
   const m = await dvMapLoad(dvMapOf(z)); if (!m) return null;
-  const cv = document.createElement("canvas"); cv.width = DV_MW; cv.height = DV_MH; dvMapDraw(cv, m, dvMarks(z));
+  const cv = document.createElement("canvas"); cv.width = DV_MW; cv.height = DV_MH; dvMapDraw(cv, m, dvMarks(z).map((q) => (lab && lab[q.id] ? { ...q, lab: lab[q.id] } : q)));
   const u = cv.toDataURL("image/jpeg", 0.85); return { bytes: Uint8Array.from(atob(u.split(",")[1]), (c) => c.charCodeAt(0)), w: DV_MW, h: DV_MH };
 }
 // 인체도(앞 · 뒤): 손으로 X 표시 — 좌표는 그림 칸 기준 0~1 (가로:세로 = 2:3)
@@ -3762,14 +3790,14 @@ function dvOpen(id, o = {}) {
     <div class="seg dvseg" id="dvSexS">${sexes.map((s) => `<button type="button" data-s="${s}" aria-pressed="${x.sex === s}">${s}</button>`).join("")}</div>
     <div class="dvlab">시신의 완전성</div><div class="seg dvseg" id="dvWholeS">${["예", "아니오"].map((s) => `<button type="button" data-w="${s}" aria-pressed="${x.whole === s}">${s}</button>`).join("")}</div>` : ""}
     ${kind === "E" ? `<div class="dvchips dvcat" id="dvCat">${Object.keys(DV_ECAT).map((c) => `<button type="button" class="dvchip" data-cat="${esc(c)}" aria-pressed="${c === ecat}">${esc(c)}</button>`).join("")}</div>` : ""}
-    <div class="dvlab">${kind === "E" ? "품명" : "내용"}</div>
+    <div class="dvlab dvlabk">${kind === "E" ? "품명" : "내용"}</div>
     <div class="dvchips" id="dvPre">${pre.map((t) => `<button type="button" class="dvchip" data-pre="${esc(t)}" aria-pressed="${(x.desc || "").split(/[, ]+/).includes(t)}">${esc(t)}</button>`).join("")}</div>
-    <input id="dvDesc" class="dvin" type="text" value="${esc(x.desc || "")}" autocomplete="off">
+    <input id="dvDesc" class="dvin dvink" type="text" value="${esc(x.desc || "")}" autocomplete="off">
     ${kind === "E" ? `<div class="dvqty"><span>수량</span><button type="button" class="dvchip" data-q="-1">−</button><b id="dvQty">${x.qty || 1}</b><button type="button" class="dvchip" data-q="1">+</button></div>` : ""}
-    <div class="dvlab">발견 위치</div>
-    ${x.parent ? "" : `<div class="seg dvseg" id="dvFpS">${["실내", "실외", "기타"].map((s) => `<button type="button" data-f="${s}" aria-pressed="${x.fpk === s}">${s}</button>`).join("")}</div>`}
+    <div class="dvlab dvlabk">발견 위치</div>
+    <input id="dvLoc" class="dvin dvink" type="text" value="${esc(x.loc || "")}" autocomplete="off">
     ${locs.length ? `<div class="dvchips" id="dvLocs">${locs.map((t) => `<button type="button" class="dvchip" data-loc="${esc(t)}" aria-pressed="${t === x.loc}">${esc(t)}</button>`).join("")}</div>` : ""}
-    <input id="dvLoc" class="dvin" type="text" value="${esc(x.loc || "")}" autocomplete="off">
+    ${x.parent ? "" : `<div class="seg dvseg" id="dvFpS">${["실내", "실외", "기타"].map((s) => `<button type="button" data-f="${s}" aria-pressed="${x.fpk === s}">${s}</button>`).join("")}</div>`}
     <div class="dvtwo"><button id="dvPhB" class="btn dvbtn" type="button"><img id="dvPh" class="evph${dvPhoto ? "" : " hide"}" alt="" src="${dvPhoto || ""}">사진</button>
       <button id="dvLbB" class="btn dvbtn" type="button">${x.label ? "QR ✓" : "QR 연결"}</button></div>
     ${x.parent ? "" : `<div class="dvtwo">${kind !== "E" ? `<button id="dvBdB" class="btn dvbtn" type="button">${x.bd && x.bd.length ? "인체도 ✓" : "인체도"}</button>` : ""}<button id="dvPosB" class="btn dvbtn" type="button"${kind === "E" ? ' style="grid-column:1/3"' : ""}>${x.pos ? "약도 위치 ✓" : dvMapOf(zone) ? "약도에 위치 표시" : "약도 그리기"}</button></div>`}
@@ -3903,7 +3931,7 @@ function dvRows() {
   const d = dvS(), out = [];
   const hist = (x) => [...x.checks].sort((a, b) => a.at - b.at).map((c) => `${c.w} ${evHM(c.at)} ${c.by || ""}`.trim()).join(" → ");
   const ip = (x) => { const b = x.parent ? d.items.find((i) => i.id === x.parent) : x; return b && b.kind !== "E" ? `PM82-${String(b.num || 0).padStart(4, "0")}${b.zone ? "-" + b.zone : ""}` : ""; };
-  const row = (x) => ({ no: x.no, ko: dvCode(x, true), ip: ip(x), qty: x.kind === "E" ? x.qty || 1 : "", fpk: x.fpk || "", whole: x.whole || "", kind: dvKindOf(x), cat: x.cat || "", sex: x.sex || "", desc: x.desc || "", loc: x.loc || "", t: evTime(x.t), by: x.by || "", label: x.label || "", hist: hist(x), memo: x.memo || "", sub: !!x.parent, photo: x.photo || "" });
+  const row = (x) => ({ id: x.id, par: x.parent || "", seq: x.parent ? `P${x.pn || 1}` : dvSeq(x), zone: x.zone || "", lc: dvLast(x), no: x.no, ko: dvCode(x, true), ip: ip(x), qty: x.kind === "E" ? x.qty || 1 : "", fpk: x.fpk || "", whole: x.whole || "", kind: dvKindOf(x), cat: x.cat || "", sex: x.sex || "", desc: x.desc || "", loc: x.loc || "", t: evTime(x.t), by: x.by || "", label: x.label || "", hist: hist(x), memo: x.memo || "", sub: !!x.parent, photo: x.photo || "" });
   d.items.filter((x) => x.kind !== "E" && !x.parent).sort(dvSort).forEach((b) => { out.push(row(b)); d.items.filter((x) => x.parent === b.id).sort(dvSort).forEach((p) => out.push(row(p))); });
   d.items.filter((x) => x.kind === "E" && !x.parent).sort(dvSort).forEach((p) => out.push(row(p)));
   return out;
@@ -3934,30 +3962,54 @@ async function dvXlsx() {
   const n = await writeTarget(t, new Blob([blob], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })); if (n) showSheet("저장했습니다", n, "alert");
 }
 async function dvHwpx() {
-  const W = hwpxWriter(), { K, I, p, table } = W, paras = [];
-  paras.push(p([[I.lab2, "K-DVI 수습 목록"]], I.pc));
-  dvInfo().filter(([, v]) => v).forEach(([k, v]) => paras.push(p([[I.desc4, `${k}: ${v}`]], I.pl)));
-  paras.push(p([], I.pl));
-  const head = ["코딩번호", "구분", "내용 · 품명", "발견 위치", "수습 일시", "수습자", "최종 확인", "사진"];
-  const mm = [30, 14, 0, 24, 20, 16, 20, 22], fixed = mm.reduce((a, b) => a + HMM(b), 0), widths = mm.map((v) => (v ? HMM(v) : K.bodyW - fixed));
-  const cell = (c, v, cp) => ({ col: c, content: p([[cp, String(v)]], c === 2 || c === 3 ? I.pl : I.pc) });
-  const rows = [[HMM(8), head.map((h, i) => cell(i, h, I.lab4))]];
-  for (const o of dvRows()) { const lc = o.hist.split(" → ").pop() || "", t = await thumbOf(o.photo);
-    rows.push([t ? HMM(20) : HMM(8), [o.sub ? "└ " + o.no.replace(/^.*-/, "") : o.no, o.kind, [o.sex, o.cat, o.desc].filter(Boolean).join(" · "), o.loc, o.t.replace(/^\d{4}\.\s*/, ""), o.by, lc.replace(/ [^ ]+ [^ ]+$/, "")].map((x, i) => cell(i, x, i === 0 && !o.sub ? I.lab4 : I.desc4)).concat([{ col: 7, content: t ? p([[0, hwpxThumb(W, t, HMM(20), HMM(18)), true]], I.pc) : p([], I.pc) }])]); }
-  paras.push(p([[0, table(widths, rows), true]], I.pc));
-  for (const z of Object.keys(dvS().maps || {}).sort((a, b) => a.localeCompare(b, "ko", { numeric: true }))) {
-    const t = await dvMapJpeg(z); if (!t) continue;
-    paras.push(p([[I.lab4, `별지1  시신 / 유류물 수습장소(현장 요도) · ${z}`]], I.pl, true));
-    paras.push(p([[0, hwpxThumb(W, t, K.bodyW, HMM(230)), true]], I.pc));
-    paras.push(p([[I.desc4, dvMarks(z).map((q) => { const it = dvS().items.find((i) => i.id === q.id); return `${q.lab} ${it ? dvKindOf(it) + (it.desc ? " " + it.desc : "") : ""}`; }).join("  ·  ")]], I.pl));
+  const W = hwpxWriter(), { I, p, table } = W, d = dvS(), { K, ids: X } = hwpxPlus(W.K), f = d.info, paras = [];
+  const txt = (v, cp, para = I.pc) => p([[cp, String(v ?? "")]], para);
+  const two = (a2, b2, para = I.pc) => p([[X.cB, String(a2 || "")]], para) + (b2 ? p([[X.cS, String(b2)]], para) : "");
+  const zk = (o) => (o.kind === "유류품" && !o.par ? "1" : "0") + (o.zone ? "0" + o.zone : "1");
+  const raw = dvRows(), roots = raw.filter((o) => !o.par).sort((a2, b2) => zk(a2).localeCompare(zk(b2), "ko", { numeric: true }) || raw.indexOf(a2) - raw.indexOf(b2));
+  const rowsAll = roots.flatMap((o) => [o, ...raw.filter((y) => y.par === o.id)]), sn = {};
+  roots.forEach((o, i) => (sn[o.id] = String(i + 1)));
+  const photos = await Promise.all(rowsAll.map((o) => thumbOf(o.photo))), anyPh = photos.some(Boolean);
+  paras.push(txt("K-DVI 수습 목록", X.cT)); paras.push(p([], I.pc));
+  // 재난 정보
+  const iw = [HMM(24), 0, HMM(24), 0]; iw[1] = iw[3] = Math.round((K.bodyW - 2 * HMM(24)) / 2);
+  const cnt = dvInfo().find(([k]) => k === "현황")[1];
+  const info = [["재난 발생 일시", f.dt ? dotDateTime(f.dt) : "", "발생 장소", f.place], ["사건명", state.caseName || "", "팀번호", f.team],
+    ["작성자", rankName(state.user), "작성일", dotDate(state.date)], ["현장조사 팀", f.crew.map((c) => [c.rank, c.name].filter(Boolean).join(" ")).join(", "), "현황", cnt]];
+  paras.push(p([[0, table(iw, info.map((rw) => [HMM(8), rw.map((v, i) => ({ col: i, bf: i % 2 ? X.bN : X.bL, content: txt(v, i % 2 ? X.cI : X.cH, i % 2 ? I.pl : I.pc) }))])), true]], I.pc));
+  paras.push(p([], I.pc));
+  // 목록
+  const cols = [["연번", 9], ["번호", 15], ["구분", 13], ["내용 · 품명", 0], ["수량", 9], ["발견 위치", 26], ["수습", 23], ["최종 확인", 26], ...(anyPh ? [["사진", 21]] : [])];
+  const fixed = cols.reduce((a2, [, m]) => a2 + HMM(m), 0), widths = cols.map(([, m]) => (m ? HMM(m) : K.bodyW - fixed)), n = cols.length;
+  const rows = [[HMM(8), cols.map(([h], i) => ({ col: i, bf: X.bH, content: txt(h, X.cH) }))]];
+  let g = null;
+  rowsAll.forEach((o, i) => {
+    const grp = o.kind === "유류품" ? "유류품" : o.sub ? g : (o.zone ? o.zone + " 구역" : "구역 없음");
+    if (grp !== g && !o.sub) { g = grp; const c = rowsAll.filter((y) => !y.sub && (grp === "유류품" ? y.kind === "유류품" : y.kind !== "유류품" && (y.zone ? y.zone + " 구역" : "구역 없음") === grp)).length;
+      rows.push([HMM(7), [{ col: 0, span: n, bf: X.bG, content: txt(`${grp}   ·   ${c}건`, X.cG, I.pl) }]]); }
+    const t = photos[i], lc = o.lc;
+    const cells = [
+      txt(o.sub ? "" : sn[o.id], X.cG), txt(o.sub ? "└ " + o.seq : o.seq, X.cB), txt(o.kind, X.cB),
+      two([o.sex, o.desc].filter(Boolean).join(" · ") || o.cat, [o.desc && o.cat ? o.cat : "", o.whole ? `완전성 ${o.whole}` : "", o.memo].filter(Boolean).join(" · "), I.pl),
+      txt(o.qty, X.cB), two(o.loc, o.fpk, I.pl), two(o.t.replace(/^\d{4}\.\s*/, ""), o.by),
+      lc ? two(lc.w, evHM(lc.at)) + (lc.by ? txt(lc.by, X.cS) : "") : txt("", X.cB)];
+    if (anyPh) cells.push(t ? p([[0, hwpxThumb(W, t, HMM(19), HMM(17)), true]], I.pc) : p([], I.pc));
+    rows.push([t ? HMM(19) : HMM(11), cells.map((c, j) => ({ col: j, bf: X.bN, content: c }))]);
+  });
+  paras.push(p([[0, table(widths, rows, { repeat: true, split: true }), true]], I.pc));
+  paras.push(p([], I.pr)); paras.push(txt([state.user.org, rankName(state.user)].filter(Boolean).join("  "), X.cI, I.pr));
+  // 별지1 약도
+  for (const z of Object.keys(d.maps || {}).sort((a2, b2) => a2.localeCompare(b2, "ko", { numeric: true }))) {
+    const t = await dvMapJpeg(z, sn); if (!t) continue;
+    paras.push(p([[X.cG, `[별지 1]  시신 / 유류물 수습장소 (현장 요도)   ·   현장번호 ${z}`]], I.pl, true));
+    paras.push(p([[0, hwpxThumb(W, t, K.bodyW, HMM(225)), true]], I.pc));
   }
-  W.text.push("수습 목록", state.caseName || "");
-  let first = paras[0]; const i = first.indexOf("<hp:run ");
-  first = first.slice(0, i) + `<hp:run charPrIDRef="0">${K.secpr}</hp:run>` + first.slice(i);
+  W.text.push("K-DVI 수습 목록", state.caseName || "");
+  let first = paras[0]; const ix = first.indexOf("<hp:run ");
+  first = first.slice(0, ix) + `<hp:run charPrIDRef="0">${K.secpr}</hp:run>` + first.slice(ix);
   const section = K.secHead + first + paras.slice(1).join("") + "</hs:sec>";
-
-  const t = await pickTarget("hwpx", dvStem()); if (!t) return;
-  const n = await writeTarget(t, hwpxZip(W, K, section)); if (n) showSheet("저장했습니다", n, "alert");
+  const tg = await pickTarget("hwpx", dvStem()); if (!tg) return;
+  const nm = await writeTarget(tg, hwpxZip(W, K, section)); if (nm) showSheet("저장했습니다", nm, "alert");
 }
 // ---------- 2025 K-DVI 양식: 재난희생자 점검 목록표[현장조사] · 유류품 목록 · 별지1 (한글 · PDF) ----------
 const DVF = {
