@@ -407,7 +407,7 @@ const RIDGE_MM=0.46;
 function fft1(re,im){const n=re.length;for(let i=1,j=0;i<n;i++){let b=n>>1;for(;j&b;b>>=1)j^=b;j^=b;if(i<j){[re[i],re[j]]=[re[j],re[i]];[im[i],im[j]]=[im[j],im[i]]}}
   for(let len=2;len<=n;len<<=1){const ang=-2*Math.PI/len,wr=Math.cos(ang),wi=Math.sin(ang);
     for(let i=0;i<n;i+=len){let cr=1,ci=0;for(let k=0;k<len/2;k++){const a=i+k,b=a+len/2,tr=re[b]*cr-im[b]*ci,ti=re[b]*ci+im[b]*cr;re[b]=re[a]-tr;im[b]=im[a]-ti;re[a]+=tr;im[a]+=ti;const t=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=t}}}}
-function patchPeriod(W,p,ox,oy,L){
+function patchPeriod(W,p,ox,oy,L,pmin,pmax){
   const N=64,st=L/N,ca=Math.cos(p.ang),sa=Math.sin(p.ang),re=new Float64Array(N*N),im=new Float64Array(N*N);
   let m=0;
   for(let j=0;j<N;j++)for(let i=0;i<N;i++){const xl=ox+(i-N/2+.5)*st,yl=oy+(j-N/2+.5)*st;const v=bil(W.g,W.w,W.h,p.cx+xl*ca-yl*sa,p.cy+xl*sa+yl*ca);re[j*N+i]=v;m+=v}
@@ -419,9 +419,11 @@ function patchPeriod(W,p,ox,oy,L){
   const B=new Float64Array(N),C=new Float64Array(N);
   for(let j=0;j<N;j++)for(let i=0;i<N;i++){const kx=i<N/2?i:i-N,ky=j<N/2?j:j-N,r=Math.hypot(kx,ky),b=Math.round(r);if(b<N){B[b]+=re[j*N+i]**2+im[j*N+i]**2;C[b]++}}
   for(let b=0;b<N;b++)B[b]=C[b]?B[b]/C[b]:0;
-  let bi=-1,bv=0;for(let b=3;b<=24;b++)if(B[b]>bv){bv=B[b];bi=b}
+  for(let b=1;b<N;b++)B[b]*=b;   // 저주파(얼룩·멍) 억제
+  const b0=Math.max(3,Math.ceil(N*st/(pmax||1e9))),b1=Math.min(28,Math.floor(N*st/(pmin||1e-9)));
+  let bi=-1,bv=0;for(let b=b0;b<=b1;b++)if(B[b]>bv&&B[b]>=B[b-1]&&B[b]>=B[b+1]){bv=B[b];bi=b}
   if(bi<0)return null;
-  const band=[];for(let b=3;b<=28;b++)band.push(B[b]);band.sort((x,y)=>x-y);
+  const band=[];for(let b=3;b<=30;b++)band.push(B[b]);band.sort((x,y)=>x-y);
   const prom=bv/(band[band.length>>1]||1e-9);
   const y0=B[bi-1],y1=B[bi],y2=B[bi+1],den=y0-2*y1+y2,d=den<0?0.5*(y0-y2)/den:0;
   return {period:N/(bi+Math.max(-.5,Math.min(.5,d)))*st,prom};
@@ -430,16 +432,24 @@ const scCache=new Map();
 function ridgeScale(W,p){
   const key=[W.w,W.h,W.g[(W.g.length/3)|0],p.cx|0,p.cy|0,p.a|0,p.b|0,(p.ang*100)|0].join(',');
   if(scCache.has(key))return scCache.get(key);
-  const L=p.a*0.7,res=[];
-  for(const oy of [0,-0.35*p.b,0.3*p.b]){const q=patchPeriod(W,p,0,oy,L);if(q&&q.prom>3)res.push(q.period)}
+  const L=p.a*0.4,res=[],fw2=2*p.a,pmin=RIDGE_MM*fw2/34,pmax=RIDGE_MM*fw2/10;
+  for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++){if(i*i/6.25+j*j/6.25>1.01)continue;
+    const q=patchPeriod(W,p,i*0.28*p.a,j*0.25*p.b,L,pmin,pmax);if(q&&q.prom>2){q.ox=i*0.28*p.a;res.push(q)}}
   let v=null;
-  if(res.length){res.sort((x,y)=>x-y);const per=res[res.length>>1],ppmm=per/RIDGE_MM,fw=2*p.a/ppmm;if(fw>9&&fw<30)v=ppmm}
+  // 가장자리는 곡면 때문에 간격이 좁아 보이므로 가운데 열 위주, 선명도 가중 중앙값
+  const cen=res.filter(q=>Math.abs(q.ox)<=0.3*p.a),use=cen.length>=3?cen:res;
+  if(use.length>=3){
+    const arr=use.map(q=>[q.period,Math.log(q.prom)]).sort((x,y)=>x[0]-y[0]),tot=arr.reduce((t,x)=>t+x[1],0);
+    let acc=0,per=arr[0][0];for(const [pp,w] of arr){acc+=w;if(acc>=tot/2){per=pp;break}}
+    const ppmm=per/RIDGE_MM,fw=2*p.a/ppmm;if(fw>10&&fw<34)v=ppmm;
+  }
   if(scCache.size>200)scCache.clear();scCache.set(key,v);return v;
 }
+let scN=0;const fwOf=n=>({1:16,2:16.5,3:15.5,4:13.5,5:20,6:16,7:16.5,8:15.5,9:13.5,10:20})[n]||DEF_FW;   // 손가락별 평균 폭(mm)
 function scaleOf(W,p,cal){
   if(cal)return {ppmm:cal,mode:'ruler'};
   const r=ridgeScale(W,p);if(r)return {ppmm:r,mode:'ridge'};
-  return {ppmm:2*p.a/DEF_FW,mode:'width'};
+  return {ppmm:2*p.a/fwOf(scN),mode:'width'};
 }
 const SCN={ruler:'자 보정',ridge:'융선 자동',width:'추정'};
 function processFinger(W,p,o,cal,maxSide,ppi){
@@ -547,18 +557,26 @@ function toCanvas(R,c){
   if(R.rgb)d.set(R.rgb);else for(let i=0,j=0;i<R.res.length;i++,j+=4){const v=R.res[i]*255;d[j]=d[j+1]=d[j+2]=v;d[j+3]=255}
   x.putImageData(im,0,0);return c;
 }
+const RIDGE_K=1.12;   // 융선 가늚/굵음 막대 비율(±12%)
 function scaledPhoto(bm,flip,ppmm,mode){
   const w=bm.width||bm.naturalWidth,h=bm.height||bm.naturalHeight,bar=Math.max(90,Math.round(Math.min(w,h)*0.07)),mm=10,L=mm*ppmm;
-  const x0=Math.round(bar*0.4),need=Math.ceil(x0+L+bar*1.6),W2=Math.max(w,need),c=document.createElement('canvas');   // 10mm 막대가 다 들어가도록 필요하면 폭을 넓힘
-  c.width=W2;c.height=h+bar;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W2,h+bar);
+  const est=mode!=='ruler',rows=est?[['가는 융선',RIDGE_K],['보통 융선',1],['굵은 융선',1/RIDGE_K]]:[['',1]];
+  const rh=Math.round(bar*0.7),top=Math.round(bar*0.42),SH=est?top+rows.length*rh+Math.round(bar*0.25):bar;
+  const x0=Math.round(bar*0.4),lab=est?bar*1.9:0,Lmax=L*(est?RIDGE_K:1),need=Math.ceil(x0+lab+Lmax+bar*1.6),W2=Math.max(w,need),c=document.createElement('canvas');
+  c.width=W2;c.height=h+SH;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W2,h+SH);
   const ox=Math.round((W2-w)/2);x.save();x.translate(ox,0);if(flip){x.translate(w,0);x.scale(-1,1)}x.drawImage(bm,0,0,w,h);x.restore();
-  const y0=h+Math.round(bar*0.72),lw=Math.max(2,Math.round(bar/30));
-  x.strokeStyle='#000';x.fillStyle='#000';x.lineWidth=lw;x.beginPath();x.moveTo(x0,y0);x.lineTo(x0+L,y0);
-  for(let i=0;i<=mm;i++){const t=i%5===0?bar*0.38:bar*0.2,xx=x0+i*ppmm;x.moveTo(xx,y0);x.lineTo(xx,y0-t)}
-  x.stroke();x.font=`bold ${Math.round(bar*0.32)}px sans-serif`;x.textBaseline='alphabetic';x.textAlign='left';x.fillText('1 cm',x0+L+bar*0.25,y0);
-  const info=`${({ruler:'자 보정',ridge:'융선 자동',width:'추정'})[mode]} · ${(ppmm*25.4).toFixed(0)} ppi${flip?' · 좌우반전':''}`;
-  x.font=`${Math.round(bar*0.24)}px sans-serif`;x.fillStyle='#555';
-  if(W2-(x0+L+bar*1.6)>x.measureText(info).width+bar*0.4){x.textAlign='right';x.fillText(info,W2-bar*0.4,y0)}else{x.textAlign='left';x.fillText(info,x0,h+Math.round(bar*0.22))}
+  const lw=Math.max(2,Math.round(bar/30)),info=`${({ruler:'자 보정',ridge:'융선 추정',width:'추정'})[mode]} · ${(ppmm*25.4).toFixed(0)} ppi${flip?' · 좌우반전':''}`;
+  rows.forEach(([nm,k],i)=>{
+    const y0=est?h+top+(i+1)*rh-Math.round(rh*0.18):h+Math.round(bar*0.72),bl=est?rh*0.95:bar,pm=ppmm*k,xs=x0+lab;
+    x.strokeStyle='#000';x.fillStyle='#000';x.lineWidth=lw;x.beginPath();x.moveTo(xs,y0);x.lineTo(xs+mm*pm,y0);
+    for(let j=0;j<=mm;j++){const t=j%5===0?bl*0.38:bl*0.2,xx=xs+j*pm;x.moveTo(xx,y0);x.lineTo(xx,y0-t)}
+    x.stroke();x.textBaseline='alphabetic';
+    if(est){x.font=`bold ${Math.round(bar*0.27)}px sans-serif`;x.textAlign='left';x.fillText(nm,x0,y0)}
+    x.font=`bold ${Math.round(est?bar*0.24:bl*0.32)}px sans-serif`;x.textAlign='left';x.fillText('1 cm',xs+mm*pm+bar*0.25,y0);
+  });
+  x.font=`${Math.round(bar*0.24)}px sans-serif`;x.fillStyle='#555';x.textBaseline='alphabetic';
+  if(est){x.textAlign='left';x.fillText(info,x0,h+Math.round(top*0.8))}
+  else if(W2-(x0+L+bar*1.6)>x.measureText(info).width+bar*0.4){x.textAlign='right';x.fillText(info,W2-bar*0.4,h+Math.round(bar*0.72))}else{x.textAlign='left';x.fillText(info,x0,h+Math.round(bar*0.22))}
   return c;
 }
 function afisCanvas(src,R){
@@ -840,10 +858,10 @@ let pvT=0;
 function schedPv(){clearTimeout(pvT);pvT=setTimeout(updPv,70)}
 function updPv(){
   if(!E)return;
-  const R=processFinger(W,E.p,E.o,E.cal,560);toCanvas(R,pv);
+  scN=E.n;const R=processFinger(W,E.p,E.o,E.cal,560);toCanvas(R,pv);
   const fs=sizeInfo(E);
   $('pvInfo').innerHTML=
-    `<div>배율 <b>${SCN[fs.mode]}</b>${fs.mode==='width'?' <span class="w">(손가락 폭 16mm 가정)</span>':fs.mode==='ridge'?' <span class="w">(±15%)</span>':''}</div>`+
+    `<div>배율 <b>${SCN[fs.mode]}</b>${fs.mode==='width'?' <span class="w">(손가락 폭 ${fwOf(scN)}mm 가정)</span>':fs.mode==='ridge'?' <span class="w">(±15%)</span>':''}</div>`+
     `<div>크기 <b>${fs.wmm.toFixed(1)} × ${fs.hmm.toFixed(1)} mm</b></div>`+
     `<div>원본 <b>${W.srcW} × ${W.srcH}</b> · 지두 <b>${Math.round(2*E.p.a*W.srcW/W.w)} px</b></div>`+
     `<div>출력 <b>${Math.round(fs.ow*(1000)/500)} × ${Math.round(fs.oh*(1000)/500)} px · ${1000} ppi</b></div>`+
@@ -1106,7 +1124,7 @@ async function grab(){
   busy(false);
   rvPrev=old||null;rvN=n;$('rvTitle').textContent=n+'. '+FN[n];show('review');
 }
-function makeReview(n,Wk){const RR=processFinger(Wk,S.f[n].p,S.f[n].o,null,1000),rc=toCanvas(RR,$('rvImg'));rvBase=toCanvas(RR);rvPpi=RR.ppi;rvEnhC=null;$('rvEnh').classList.remove('on');
+function makeReview(n,Wk){scN=n;const RR=processFinger(Wk,S.f[n].p,S.f[n].o,null,1000),rc=toCanvas(RR,$('rvImg'));rvBase=toCanvas(RR);rvPpi=RR.ppi;rvEnhC=null;$('rvEnh').classList.remove('on');
   const tc=document.createElement('canvas'),k=Math.min(1,640/Math.max(rc.width,rc.height));tc.width=Math.round(rc.width*k);tc.height=Math.round(rc.height*k);tc.getContext('2d').drawImage(rc,0,0,tc.width,tc.height);
   S.f[n].thumb=tc.toDataURL('image/jpeg',0.92);save()}
 /* 폰 기본 카메라 앱으로 촬영 → 지두 위치 자동 찾기 */
@@ -1179,8 +1197,8 @@ async function processAll(){
     busy(true,`처리 중… ${n}/10`);
     await new Promise(r=>setTimeout(r,10));
     const Wk=await loadWork(f.orig),p=f.p||defParams(Wk),o={...DEFO,...f.o};
-    const pp=1000,R=processFinger(Wk,p,o,f.cal,4000,pp),FR=R,R5=pp===500?R:processFinger(Wk,p,o,f.cal,4000,500);
-    const cR=toCanvas(R);out[n]={R,c:cR,FR,fc:cR,R5,c5:pp===500?null:toCanvas(R5),o,cal:f.cal,src:[Wk.srcW,Wk.srcH],ppmmO:R.ppmm*Wk.srcW/Wk.w};
+    scN=n;const pp=1000,R=processFinger(Wk,p,o,f.cal,4000,pp),FR=R,RF=processFinger(Wk,p,{...o,curve:false},f.cal,4000,pp);
+    const cR=toCanvas(R);out[n]={R,c:cR,FR,fc:cR,RF,cF:toCanvas(RF),o,cal:f.cal,src:[Wk.srcW,Wk.srcH],ppmmO:R.ppmm*Wk.srcW/Wk.w};
   }
   return out;
 }
@@ -1342,12 +1360,10 @@ $('btnZip').onclick=async()=>{closeOut();
     for(const n of req()){
       const f=S.f[n],q=P[n];if(!f||!q)continue;const pre=`${pad(n)}_${FN[n].replace(/\s/g,'')}`;
       busy(true,`저장 중… ${n}`);await new Promise(r=>setTimeout(r,10));
-      files.push({name:`${pre}_0_촬영원본.${extOf(f.orig)}`,data:await u8(f.orig)});   // 폰이 찍은 파일 그대로(손대지 않음)
-      {const bm=await decode(f.orig),w0=bm.width||bm.naturalWidth,h0=bm.height||bm.naturalHeight,fk=(1000/25.4)/q.ppmmO,rc=document.createElement('canvas');   // 원본도 1000ppi로 맞춤
-        rc.width=Math.max(1,Math.round(w0*fk));rc.height=Math.max(1,Math.round(h0*fk));const rx=rc.getContext('2d');rx.imageSmoothingQuality='high';rx.drawImage(bm,0,0,rc.width,rc.height);if(bm.close)bm.close();
-        files.push({name:`${pre}_1_원본.jpg`,data:await u8(await jpgWithDpi(scaledPhoto(rc,false,1000/25.4,q.R.mode),1000))})}
+      files.push({name:`${pre}_1_원본.${extOf(f.orig)}`,data:await u8(f.orig)});
       const pm=1000/25.4;
-      files.push({name:`${pre}_2_${[q.o.flip?'좌우반전':'',q.o.curve?'곡면보정':''].filter(Boolean).join('_')||'보정없음'}.jpg`,data:await u8(await jpgWithDpi(scaledPhoto(q.c,false,pm,q.R.mode),1000))});
+      files.push({name:`${pre}_2_좌우반전.jpg`,data:await u8(await jpgWithDpi(scaledPhoto(q.cF,false,pm,q.R.mode),1000))});
+             files.push({name:`${pre}_3_곡면보정.jpg`,data:await u8(await jpgWithDpi(scaledPhoto(q.c,false,pm,q.R.mode),1000))});
     }
     busy(true,'묶는 중…');
     download(makeZip(files),`${baseName()}_${S.kind==='one'?'일지':'십지'}지문.zip`);
